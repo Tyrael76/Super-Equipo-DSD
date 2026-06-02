@@ -10,6 +10,33 @@ Usa estos prompts en este orden por capas:
 4. `epic_simulador/PROMPT_RECONSTRUIR_SIMULADOR.md`
 5. Este archivo otra vez para validar la integracion completa.
 
+## Prompts especificos por carpeta
+
+Editor:
+
+- `epic_editor/domain/PROMPT_RECONSTRUIR_DOMAIN.md`
+- `epic_editor/controllers/PROMPT_RECONSTRUIR_CONTROLLERS.md`
+- `epic_editor/services/PROMPT_RECONSTRUIR_SERVICES.md`
+- `epic_editor/validators/PROMPT_RECONSTRUIR_VALIDATORS.md`
+- `epic_editor/tests/PROMPT_RECONSTRUIR_TESTS.md`
+
+Motor:
+
+- `epic_motor/models/PROMPT_RECONSTRUIR_MODELS.md`
+- `epic_motor/core/PROMPT_RECONSTRUIR_CORE.md`
+- `epic_motor/logic/PROMPT_RECONSTRUIR_LOGIC.md`
+- `epic_motor/services/PROMPT_RECONSTRUIR_SERVICES.md`
+- `epic_motor/engine/PROMPT_RECONSTRUIR_ENGINE.md`
+- `epic_motor/api/PROMPT_RECONSTRUIR_API.md`
+- `epic_motor/tests/PROMPT_RECONSTRUIR_TESTS.md`
+
+Simulador:
+
+- `epic_simulador/PROMPT_RECONSTRUIR_HTML.md`
+- `epic_simulador/PROMPT_RECONSTRUIR_STYLES.md`
+- `epic_simulador/PROMPT_RECONSTRUIR_RUNTIME.md`
+- `epic_simulador/PROMPT_RECONSTRUIR_DATOS.md`
+
 Antes de pedir codigo, la IA debe leer los archivos reales del repositorio. Si hay contradiccion entre documentacion antigua y codigo, debe priorizar el codigo activo.
 
 ## Contrato arquitectonico que no se debe romper
@@ -144,6 +171,8 @@ Entrega:
 - Comandos para ejecutar pruebas.
 - Riesgos pendientes si alguna parte no pudo verificarse.
 ```
+
+Cuando una capa grande falle, no vuelvas a pedir "reconstruye todo". Usa el prompt especifico de la subcarpeta responsable. Por ejemplo: si falla una referencia visual fantasma, usa `epic_editor/validators/PROMPT_RECONSTRUIR_VALIDATORS.md`; si falla el movimiento de bolitas, usa `epic_simulador/PROMPT_RECONSTRUIR_RUNTIME.md`.
 
 ## Reglas visuales del Simulador que deben sobrevivir
 

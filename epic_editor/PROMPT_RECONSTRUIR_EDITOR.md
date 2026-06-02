@@ -112,6 +112,16 @@ Pruebas minimas:
 Entrega codigo completo y comandos para probar.
 ```
 
+## Prompts especificos de subcarpetas
+
+Usa estos prompts cuando quieras reconstruir una parte concreta del Editor:
+
+- `epic_editor/domain/PROMPT_RECONSTRUIR_DOMAIN.md`: contrato `PlaygroundSnapshot`, estado inicial y acciones puras.
+- `epic_editor/controllers/PROMPT_RECONSTRUIR_CONTROLLERS.md`: `EditorController` como orquestador para UI.
+- `epic_editor/services/PROMPT_RECONSTRUIR_SERVICES.md`: cliente HTTP, adaptacion al Motor y mocks.
+- `epic_editor/validators/PROMPT_RECONSTRUIR_VALIDATORS.md`: integridad referencial y reglas de snapshot.
+- `epic_editor/tests/PROMPT_RECONSTRUIR_TESTS.md`: pruebas Jest del Editor.
+
 ## Prompt de endurecimiento
 
 Usa este prompt despues de una primera implementacion para obligar a la IA a revisar fallos finos.

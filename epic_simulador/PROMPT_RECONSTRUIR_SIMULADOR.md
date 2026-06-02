@@ -128,6 +128,15 @@ Pruebas/verificacion:
 Entrega codigo completo, comandos de ejecucion y cualquier limitacion encontrada.
 ```
 
+## Prompts especificos por archivo/responsabilidad
+
+El Simulador no tiene subcarpetas, asi que estos prompts bajan a los archivos y responsabilidades principales:
+
+- `epic_simulador/PROMPT_RECONSTRUIR_HTML.md`: estructura de `index.html`.
+- `epic_simulador/PROMPT_RECONSTRUIR_STYLES.md`: estilos de `style.css`.
+- `epic_simulador/PROMPT_RECONSTRUIR_RUNTIME.md`: logica, render SVG y animaciones en `simulator.js`.
+- `epic_simulador/PROMPT_RECONSTRUIR_DATOS.md`: presets y `e2e-real-trace.json`.
+
 ## Prompt especifico para corregir movimiento
 
 Usa este prompt si la visualizacion ya existe pero el movimiento esta mal.

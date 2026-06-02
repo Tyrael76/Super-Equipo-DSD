@@ -95,6 +95,18 @@ Pruebas minimas:
 Entrega codigo completo, comandos para ejecutar pytest y comando para levantar uvicorn.
 ```
 
+## Prompts especificos de subcarpetas
+
+Usa estos prompts cuando quieras reconstruir una parte concreta del Motor:
+
+- `epic_motor/models/PROMPT_RECONSTRUIR_MODELS.md`: modelos Pydantic y contrato activo.
+- `epic_motor/core/PROMPT_RECONSTRUIR_CORE.md`: Belnap y conectivos activos.
+- `epic_motor/logic/PROMPT_RECONSTRUIR_LOGIC.md`: compatibilidad o deduplicacion con `core`.
+- `epic_motor/services/PROMPT_RECONSTRUIR_SERVICES.md`: `run_propagation` y `execution_trace`.
+- `epic_motor/engine/PROMPT_RECONSTRUIR_ENGINE.md`: auditoria de motor legacy.
+- `epic_motor/api/PROMPT_RECONSTRUIR_API.md`: FastAPI, endpoints y CORS.
+- `epic_motor/tests/PROMPT_RECONSTRUIR_TESTS.md`: pruebas pytest del Motor.
+
 ## Prompt de compatibilidad con Editor
 
 Usalo cuando el Motor y el Editor no se entiendan.
