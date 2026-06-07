@@ -9,6 +9,7 @@
 import { EditorController } from './dist/controllers/editorController.js';
 import { MotorApiClient } from './dist/services/motorApiClient.js';
 import { validarSnapshot } from './dist/validators/editorValidation.js';
+import { FormulaParser } from './dist/services/formulaParser.js';
 
 // ==========================================
 // Estado Global del Bridge
@@ -27,7 +28,7 @@ let errorCallback = null;
  * Inicializa el bridge con el EditorController y el MotorApiClient
  * @param {string} motorUrl - URL del motor API (default: http://localhost:8000)
  */
-export function initializeEditorBridge(motorUrl = 'http://localhost:8000') {
+export function initializeEditorBridge(motorUrl = 'http://localhost:8001') {
   console.log('[EditorBridge] Inicializando bridge con motor en:', motorUrl);
   
   // Crear instancia del cliente del motor
@@ -80,12 +81,12 @@ export function onError(callback) {
  * @param {number} radius - Radio del conjunto
  * @returns {Object} Resultado de la operación
  */
-export function createSet(id, connective, x, y, radius = 65) {
+export function createSet(id, connective, x, y, radius = 65, color = "#3b82f6") {
   if (!editorController) {
     return { ok: false, error: 'Bridge no inicializado' };
   }
   
-  const result = editorController.crearContexto(id, connective, x, y, radius);
+  const result = editorController.crearContexto(id, connective, x, y, radius, "circle", color);
   
   if (!result.ok && errorCallback) {
     errorCallback(result.errors);
@@ -178,12 +179,12 @@ export function deleteVariable(id) {
  * @param {string} connective - Conectivo de la relación
  * @returns {Object} Resultado de la operación
  */
-export function createRelation(id, fromVariable, toVariable, connective) {
+export function createRelation(id, fromVariable, toVariable, connective, color = "#94a3b8", direction = "unidirectional") {
   if (!editorController) {
     return { ok: false, error: 'Bridge no inicializado' };
   }
   
-  const result = editorController.conectar(id, fromVariable, toVariable, connective);
+  const result = editorController.conectar(id, fromVariable, toVariable, connective, color, direction);
   
   if (!result.ok && errorCallback) {
     errorCallback(result.errors);
@@ -292,7 +293,7 @@ export function getCurrentSnapshot() {
 export function resetEditor() {
   if (!motorClient) {
     console.warn('[EditorBridge] Motor client no inicializado, usando URL por defecto');
-    motorClient = new MotorApiClient('http://localhost:8000');
+    motorClient = new MotorApiClient('http://localhost:8001');
   }
   
   editorController = new EditorController(motorClient);
@@ -318,6 +319,19 @@ export async function loadConnectives() {
   }
   
   await editorController.cargarConectivos();
+}
+
+/**
+ * Parsea una fórmula y la dibuja en el editor
+ * @param {string} formula - La fórmula a parsear
+ */
+export function parseFormula(formula) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+  const parser = new FormulaParser(editorController);
+  parser.parse(formula);
+  return { ok: true };
 }
 
 // ==========================================

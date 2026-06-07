@@ -31,7 +31,7 @@ export interface IMotorClient {
 export class MotorApiClient implements IMotorClient {
   private readonly baseUrl: string;
 
-  constructor(baseUrl = "http://localhost:8000") {
+  constructor(baseUrl = "http://localhost:8001") {
     this.baseUrl = baseUrl.replace(/\/$/, "");
   }
 

@@ -57,12 +57,14 @@ export interface VisualSet {
   y: number;
   radius: number;
   shape: string;
+  color?: string;
   [key: string]: unknown;
 }
 
 export interface VisualRelation {
   color: string;
   thickness: number;
+  direction?: "unidirectional" | "bidirectional";
   [key: string]: unknown;
 }
 

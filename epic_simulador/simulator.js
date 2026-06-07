@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   // Inicializar el Editor Bridge
   console.log('[Simulator] Inicializando Editor Bridge...');
-  EditorBridge.initializeEditorBridge('http://localhost:8000');
+  EditorBridge.initializeEditorBridge('http://localhost:8001');
   
   // Registrar callback para actualizar la vista cuando cambie el estado del editor
   EditorBridge.onStateChange((snapshot) => {
@@ -1060,6 +1060,10 @@ function drawSetSVG(setId, setVal, cx, cy, radius) {
   circle.setAttribute("cy", cy);
   circle.setAttribute("r", radius);
   circle.setAttribute("class", "svg-set");
+  if (setVal.color) {
+    circle.setAttribute("stroke", setVal.color);
+    circle.setAttribute("stroke-width", "2");
+  }
   g.appendChild(circle);
 
   const textId = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -1439,6 +1443,19 @@ function setupEditorEventListeners() {
   document.getElementById("btnEditAddRel").addEventListener("click", editorAddRelation);
   document.getElementById("btnResetEditor").addEventListener("click", resetEditorGraph);
   document.getElementById("btnCalculateAPI").addEventListener("click", calculateWithAPI);
+  document.getElementById("btnEditParseFormula").addEventListener("click", () => {
+    const formula = document.getElementById("editFormulaInput").value.trim();
+    if (formula) {
+      EditorBridge.parseFormula(formula);
+      const state = EditorBridge.getEditorState();
+      editorGraph.logic = JSON.parse(JSON.stringify(state.snapshot.logic));
+      editorGraph.sets = JSON.parse(JSON.stringify(state.snapshot.visual.sets));
+      editorGraph.instances = JSON.parse(JSON.stringify(state.snapshot.visual.instances));
+      editorGraph.relations = JSON.parse(JSON.stringify(state.snapshot.visual.relations));
+      syncEditorDropdowns();
+      renderEditorPreview();
+    }
+  });
 
   syncEditorDropdowns();
 }
@@ -1472,6 +1489,7 @@ function editorAddSet() {
   const nameInput = document.getElementById("editSetName");
   const id = nameInput.value.trim().replace(/\s+/g, "_");
   const connective = document.getElementById("editSetConnective").value;
+  const color = document.getElementById("editSetColor").value;
 
   if (!id) {
     alert("Por favor ingresa un nombre para el conjunto");
@@ -1486,7 +1504,7 @@ function editorAddSet() {
   const radius = 65;
 
   // Usar el bridge para crear el conjunto
-  const result = EditorBridge.createSet(id, connective, x, y, radius);
+  const result = EditorBridge.createSet(id, connective, x, y, radius, color);
   
   if (!result.ok) {
     alert(result.errors ? result.errors[0].message : "Error al crear el conjunto");
@@ -1506,7 +1524,8 @@ function editorAddSet() {
     y,
     radius,
     shape: "circle",
-    connective
+    connective,
+    color
   };
 
   nameInput.value = "";
@@ -1595,6 +1614,8 @@ function editorAddRelation() {
   const fromVar = document.getElementById("editRelFrom").value;
   const toVar = document.getElementById("editRelTo").value;
   const connective = document.getElementById("editRelConnective").value;
+  const color = document.getElementById("editRelColor").value;
+  const direction = document.getElementById("editRelDirection").value;
 
   if (!fromVar || !toVar) {
     alert("Por favor selecciona origen y destino");
@@ -1608,7 +1629,7 @@ function editorAddRelation() {
   const id = `rel_${fromVar}_to_${toVar}`;
   
   // Crear la relación usando el bridge
-  const result = EditorBridge.createRelation(id, fromVar, toVar, connective);
+  const result = EditorBridge.createRelation(id, fromVar, toVar, connective, color, direction);
   
   if (!result.ok) {
     alert(result.errors ? result.errors[0].message : "Error al crear la relación");
@@ -1624,8 +1645,9 @@ function editorAddRelation() {
   });
 
   editorGraph.relations[id] = {
-    color: connective === "CONTRAPOSITIONAL" ? "#EC4899" : "#3B82F6",
-    thickness: 2
+    color: color,
+    thickness: 2,
+    direction: direction
   };
 
   renderEditorPreview();
@@ -1721,11 +1743,25 @@ function renderEditorPreview() {
 
       path.setAttribute("d", pathD);
       path.setAttribute("class", `svg-relation-path ${rel.connective === 'CONTRAPOSITIONAL' ? 'contrapositive' : ''}`);
-      path.setAttribute("stroke", rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6");
+      path.setAttribute("stroke", visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6"));
       path.setAttribute("stroke-width", visualRel.thickness || 2);
       path.setAttribute("marker-end", "url(#arrow-editor)");
+      if (visualRel.direction === "bidirectional") {
+        path.setAttribute("marker-start", "url(#arrow-editor)");
+      }
       
       svg.appendChild(path);
+
+      // Label for connective
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", (startX + endX) / 2);
+      text.setAttribute("y", (startY + endY) / 2 - 10);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("fill", visualRel.color || "#94a3b8");
+      text.setAttribute("font-size", "12px");
+      text.setAttribute("font-family", "Arial");
+      text.textContent = rel.connective;
+      svg.appendChild(text);
     }
   });
 }

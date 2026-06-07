@@ -182,6 +182,7 @@
                       <option value="IMPLIES">IMPLIES</option>
                       <option value="BICONDITIONAL">BICONDITIONAL</option>
                     </select>
+                    <input type="color" id="editSetColor" value="#3b82f6" title="Color del Conjunto">
                     <button class="btn btn-primary" id="btnEditAddSet">Añadir</button>
                   </div>
                 </div>
@@ -223,7 +224,21 @@
                       <option value="CONTRAPOSITIONAL">CONTRAPOSITIONAL</option>
                       <option value="IMPLIES">IMPLIES</option>
                     </select>
+                    <select id="editRelDirection">
+                      <option value="unidirectional">Unidireccional &rarr;</option>
+                      <option value="bidirectional">Bidireccional &harr;</option>
+                    </select>
+                    <input type="color" id="editRelColor" value="#94a3b8" title="Color de la Flecha">
                     <button class="btn btn-primary" id="btnEditAddRel">Conectar</button>
+                  </div>
+                </div>
+
+                <!-- Parse Formula Form -->
+                <div class="editor-form-card">
+                  <h3><i data-lucide="file-code"></i> Generar desde Fórmula</h3>
+                  <div class="form-row">
+                    <input type="text" id="editFormulaInput" placeholder="Ej. p AND q IMPLIES r">
+                    <button class="btn btn-primary" id="btnEditParseFormula">Generar</button>
                   </div>
                 </div>
 

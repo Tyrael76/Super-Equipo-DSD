@@ -107,8 +107,11 @@ export class EditorController {
     connective: MotorConnective,
     x: number,
     y: number,
+    radius: number = 65,
+    shape: string = "circle",
+    color?: string,
   ): ControllerResult {
-    this.setState(actions.crearContexto(this.state, id, connective, x, y));
+    this.setState(actions.crearContexto(this.state, id, connective, x, y, radius, shape, color));
     return { ok: true, data: undefined };
   }
 
@@ -122,8 +125,10 @@ export class EditorController {
     from: string,
     to: string,
     connective: MotorConnective,
+    color?: string,
+    direction?: "unidirectional" | "bidirectional",
   ): ControllerResult {
-    this.setState(actions.crearRelacion(this.state, id, from, to, connective));
+    this.setState(actions.crearRelacion(this.state, id, from, to, connective, color, 2, direction));
     return { ok: true, data: undefined };
   }
 
