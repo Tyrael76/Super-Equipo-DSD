@@ -882,12 +882,29 @@ function renderBoxView() {
     svgContainer.appendChild(svg);
 
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-    defs.innerHTML = `
-      <marker id="arrow-box-${boxIdx}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 1 L 10 5 L 0 9 z" fill="#3B82F6" />
-      </marker>
-    `;
     svg.appendChild(defs);
+    
+    // Create dynamic markers for each relation with its specific color
+    logic.relations.forEach(rel => {
+      const relVisual = visual.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
+      const markerColor = relVisual.color || "#3B82F6";
+      
+      const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+      marker.setAttribute("id", `arrow-box-${boxIdx}-${rel.id}`);
+      marker.setAttribute("viewBox", "0 0 10 10");
+      marker.setAttribute("refX", "6");
+      marker.setAttribute("refY", "5");
+      marker.setAttribute("markerWidth", "6");
+      marker.setAttribute("markerHeight", "6");
+      marker.setAttribute("orient", "auto-start-reverse");
+      
+      const markerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      markerPath.setAttribute("d", "M 0 1 L 10 5 L 0 9 z");
+      markerPath.setAttribute("fill", markerColor);
+      
+      marker.appendChild(markerPath);
+      defs.appendChild(marker);
+    });
 
     const leftCenterX = 110;
     const rightCenterX = 310;
@@ -971,7 +988,7 @@ function renderBoxView() {
         path.setAttribute("class", `svg-relation-path ${relVisual.is_contrapositive ? 'contrapositive' : ''}`);
         path.setAttribute("stroke", relVisual.color || "#3B82F6");
         path.setAttribute("stroke-width", relVisual.thickness || 2);
-        path.setAttribute("marker-end", `url(#arrow-box-${boxIdx})`);
+        path.setAttribute("marker-end", `url(#arrow-box-${boxIdx}-${rel.id})`);
         
         svg.appendChild(path);
       }
@@ -996,12 +1013,29 @@ function renderGlobalView() {
   svg.appendChild(gTransform);
 
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  defs.innerHTML = `
-    <marker id="arrow-global" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3B82F6" />
-    </marker>
-  `;
   gTransform.appendChild(defs);
+  
+  // Create dynamic markers for each relation with its specific color
+  logic.relations.forEach(rel => {
+    const relVisual = visual.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
+    const markerColor = relVisual.color || "#3B82F6";
+    
+    const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+    marker.setAttribute("id", `arrow-global-${rel.id}`);
+    marker.setAttribute("viewBox", "0 0 10 10");
+    marker.setAttribute("refX", "6");
+    marker.setAttribute("refY", "5");
+    marker.setAttribute("markerWidth", "6");
+    marker.setAttribute("markerHeight", "6");
+    marker.setAttribute("orient", "auto-start-reverse");
+    
+    const markerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    markerPath.setAttribute("d", "M 0 1 L 10 5 L 0 9 z");
+    markerPath.setAttribute("fill", markerColor);
+    
+    marker.appendChild(markerPath);
+    defs.appendChild(marker);
+  });
 
   Object.entries(visual.sets).forEach(([setId, setVal]) => {
     const gSet = drawSetSVG(setId, setVal, setVal.x, setVal.y, setVal.radius);
@@ -1056,7 +1090,7 @@ function renderGlobalView() {
       path.setAttribute("class", `svg-relation-path ${relVisual.is_contrapositive ? 'contrapositive' : ''}`);
       path.setAttribute("stroke", relVisual.color || "#3B82F6");
       path.setAttribute("stroke-width", relVisual.thickness || 2);
-      path.setAttribute("marker-end", "url(#arrow-global)");
+      path.setAttribute("marker-end", `url(#arrow-global-${rel.id})`);
       
       gTransform.appendChild(path);
     }
@@ -1709,12 +1743,29 @@ function renderEditorPreview() {
   container.appendChild(svg);
 
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  defs.innerHTML = `
-    <marker id="arrow-editor" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3B82F6" />
-    </marker>
-  `;
   svg.appendChild(defs);
+  
+  // Create dynamic markers for each relation with its specific color
+  rels.forEach(rel => {
+    const visualRel = editorGraph.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
+    const markerColor = visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6");
+    
+    const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+    marker.setAttribute("id", `arrow-editor-${rel.id}`);
+    marker.setAttribute("viewBox", "0 0 10 10");
+    marker.setAttribute("refX", "6");
+    marker.setAttribute("refY", "5");
+    marker.setAttribute("markerWidth", "6");
+    marker.setAttribute("markerHeight", "6");
+    marker.setAttribute("orient", "auto-start-reverse");
+    
+    const markerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    markerPath.setAttribute("d", "M 0 1 L 10 5 L 0 9 z");
+    markerPath.setAttribute("fill", markerColor);
+    
+    marker.appendChild(markerPath);
+    defs.appendChild(marker);
+  });
 
   sets.forEach(([setId, val]) => {
     const gSet = drawSetSVG(setId, val, val.x, val.y, val.radius);
@@ -1762,9 +1813,9 @@ function renderEditorPreview() {
       path.setAttribute("class", `svg-relation-path ${rel.connective === 'CONTRAPOSITIONAL' ? 'contrapositive' : ''}`);
       path.setAttribute("stroke", visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6"));
       path.setAttribute("stroke-width", visualRel.thickness || 2);
-      path.setAttribute("marker-end", "url(#arrow-editor)");
+      path.setAttribute("marker-end", `url(#arrow-editor-${rel.id})`);
       if (visualRel.direction === "bidirectional") {
-        path.setAttribute("marker-start", "url(#arrow-editor)");
+        path.setAttribute("marker-start", `url(#arrow-editor-${rel.id})`);
       }
       
       svg.appendChild(path);
@@ -1859,6 +1910,11 @@ async function calculateWithAPI() {
         btn.click();
       }
     });
+
+    // Esperar un momento para que el DOM se actualice y luego iniciar la reproducción automática
+    setTimeout(() => {
+      play();
+    }, 300);
 
     alert("¡Éxito! Propagación calculada por el motor. Reproduciendo animación.");
     console.log('[Simulator] Cálculo completado exitosamente');

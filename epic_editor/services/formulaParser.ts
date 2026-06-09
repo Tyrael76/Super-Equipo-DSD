@@ -2,9 +2,21 @@ import type { EditorController } from "../controllers/editorController";
 
 export class FormulaParser {
   private controller: EditorController;
+  private setCounter: number = 0;
 
   constructor(controller: EditorController) {
     this.controller = controller;
+    this.setCounter = 0;
+  }
+
+  /**
+   * Genera un nombre de conjunto simple (A, B, C, ...)
+   */
+  private getNextSetName(): string {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const name = letters[this.setCounter % letters.length];
+    this.setCounter++;
+    return name;
   }
 
   /**
@@ -63,29 +75,33 @@ export class FormulaParser {
     let startX = 100;
     let startY = 150;
 
-    // Crear el conjunto fuente
-    const sourceSetId = `set_source_${Date.now()}`;
+    // Crear el conjunto fuente con nombre simple
+    const sourceSetId = this.getNextSetName();
     this.controller.crearContexto(sourceSetId, setConnective as any, startX, startY, 80, "circle", "#3b82f6");
 
     let varOffsetX = -30;
     for (const v of currentLhs) {
-      this.controller.crearVariable(v, "N");
+      // Asignar valor inicial V (verdadero) a las variables del lado izquierdo
+      this.controller.crearVariable(v, "V");
       this.controller.dibujarInstancia(`inst_${v}`, v, startX + varOffsetX, startY);
+      this.controller.asignarVariableAContexto?.(v, sourceSetId);
       varOffsetX += 60;
     }
 
     if (target) {
-      const targetSetId = `set_target_${Date.now()}`;
+      const targetSetId = this.getNextSetName();
       const targetX = startX + 300;
       this.controller.crearContexto(targetSetId, "PROPAGATION", targetX, startY, 80, "circle", "#22c55e");
       
+      // Asignar valor inicial N (neutro) a la variable objetivo
       this.controller.crearVariable(target, "N");
       this.controller.dibujarInstancia(`inst_${target}`, target, targetX, startY);
+      this.controller.asignarVariableAContexto?.(target, targetSetId);
 
-      // Conectar lhs a target
+      // Conectar lhs a target con nombres simples
       for (const v of currentLhs) {
         this.controller.conectar(
-          `rel_${v}_${target}_${Date.now()}`,
+          `rel_${v}_to_${target}`,
           v,
           target,
           currentConnective as any,
