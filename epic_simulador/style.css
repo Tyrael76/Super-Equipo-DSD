@@ -785,7 +785,7 @@ body {
 
 .svg-relation-path {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.15);
+  /* stroke color is set dynamically via JavaScript */
   stroke-width: 2;
   transition: stroke 0.3s;
 }
