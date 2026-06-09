@@ -7,14 +7,14 @@
   "scripts": {
     "dev": "npm run build:editor && vite",
     "build": "npm run build:editor && vite build",
-    "build:editor": "tsc --project ../tsconfig.json",
+    "build:editor": "node node_modules/typescript/lib/tsc.js --project ../tsconfig.json",
     "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "vite": "^5.0.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.9.3",
+    "vite": "^5.0.0"
   }
 }

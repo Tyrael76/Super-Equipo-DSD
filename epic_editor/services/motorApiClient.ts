@@ -31,7 +31,7 @@ export interface IMotorClient {
 export class MotorApiClient implements IMotorClient {
   private readonly baseUrl: string;
 
-  constructor(baseUrl = "http://localhost:8001") {
+  constructor(baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/$/, "");
   }
 
@@ -109,7 +109,7 @@ export class MotorApiClient implements IMotorClient {
     }
 
     // Convertir la respuesta del motor (diccionarios) de vuelta a arrays
-    return this._convertFromMotorFormat(body);
+    return this._convertFromMotorFormat(body, snapshot);
   }
 
   /**
@@ -161,7 +161,7 @@ export class MotorApiClient implements IMotorClient {
   /**
    * Convierte el formato del Motor (diccionarios) de vuelta al formato del Editor (arrays)
    */
-  private _convertFromMotorFormat(motorSnapshot: any): PlaygroundSnapshot {
+  private _convertFromMotorFormat(motorSnapshot: any, originalSnapshot?: PlaygroundSnapshot): PlaygroundSnapshot {
     const logic: any = {
       variables: [],
       sets: [],
@@ -170,29 +170,38 @@ export class MotorApiClient implements IMotorClient {
 
     // Convertir diccionarios a arrays
     if (motorSnapshot.logic?.variables) {
-      logic.variables = Object.values(motorSnapshot.logic.variables).map((v: any) => ({
-        id: v.id,
-        truth_value: v.value || "N",
-        memberships: []
-      }));
+      logic.variables = Object.values(motorSnapshot.logic.variables).map((v: any) => {
+        const originalVar = originalSnapshot?.logic?.variables?.find(ov => ov.id === v.id);
+        return {
+          id: v.id,
+          truth_value: v.value || "N",
+          memberships: originalVar?.memberships || []
+        };
+      });
     }
 
     if (motorSnapshot.logic?.sets) {
-      logic.sets = Object.values(motorSnapshot.logic.sets).map((s: any) => ({
-        id: s.id,
-        connective: "PROPAGATION",
-        subsets: s.elements || [],
-        result_alias: null
-      }));
+      logic.sets = Object.values(motorSnapshot.logic.sets).map((s: any) => {
+        const originalSet = originalSnapshot?.logic?.sets?.find(os => os.id === s.id);
+        return {
+          id: s.id,
+          connective: originalSet?.connective || "PROPAGATION",
+          subsets: s.elements || originalSet?.subsets || [],
+          result_alias: originalSet?.result_alias || null
+        };
+      });
     }
 
     if (motorSnapshot.logic?.relations) {
-      logic.relations = Object.values(motorSnapshot.logic.relations).map((r: any) => ({
-        id: r.id,
-        from_variable: r.source,
-        to_variable: r.target,
-        connective: r.connective || "PROPAGATION"
-      }));
+      logic.relations = Object.values(motorSnapshot.logic.relations).map((r: any) => {
+        const originalRelation = originalSnapshot?.logic?.relations?.find(or => or.id === r.id);
+        return {
+          id: r.id,
+          from_variable: r.source || originalRelation?.from_variable,
+          to_variable: r.target || originalRelation?.to_variable,
+          connective: r.connective || originalRelation?.connective || "PROPAGATION"
+        };
+      });
     }
 
     return {
@@ -205,6 +214,20 @@ export class MotorApiClient implements IMotorClient {
       logic,
       visual: motorSnapshot.visual || {},
       execution_trace: motorSnapshot.execution_trace
+        ? {
+            ...motorSnapshot.execution_trace,
+            actions: (motorSnapshot.execution_trace.actions || []).map((a: any) => ({
+              step: a.step,
+              // Normalizar: motor usa target_id/result_value, simulador usa variable_id/new_value
+              variable_id: a.variable_id ?? a.target_id,
+              new_value: a.new_value ?? a.result_value,
+              // Normalizar: motor usa action_type:"stabilization", simulador usa is_stabilized
+              is_stabilized: a.is_stabilized ?? (a.action_type === "stabilization" || a.target_id === "*"),
+              description: a.description,
+              action_type: a.action_type,
+            })),
+          }
+        : undefined,
     };
   }
 

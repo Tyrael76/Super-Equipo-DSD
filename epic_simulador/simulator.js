@@ -288,7 +288,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   // Inicializar el Editor Bridge
   console.log('[Simulator] Inicializando Editor Bridge...');
-  EditorBridge.initializeEditorBridge('http://localhost:8001');
+  const motorUrl = import.meta.env.VITE_MOTOR_URL ?? 'http://localhost:8000';
+  EditorBridge.initializeEditorBridge(motorUrl);
   
   // Registrar callback para actualizar la vista cuando cambie el estado del editor
   EditorBridge.onStateChange((snapshot) => {
@@ -596,6 +597,18 @@ function loadSnapshot(snapshot) {
   buildVariableHistory();
   calculateRelativeCoordinates();
   extractBoxPairs();
+
+  // DIAGNOSTIC — ver F12
+  console.group('🔍 loadSnapshot DIAGNOSTIC');
+  console.log('logic.variables:', simState.snapshot.logic.variables);
+  console.log('logic.relations:', simState.snapshot.logic.relations);
+  console.log('visual.instances:', simState.snapshot.visual.instances);
+  console.log('visual.sets:', simState.snapshot.visual.sets);
+  console.log('relativeCoordinates:', simState.relativeCoordinates);
+  console.log('boxPairs:', simState.boxPairs);
+  console.log('execution_trace actions:', simState.snapshot.execution_trace?.actions);
+  console.groupEnd();
+
   updateUI();
 
   simState.zoom = 1;
@@ -898,6 +911,7 @@ function renderBoxView() {
     const drawVariablesForSet = (setId, cx) => {
       Object.entries(visual.instances).forEach(([instId, inst]) => {
         const relData = simState.relativeCoordinates[instId];
+        console.log(`[drawVar] inst=${instId} relData.setId=${relData?.setId} expected=${setId} match=${relData?.setId === setId}`);
         if (relData && relData.setId === setId) {
           const scale = cx === leftCenterX ? (leftRadius / setLeft.radius) : (rightRadius / setRight.radius);
           const bx = cx + relData.dx * scale;
@@ -1557,6 +1571,9 @@ function editorAddVariable() {
     alert(varResult.errors ? varResult.errors[0].message : "Error al crear la variable");
     return;
   }
+
+  // Asignar la variable al conjunto en el controller (fix memberships)
+  EditorBridge.assignVariableToSet(id, setId);
 
   // Calcular posición visual dentro del conjunto
   const parentSet = editorGraph.sets[setId];

@@ -28,7 +28,7 @@ let errorCallback = null;
  * Inicializa el bridge con el EditorController y el MotorApiClient
  * @param {string} motorUrl - URL del motor API (default: http://localhost:8000)
  */
-export function initializeEditorBridge(motorUrl = 'http://localhost:8001') {
+export function initializeEditorBridge(motorUrl) {
   console.log('[EditorBridge] Inicializando bridge con motor en:', motorUrl);
   
   // Crear instancia del cliente del motor
@@ -193,6 +193,17 @@ export function createRelation(id, fromVariable, toVariable, connective, color =
   return result;
 }
 
+/**
+ * Asigna una variable a un conjunto (membership)
+ * @param {string} variableId - ID de la variable
+ * @param {string} setId - ID del conjunto
+ */
+export function assignVariableToSet(variableId, setId) {
+  if (!editorController) return { ok: false, error: 'Bridge no inicializado' };
+  editorController.asignarVariableAContexto?.(variableId, setId);
+  return { ok: true };
+}
+
 // ==========================================
 // API de Validación y Ejecución
 // ==========================================
@@ -293,7 +304,7 @@ export function getCurrentSnapshot() {
 export function resetEditor() {
   if (!motorClient) {
     console.warn('[EditorBridge] Motor client no inicializado, usando URL por defecto');
-    motorClient = new MotorApiClient('http://localhost:8001');
+    motorClient = new MotorApiClient(motorUrl ?? 'http://localhost:8000');
   }
   
   editorController = new EditorController(motorClient);
