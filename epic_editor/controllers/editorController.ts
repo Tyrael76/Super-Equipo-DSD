@@ -16,7 +16,6 @@ import type { EditorState } from "../domain/editorState";
 import * as actions from "../domain/editorActions";
 import { validarSnapshot } from "../validators/editorValidation";
 import type { IMotorClient } from "../services/motorApiClient";
-import { MotorApiClient } from "../services/motorApiClient";
 
 export type ControllerResult<T = void> =
   | { ok: true; data: T }
@@ -27,9 +26,9 @@ export class EditorController {
   private readonly motorClient: IMotorClient;
   private readonly subscribers: Array<(state: EditorState) => void> = [];
 
-  constructor(motorClient?: IMotorClient) {
+  constructor(motorClient: IMotorClient) {
     this.state = createInitialState();
-    this.motorClient = motorClient ?? new MotorApiClient();
+    this.motorClient = motorClient;
   }
 
   subscribe(cb: (state: EditorState) => void): () => void {
@@ -72,6 +71,11 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  asignarVariableAContexto(variable_id: string, set_id: string): ControllerResult {
+    this.setState(actions.asignarVariableAContexto(this.state, variable_id, set_id));
+    return { ok: true, data: undefined };
+  }
+
   dibujarInstancia(
     instance_id: string,
     variable_id: string,
@@ -107,8 +111,11 @@ export class EditorController {
     connective: MotorConnective,
     x: number,
     y: number,
+    radius: number = 65,
+    shape: string = "circle",
+    color?: string,
   ): ControllerResult {
-    this.setState(actions.crearContexto(this.state, id, connective, x, y));
+    this.setState(actions.crearContexto(this.state, id, connective, x, y, radius, shape, color));
     return { ok: true, data: undefined };
   }
 
@@ -122,8 +129,10 @@ export class EditorController {
     from: string,
     to: string,
     connective: MotorConnective,
+    color?: string,
+    direction?: "unidirectional" | "bidirectional",
   ): ControllerResult {
-    this.setState(actions.crearRelacion(this.state, id, from, to, connective));
+    this.setState(actions.crearRelacion(this.state, id, from, to, connective, color, 2, direction));
     return { ok: true, data: undefined };
   }
 

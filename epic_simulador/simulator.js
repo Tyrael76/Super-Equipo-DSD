@@ -1,6 +1,11 @@
 // EPiC Playground Simulator & Visualizer Core Logic
 
 // ==========================================
+// 0. Imports del Editor Bridge
+// ==========================================
+import * as EditorBridge from './editor-bridge.js';
+
+// ==========================================
 // 1. Preset Simulation Examples (JSON snapshots)
 // ==========================================
 const PRESETS = {
@@ -278,11 +283,31 @@ let editorGraph = {
 // ==========================================
 // 3. Initialization
 // ==========================================
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   lucide.createIcons();
+  
+  // Inicializar el Editor Bridge
+  console.log('[Simulator] Inicializando Editor Bridge...');
+  const motorUrl = import.meta.env.VITE_MOTOR_URL ?? 'http://localhost:8000';
+  EditorBridge.initializeEditorBridge(motorUrl);
+  
+  // Registrar callback para actualizar la vista cuando cambie el estado del editor
+  EditorBridge.onStateChange((snapshot) => {
+    console.log('[Simulator] Estado del editor actualizado, renderizando preview...');
+    renderEditorPreview();
+  });
+  
+  // Registrar callback para manejar errores
+  EditorBridge.onError((errors) => {
+    console.error('[Simulator] Errores del editor:', errors);
+    displayEditorErrors(errors);
+  });
+  
   setupEventListeners();
   setupEditorEventListeners();
   loadSnapshot(PRESETS.simple);
+  
+  console.log('[Simulator] Inicialización completa');
 });
 
 // ==========================================
@@ -572,6 +597,18 @@ function loadSnapshot(snapshot) {
   buildVariableHistory();
   calculateRelativeCoordinates();
   extractBoxPairs();
+
+  // DIAGNOSTIC — ver F12
+  console.group('🔍 loadSnapshot DIAGNOSTIC');
+  console.log('logic.variables:', simState.snapshot.logic.variables);
+  console.log('logic.relations:', simState.snapshot.logic.relations);
+  console.log('visual.instances:', simState.snapshot.visual.instances);
+  console.log('visual.sets:', simState.snapshot.visual.sets);
+  console.log('relativeCoordinates:', simState.relativeCoordinates);
+  console.log('boxPairs:', simState.boxPairs);
+  console.log('execution_trace actions:', simState.snapshot.execution_trace?.actions);
+  console.groupEnd();
+
   updateUI();
 
   simState.zoom = 1;
@@ -874,6 +911,7 @@ function renderBoxView() {
     const drawVariablesForSet = (setId, cx) => {
       Object.entries(visual.instances).forEach(([instId, inst]) => {
         const relData = simState.relativeCoordinates[instId];
+        console.log(`[drawVar] inst=${instId} relData.setId=${relData?.setId} expected=${setId} match=${relData?.setId === setId}`);
         if (relData && relData.setId === setId) {
           const scale = cx === leftCenterX ? (leftRadius / setLeft.radius) : (rightRadius / setRight.radius);
           const bx = cx + relData.dx * scale;
@@ -1036,6 +1074,10 @@ function drawSetSVG(setId, setVal, cx, cy, radius) {
   circle.setAttribute("cy", cy);
   circle.setAttribute("r", radius);
   circle.setAttribute("class", "svg-set");
+  if (setVal.color) {
+    circle.setAttribute("stroke", setVal.color);
+    circle.setAttribute("stroke-width", "2");
+  }
   g.appendChild(circle);
 
   const textId = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -1415,11 +1457,30 @@ function setupEditorEventListeners() {
   document.getElementById("btnEditAddRel").addEventListener("click", editorAddRelation);
   document.getElementById("btnResetEditor").addEventListener("click", resetEditorGraph);
   document.getElementById("btnCalculateAPI").addEventListener("click", calculateWithAPI);
+  document.getElementById("btnEditParseFormula").addEventListener("click", () => {
+    const formula = document.getElementById("editFormulaInput").value.trim();
+    if (formula) {
+      EditorBridge.parseFormula(formula);
+      const state = EditorBridge.getEditorState();
+      editorGraph.logic = JSON.parse(JSON.stringify(state.snapshot.logic));
+      editorGraph.sets = JSON.parse(JSON.stringify(state.snapshot.visual.sets));
+      editorGraph.instances = JSON.parse(JSON.stringify(state.snapshot.visual.instances));
+      editorGraph.relations = JSON.parse(JSON.stringify(state.snapshot.visual.relations));
+      syncEditorDropdowns();
+      renderEditorPreview();
+    }
+  });
 
   syncEditorDropdowns();
 }
 
 function resetEditorGraph() {
+  console.log('[Simulator] Reiniciando editor...');
+  
+  // Reiniciar el bridge (esto crea un nuevo EditorController)
+  EditorBridge.resetEditor();
+  
+  // Limpiar el editorGraph local (mantener compatibilidad con código existente)
   editorGraph = {
     sets: {},
     instances: {},
@@ -1430,30 +1491,41 @@ function resetEditorGraph() {
       relations: []
     }
   };
+  
   syncEditorDropdowns();
   renderEditorPreview();
   document.getElementById("apiErrorLog").style.display = "none";
+  
+  console.log('[Simulator] Editor reiniciado');
 }
 
 function editorAddSet() {
   const nameInput = document.getElementById("editSetName");
   const id = nameInput.value.trim().replace(/\s+/g, "_");
   const connective = document.getElementById("editSetConnective").value;
+  const color = document.getElementById("editSetColor").value;
 
   if (!id) {
     alert("Por favor ingresa un nombre para el conjunto");
     return;
   }
-  if (editorGraph.sets[id]) {
-    alert("Ya existe un conjunto con ese nombre");
-    return;
-  }
 
-  const count = Object.keys(editorGraph.sets).length;
+  // Calcular posición automática
+  const state = EditorBridge.getEditorState();
+  const count = state ? state.snapshot.logic.sets.length : Object.keys(editorGraph.sets).length;
   const x = 120 + count * 220;
   const y = 150;
   const radius = 65;
 
+  // Usar el bridge para crear el conjunto
+  const result = EditorBridge.createSet(id, connective, x, y, radius, color);
+  
+  if (!result.ok) {
+    alert(result.errors ? result.errors[0].message : "Error al crear el conjunto");
+    return;
+  }
+
+  // Actualizar editorGraph local para compatibilidad
   editorGraph.logic.sets.push({
     id,
     connective,
@@ -1466,12 +1538,15 @@ function editorAddSet() {
     y,
     radius,
     shape: "circle",
-    connective
+    connective,
+    color
   };
 
   nameInput.value = "";
   syncEditorDropdowns();
   renderEditorPreview();
+  
+  console.log('[Simulator] Conjunto creado:', id);
 }
 
 function editorAddVariable() {
@@ -1484,50 +1559,80 @@ function editorAddVariable() {
     alert("Por favor ingresa un nombre para la variable");
     return;
   }
-  if (editorGraph.logic.variables.find(v => v.id === id)) {
-    alert("Ya existe una variable con ese nombre");
-    return;
-  }
   if (!setId) {
     alert("Por favor selecciona un conjunto contenedor");
     return;
   }
 
+  // Crear la variable lógica usando el bridge
+  const varResult = EditorBridge.createVariable(id, val);
+  
+  if (!varResult.ok) {
+    alert(varResult.errors ? varResult.errors[0].message : "Error al crear la variable");
+    return;
+  }
+
+  // Asignar la variable al conjunto en el controller (fix memberships)
+  EditorBridge.assignVariableToSet(id, setId);
+
+  // Calcular posición visual dentro del conjunto
+  const parentSet = editorGraph.sets[setId];
+  if (!parentSet) {
+    alert("Conjunto no encontrado");
+    return;
+  }
+
+  const varsInSet = editorGraph.logic.variables.filter(v => v.memberships.includes(setId)).length;
+  
+  let dx = 0, dy = 0;
+  if (varsInSet === 0) { dx = 0; dy = 0; }
+  else if (varsInSet === 1) { dx = -20; dy = 15; }
+  else if (varsInSet === 2) { dx = 20; dy = 15; }
+  else if (varsInSet === 3) { dx = 0; dy = -25; }
+  else {
+    dx = (Math.random() - 0.5) * 40;
+    dy = (Math.random() - 0.5) * 40;
+  }
+
+  const instId = `inst_${id}`;
+  const x = parentSet.x + dx;
+  const y = parentSet.y + dy;
+
+  // Crear la instancia visual usando el bridge
+  const instResult = EditorBridge.createVariableInstance(instId, id, x, y);
+  
+  if (!instResult.ok) {
+    alert(instResult.errors ? instResult.errors[0].message : "Error al crear la instancia visual");
+    return;
+  }
+
+  // Actualizar editorGraph local para compatibilidad
   editorGraph.logic.variables.push({
     id,
     truth_value: val,
     memberships: [setId]
   });
 
-  const parentSet = editorGraph.sets[setId];
-  const varsInSet = editorGraph.logic.variables.filter(v => v.memberships.includes(setId)).length - 1;
-  
-  let dx = 0, dy = 0;
-  if (varsInSet === 1) { dx = -20; dy = 15; }
-  else if (varsInSet === 2) { dx = 20; dy = 15; }
-  else if (varsInSet === 3) { dx = 0; dy = -25; }
-  else if (varsInSet > 3) {
-    dx = (Math.random() - 0.5) * 40;
-    dy = (Math.random() - 0.5) * 40;
-  }
-
-  const instId = `inst_${id}`;
   editorGraph.instances[instId] = {
     id: instId,
     variable_id: id,
-    x: parentSet.x + dx,
-    y: parentSet.y + dy
+    x,
+    y
   };
 
   nameInput.value = "";
   syncEditorDropdowns();
   renderEditorPreview();
+  
+  console.log('[Simulator] Variable creada:', id);
 }
 
 function editorAddRelation() {
   const fromVar = document.getElementById("editRelFrom").value;
   const toVar = document.getElementById("editRelTo").value;
   const connective = document.getElementById("editRelConnective").value;
+  const color = document.getElementById("editRelColor").value;
+  const direction = document.getElementById("editRelDirection").value;
 
   if (!fromVar || !toVar) {
     alert("Por favor selecciona origen y destino");
@@ -1539,11 +1644,16 @@ function editorAddRelation() {
   }
 
   const id = `rel_${fromVar}_to_${toVar}`;
-  if (editorGraph.logic.relations.find(r => r.id === id)) {
-    alert("Ya existe esta relación");
+  
+  // Crear la relación usando el bridge
+  const result = EditorBridge.createRelation(id, fromVar, toVar, connective, color, direction);
+  
+  if (!result.ok) {
+    alert(result.errors ? result.errors[0].message : "Error al crear la relación");
     return;
   }
 
+  // Actualizar editorGraph local para compatibilidad
   editorGraph.logic.relations.push({
     id,
     from_variable: fromVar,
@@ -1552,11 +1662,14 @@ function editorAddRelation() {
   });
 
   editorGraph.relations[id] = {
-    color: connective === "CONTRAPOSITIONAL" ? "#EC4899" : "#3B82F6",
-    thickness: 2
+    color: color,
+    thickness: 2,
+    direction: direction
   };
 
   renderEditorPreview();
+  
+  console.log('[Simulator] Relación creada:', id);
 }
 
 function syncEditorDropdowns() {
@@ -1647,128 +1760,100 @@ function renderEditorPreview() {
 
       path.setAttribute("d", pathD);
       path.setAttribute("class", `svg-relation-path ${rel.connective === 'CONTRAPOSITIONAL' ? 'contrapositive' : ''}`);
-      path.setAttribute("stroke", rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6");
+      path.setAttribute("stroke", visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6"));
       path.setAttribute("stroke-width", visualRel.thickness || 2);
       path.setAttribute("marker-end", "url(#arrow-editor)");
+      if (visualRel.direction === "bidirectional") {
+        path.setAttribute("marker-start", "url(#arrow-editor)");
+      }
       
       svg.appendChild(path);
+
+      // Label for connective
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", (startX + endX) / 2);
+      text.setAttribute("y", (startY + endY) / 2 - 10);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("fill", visualRel.color || "#94a3b8");
+      text.setAttribute("font-size", "12px");
+      text.setAttribute("font-family", "Arial");
+      text.textContent = rel.connective;
+      svg.appendChild(text);
     }
   });
 }
 
-// --- CALL FASTAPI BACKEND MOTOR DIRECTLY FROM BROWSER ---
+// --- CALL FASTAPI BACKEND MOTOR USING EDITOR BRIDGE ---
 async function calculateWithAPI() {
   const errorLog = document.getElementById("apiErrorLog");
   errorLog.style.display = "none";
   errorLog.innerHTML = "";
 
-  if (editorGraph.logic.variables.length === 0) {
+  console.log('[Simulator] Iniciando cálculo con Motor API usando EditorBridge...');
+
+  // Verificar que el bridge esté inicializado
+  if (!EditorBridge.isInitialized()) {
+    errorLog.style.display = "block";
+    errorLog.innerHTML = `<strong>Error:</strong> El Editor Bridge no está inicializado.<br><small>Recarga la página e intenta de nuevo.</small>`;
+    return;
+  }
+
+  const state = EditorBridge.getEditorState();
+  
+  if (!state || state.snapshot.logic.variables.length === 0) {
     alert("Añade al menos una variable antes de calcular");
     return;
   }
 
-  const snapshot = {
-    meta: {
-      schema_version: "3.0",
-      editor_mode: "edicion",
-      belnap_domain: ["V", "F", "N", "B"],
-      max_iterations: 100
-    },
-    logic: {
-      variables: editorGraph.logic.variables,
-      sets: editorGraph.logic.sets,
-      relations: editorGraph.logic.relations
-    },
-    visual: {
-      sets: editorGraph.sets,
-      instances: editorGraph.instances,
-      relations: editorGraph.relations
-    }
-  };
+  console.log('[Simulator] Estado del editor:', state);
 
-  const motorVariables = {};
-  snapshot.logic.variables.forEach(v => {
-    motorVariables[v.id] = { id: v.id, value: v.truth_value || "N" };
-  });
+  // Validar el snapshot antes de enviar
+  console.log('[Simulator] Validando snapshot...');
+  const validation = EditorBridge.validateSnapshot();
+  
+  if (!validation.valid) {
+    console.error('[Simulator] Validación fallida:', validation.errors);
+    errorLog.style.display = "block";
+    errorLog.innerHTML = `<strong>Errores de Validación:</strong><ul>`;
+    validation.errors.forEach(err => {
+      errorLog.innerHTML += `<li><strong>${err.field}:</strong> ${err.message}</li>`;
+    });
+    errorLog.innerHTML += `</ul>`;
+    return;
+  }
 
-  const motorSets = {};
-  snapshot.logic.sets.forEach(s => {
-    motorSets[s.id] = { id: s.id, elements: [] };
-  });
-
-  const motorRelations = {};
-  snapshot.logic.relations.forEach(r => {
-    motorRelations[r.id] = {
-      id: r.id,
-      source: r.from_variable,
-      target: r.to_variable,
-      connective: r.connective || "PROPAGATION",
-      is_contrapositive: r.connective === "CONTRAPOSITIONAL"
-    };
-  });
-
-  const motorPayload = {
-    meta: { max_iterations: 100, version: "1.1" },
-    logic: {
-      variables: motorVariables,
-      sets: motorSets,
-      relations: motorRelations
-    },
-    visual: snapshot.visual
-  };
-
-  console.log("Calculando con Motor API:", motorPayload);
+  console.log('[Simulator] Snapshot válido, ejecutando con motor...');
 
   try {
-    const res = await fetch("http://localhost:8000/calcular", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(motorPayload)
-    });
-
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => null);
-      throw new Error(`Motor respondió con estado ${res.status}: ${JSON.stringify(errBody?.detail ?? errBody)}`);
+    // Ejecutar usando el bridge (incluye validación y comunicación con el motor)
+    const result = await EditorBridge.executeWithMotor();
+    
+    if (!result.ok) {
+      console.error('[Simulator] Error en ejecución:', result.errors);
+      errorLog.style.display = "block";
+      errorLog.innerHTML = `<strong>Error al ejecutar:</strong><ul>`;
+      result.errors.forEach(err => {
+        errorLog.innerHTML += `<li><strong>${err.field}:</strong> ${err.message}</li>`;
+      });
+      errorLog.innerHTML += `</ul>`;
+      return;
     }
 
-    const motorResult = await res.json();
-    console.log("Resultado del Motor:", motorResult);
+    console.log('[Simulator] Ejecución exitosa:', result);
 
-    const finalVariables = snapshot.logic.variables.map(v => {
-      const val = motorResult.logic?.variables?.[v.id]?.value;
-      return { ...v, truth_value: val || v.truth_value };
-    });
+    // Obtener el snapshot actualizado con la traza de ejecución
+    const finalSnapshot = result.snapshot;
+    
+    if (!finalSnapshot || !finalSnapshot.execution_trace) {
+      throw new Error('El motor no devolvió una traza de ejecución válida');
+    }
 
-    const initialVariables = snapshot.logic.variables.map(v => ({ ...v }));
-
-    const sets = snapshot.logic.sets;
-    const relations = snapshot.logic.relations;
-
-    const motorTrace = motorResult.execution_trace || { actions: [], stabilized: true, total_iterations: 0 };
-    const actions = (motorTrace.actions || []).map(act => ({
-      step: act.step,
-      action_type: act.is_stabilized ? "stabilization" : "propagation",
-      target_id: act.variable_id || act.target_id,
-      result_value: act.new_value || act.result_value,
-      description: act.description
-    }));
-
-    const execution_trace = {
-      iterations: motorTrace.total_iterations ?? motorTrace.iterations ?? 0,
-      stabilized: motorTrace.stabilized ?? false,
-      actions: actions,
-      final_logic: { variables: finalVariables, sets, relations }
-    };
-
-    const finalSnapshot = {
-      meta: snapshot.meta,
-      logic: { variables: initialVariables, sets, relations },
-      visual: snapshot.visual,
-      execution_trace
-    };
-
+    console.log('[Simulator] Cargando snapshot con traza de ejecución...');
+    
+    // Cargar el snapshot en el simulador para visualizar la animación
     loadSnapshot(finalSnapshot);
 
+    // Cambiar a la vista de cajitas para ver la animación
     document.querySelectorAll(".tab-btn").forEach(btn => {
       if (btn.getAttribute("data-tab") === "box-view") {
         btn.click();
@@ -1776,10 +1861,24 @@ async function calculateWithAPI() {
     });
 
     alert("¡Éxito! Propagación calculada por el motor. Reproduciendo animación.");
+    console.log('[Simulator] Cálculo completado exitosamente');
 
   } catch (err) {
+    console.error('[Simulator] Excepción durante cálculo:', err);
     errorLog.style.display = "block";
     errorLog.innerHTML = `<strong>Error de conexión al Motor:</strong> ${err.message}<br><br><small>Verifica que el servidor FastAPI esté encendido en http://localhost:8000</small>`;
-    console.error(err);
   }
+}
+
+// Función auxiliar para mostrar errores del editor
+function displayEditorErrors(errors) {
+  const errorLog = document.getElementById("apiErrorLog");
+  if (!errorLog) return;
+  
+  errorLog.style.display = "block";
+  errorLog.innerHTML = `<strong>Errores del Editor:</strong><ul>`;
+  errors.forEach(err => {
+    errorLog.innerHTML += `<li><strong>${err.field}:</strong> ${err.message} (${err.severity})</li>`;
+  });
+  errorLog.innerHTML += `</ul>`;
 }

@@ -122,6 +122,7 @@ export function crearContexto(
   y: number,
   radius: number = 100,
   shape: string = "ellipse",
+  color?: string,
 ): EditorState {
   if (state.snapshot.logic.sets.some((s) => s.id === id)) return state;
 
@@ -140,7 +141,7 @@ export function crearContexto(
         ...state.snapshot.visual,
         sets: {
           ...state.snapshot.visual.sets,
-          [id]: { x, y, radius, shape },
+          [id]: { x, y, radius, shape, color },
         },
       },
     },
@@ -181,6 +182,7 @@ export function crearRelacion(
   connective: MotorConnective,
   color: string = "#000000",
   thickness: number = 2,
+  direction: "unidirectional" | "bidirectional" = "unidirectional",
 ): EditorState {
   if (state.snapshot.logic.relations.some((r) => r.id === id)) return state;
 
@@ -199,7 +201,7 @@ export function crearRelacion(
         ...state.snapshot.visual,
         relations: {
           ...state.snapshot.visual.relations,
-          [id]: { color, thickness },
+          [id]: { color, thickness, direction },
         },
       },
     },

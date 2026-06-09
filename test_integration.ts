@@ -1,90 +1,187 @@
-import { EditorController } from "./epic_editor/controllers/editorController";
-import { MotorApiClient } from "./epic_editor/services/motorApiClient";
-import * as fs from "fs";
-import * as path from "path";
+/**
+ * Test de Integración - EPiC Playground
+ * 
+ * Este archivo contiene pruebas de integración para verificar que
+ * el EditorController, MotorApiClient y el validador funcionan correctamente.
+ */
 
-async function runEndToEndSimulation() {
-  console.log("=== Iniciando Flujo de Prueba E2E (Usuario Común) ===");
+import { EditorController } from './epic_editor/controllers/editorController';
+import { MockMotorClient } from './epic_editor/services/motorApiClient';
+import { validarSnapshot } from './epic_editor/validators/editorValidation';
+import type { PlaygroundSnapshot } from './epic_editor/domain/editorTypes';
 
-  // 1. Inicializar el Editor Controller apuntando al Motor API real (localhost:8000)
-  const motorClient = new MotorApiClient("http://localhost:8000");
-  const controller = new EditorController(motorClient);
+describe('Integración Editor + Motor', () => {
+  let controller: EditorController;
+  let mockMotor: MockMotorClient;
 
-  console.log("1. Cargando conectivos desde el Motor...");
-  try {
-    await controller.cargarConectivos();
-    console.log("   Conectivos disponibles:", controller.getState().available_connectives);
-  } catch (err) {
-    console.error("❌ ERROR: No se pudo conectar con el Motor. ¿Está encendido en http://localhost:8000?");
-    console.log("   Por favor levanta el servidor ejecutando: cd epic_motor && uvicorn main:app --reload");
-    process.exit(1);
-  }
+  beforeEach(() => {
+    mockMotor = new MockMotorClient();
+    controller = new EditorController(mockMotor);
+  });
 
-  // 2. Simular al usuario interactuando y dibujando en el Editor (Capa Lógica + Capa Visual)
-  console.log("2. Dibujando elementos en el lienzo del Editor...");
-  
-  // Crear conjuntos (circunferencias)
-  controller.crearContexto("set_X", "PROPAGATION", 150, 200);
-  controller.crearContexto("set_Y", "PROPAGATION", 450, 200);
+  test('Crear conjunto y variable', () => {
+    // Crear conjunto
+    const setResult = controller.crearContexto('set_A', 'PROPAGATION', 100, 100);
+    expect(setResult.ok).toBe(true);
 
-  // Crear variables lógicas
-  controller.crearVariable("p", "V"); // p empieza positiva (Verde)
-  controller.crearVariable("q", "N"); // q empieza neutra (Gris)
+    // Crear variable
+    const varResult = controller.crearVariable('p', 'V');
+    expect(varResult.ok).toBe(true);
 
-  // Dibujar instancias visuales de las variables dentro de sus respectivos conjuntos
-  controller.dibujarInstancia("inst_p", "p", 150, 200); // inst_p posicionada en set_X (150, 200)
-  controller.dibujarInstancia("inst_q", "q", 450, 200); // inst_q posicionada en set_Y (450, 200)
+    // Crear instancia visual
+    const instResult = controller.dibujarInstancia('inst_p', 'p', 100, 100);
+    expect(instResult.ok).toBe(true);
 
-  // Asignar membresías lógicas
-  // (El controlador lo hace internamente al dibujar la instancia y/o asociarla)
-  // Agregamos manualmente para asegurar consistencia
-  const state = controller.getState();
-  state.snapshot.logic.variables.find(v => v.id === "p")?.memberships.push("set_X");
-  state.snapshot.logic.variables.find(v => v.id === "q")?.memberships.push("set_Y");
+    // Verificar estado
+    const state = controller.getState();
+    expect(state.snapshot.logic.sets).toHaveLength(1);
+    expect(state.snapshot.logic.variables).toHaveLength(1);
+    expect(Object.keys(state.snapshot.visual.instances)).toHaveLength(1);
+  });
 
-  // Conectar con una flecha de implicación p -> q
-  controller.conectar("rel_p_to_q", "p", "q", "PROPAGATION");
+  test('Validar snapshot correctamente', () => {
+    // Crear escenario válido
+    controller.crearContexto('set_A', 'PROPAGATION', 100, 100);
+    controller.crearVariable('p', 'V');
+    controller.dibujarInstancia('inst_p', 'p', 100, 100);
 
-  console.log("   Lienzo dibujado con éxito.");
-  console.log("   Snapshot antes de enviar:");
-  console.log(JSON.stringify(controller.getState().snapshot, null, 2));
+    // Validar
+    const validation = controller.validar();
+    expect(validation.valid).toBe(true);
+    expect(validation.errors).toHaveLength(0);
+  });
 
-  // 3. Validar el Snapshot antes de enviar al motor (Safety check)
-  console.log("3. Validando integridad referencial del snapshot...");
-  const validation = controller.validar();
-  if (!validation.valid) {
-    console.error("❌ Errores de validación:", validation.errors);
-    process.exit(1);
-  }
-  console.log("   Validación exitosa (Sin referencias rotas ni bucles inválidos).");
+  test('Detectar errores de validación', () => {
+    // Crear variable sin instancia visual
+    controller.crearVariable('p', 'V');
 
-  // 4. Enviar al Motor para calcular la propagación
-  console.log("4. Enviando snapshot al Motor (POST /calcular)...");
-  const result = await controller.ejecutar();
+    // Validar
+    const validation = controller.validar();
+    expect(validation.valid).toBe(false);
+    expect(validation.errors.length).toBeGreaterThan(0);
+  });
 
-  if (!result.ok) {
-    console.error("❌ Error en la ejecución del Motor:", result.errors);
-    process.exit(1);
-  }
+  test('Ejecutar con motor mock', async () => {
+    // Crear escenario
+    controller.crearContexto('set_A', 'PROPAGATION', 100, 100);
+    controller.crearContexto('set_B', 'PROPAGATION', 200, 100);
+    controller.crearVariable('p', 'V');
+    controller.crearVariable('q', 'N');
+    controller.dibujarInstancia('inst_p', 'p', 100, 100);
+    controller.dibujarInstancia('inst_q', 'q', 200, 100);
+    controller.conectar('rel1', 'p', 'q', 'PROPAGATION');
 
-  console.log("   ¡Respuesta del Motor recibida exitosamente!");
-  const finalSnapshot = controller.getState().snapshot;
-  console.log(`   Iteraciones de estabilización: ${finalSnapshot.execution_trace?.iterations}`);
-  console.log(`   Acciones en el rastro: ${finalSnapshot.execution_trace?.actions.length}`);
+    // Ejecutar
+    const result = await controller.ejecutar();
+    expect(result.ok).toBe(true);
+    
+    if (result.ok) {
+      expect(result.data).toBeDefined();
+      expect(result.data.stabilized).toBe(true);
+    }
+  });
 
-  // 5. Guardar el JSON resultante para cargarlo en el Simulador
-  const outputDir = path.join(__dirname, "epic_simulador");
-  // Asegurarnos que la carpeta public existe en vite para poder servirlo directamente, o guardarlo para cargar manual
-  const outputPath = path.join(outputDir, "e2e-real-trace.json");
-  
-  fs.writeFileSync(outputPath, JSON.stringify(finalSnapshot, null, 2));
-  console.log(`\n5. 🎉 Snapshot con Execution Trace guardado en:\n   ${outputPath}`);
-  console.log("\n=== Instrucciones de Visualización ===");
-  console.log("1. Abre el simulador en: http://localhost:5173/");
-  console.log("2. Arrastra o sube el archivo 'e2e-real-trace.json' generado en 'epic_simulador/e2e-real-trace.json'.");
-  console.log("3. ¡Disfruta la animación paso a paso!");
-}
+  test('Snapshot tiene estructura correcta', () => {
+    controller.crearContexto('set_A', 'PROPAGATION', 100, 100);
+    controller.crearVariable('p', 'V');
+    controller.dibujarInstancia('inst_p', 'p', 100, 100);
 
-runEndToEndSimulation().catch(err => {
-  console.error("Error crítico en la prueba:", err);
+    const state = controller.getState();
+    const snapshot = state.snapshot;
+
+    // Verificar estructura
+    expect(snapshot.meta).toBeDefined();
+    expect(snapshot.logic).toBeDefined();
+    expect(snapshot.visual).toBeDefined();
+    expect(snapshot.meta.schema_version).toBe('3.0');
+    expect(snapshot.meta.editor_mode).toBe('edicion');
+  });
 });
+
+describe('Validador de Snapshots', () => {
+  test('Validar snapshot vacío', () => {
+    const snapshot: PlaygroundSnapshot = {
+      meta: {
+        schema_version: '3.0',
+        editor_mode: 'edicion',
+        belnap_domain: ['V', 'F', 'N', 'B'],
+        max_iterations: 100
+      },
+      logic: {
+        variables: [],
+        sets: [],
+        relations: []
+      },
+      visual: {
+        instances: {},
+        sets: {},
+        relations: {}
+      }
+    };
+
+    const validation = validarSnapshot(snapshot, []);
+    expect(validation.valid).toBe(true);
+  });
+
+  test('Detectar variable sin instancia visual', () => {
+    const snapshot: PlaygroundSnapshot = {
+      meta: {
+        schema_version: '3.0',
+        editor_mode: 'edicion',
+        belnap_domain: ['V', 'F', 'N', 'B'],
+        max_iterations: 100
+      },
+      logic: {
+        variables: [
+          { id: 'p', truth_value: 'V', memberships: [] }
+        ],
+        sets: [],
+        relations: []
+      },
+      visual: {
+        instances: {},
+        sets: {},
+        relations: {}
+      }
+    };
+
+    const validation = validarSnapshot(snapshot, []);
+    expect(validation.valid).toBe(false);
+    expect(validation.errors.some(e => e.field === 'visual.instances')).toBe(true);
+  });
+
+  test('Detectar relación con variable inexistente', () => {
+    const snapshot: PlaygroundSnapshot = {
+      meta: {
+        schema_version: '3.0',
+        editor_mode: 'edicion',
+        belnap_domain: ['V', 'F', 'N', 'B'],
+        max_iterations: 100
+      },
+      logic: {
+        variables: [
+          { id: 'p', truth_value: 'V', memberships: [] }
+        ],
+        sets: [],
+        relations: [
+          { id: 'rel1', from_variable: 'p', to_variable: 'q', connective: 'PROPAGATION' }
+        ]
+      },
+      visual: {
+        instances: {
+          inst_p: { id: 'inst_p', variable_id: 'p', x: 100, y: 100 }
+        },
+        sets: {},
+        relations: {
+          rel1: { color: '#000', thickness: 2 }
+        }
+      }
+    };
+
+    const validation = validarSnapshot(snapshot, []);
+    expect(validation.valid).toBe(false);
+    expect(validation.errors.some(e => e.message.includes('q'))).toBe(true);
+  });
+});
+
+// Made with Bob

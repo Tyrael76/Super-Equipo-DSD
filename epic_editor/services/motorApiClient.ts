@@ -31,7 +31,7 @@ export interface IMotorClient {
 export class MotorApiClient implements IMotorClient {
   private readonly baseUrl: string;
 
-  constructor(baseUrl = "http://localhost:8000") {
+  constructor(baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/$/, "");
   }
 
@@ -68,53 +68,15 @@ export class MotorApiClient implements IMotorClient {
   }
 
   async calcular(snapshot: PlaygroundSnapshot): Promise<PlaygroundSnapshot> {
-    // 1. Map to Motor Python API format (dictionaries instead of arrays)
-    const motorVariables: Record<string, any> = {};
-    snapshot.logic.variables.forEach(v => {
-      motorVariables[v.id] = {
-        id: v.id,
-        value: v.truth_value || "N"
-      };
-    });
-
-    const motorSets: Record<string, any> = {};
-    snapshot.logic.sets.forEach(s => {
-      motorSets[s.id] = {
-        id: s.id,
-        elements: [] // not used by python engine but validated
-      };
-    });
-
-    const motorRelations: Record<string, any> = {};
-    snapshot.logic.relations.forEach(r => {
-      motorRelations[r.id] = {
-        id: r.id,
-        source: r.from_variable,
-        target: r.to_variable,
-        connective: r.connective || "PROPAGATION",
-        is_contrapositive: r.connective === "CONTRAPOSITIONAL"
-      };
-    });
-
-    const motorPayload = {
-      meta: {
-        max_iterations: snapshot.meta.max_iterations || 100,
-        version: "1.1"
-      },
-      logic: {
-        variables: motorVariables,
-        sets: motorSets,
-        relations: motorRelations
-      },
-      visual: snapshot.visual || {}
-    };
-
+    // Convertir arrays a diccionarios para el motor Python
+    const motorSnapshot = this._convertToMotorFormat(snapshot);
+    
     let res: Response;
     try {
       res = await fetch(`${this.baseUrl}/calcular`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(motorPayload),
+        body: JSON.stringify(motorSnapshot),
       });
     } catch (e) {
       throw new MotorApiError(0, "No se pudo conectar con el Motor.", e);
@@ -146,54 +108,126 @@ export class MotorApiClient implements IMotorClient {
       );
     }
 
-    // 2. Map back from Motor Python API format to TypeScript format
-    const motorRes = body as any;
-    
-    // Reconstruct variables array
-    const variables = snapshot.logic.variables.map(v => {
-      const motorVar = motorRes.logic?.variables?.[v.id];
-      return {
-        ...v,
-        truth_value: motorVar ? motorVar.value : v.truth_value
+    // Convertir la respuesta del motor (diccionarios) de vuelta a arrays
+    return this._convertFromMotorFormat(body, snapshot);
+  }
+
+  /**
+   * Convierte el formato del Editor (arrays) al formato del Motor (diccionarios)
+   */
+  private _convertToMotorFormat(snapshot: PlaygroundSnapshot): any {
+    const motorLogic: any = {
+      variables: {},
+      sets: {},
+      relations: {}
+    };
+
+    // Convertir arrays a diccionarios usando el id como clave
+    snapshot.logic.variables.forEach(v => {
+      motorLogic.variables[v.id] = {
+        id: v.id,
+        value: v.truth_value || "N"
       };
     });
 
-    // Reconstruct sets array
-    const sets = snapshot.logic.sets;
+    snapshot.logic.sets.forEach(s => {
+      motorLogic.sets[s.id] = {
+        id: s.id,
+        elements: s.subsets || []
+      };
+    });
 
-    // Reconstruct relations array
-    const relations = snapshot.logic.relations;
-
-    // Reconstruct execution trace
-    const motorTrace = motorRes.execution_trace || { actions: [], stabilized: true, total_iterations: 0 };
-    const actions = (motorTrace.actions || []).map((act: any) => ({
-      step: act.step,
-      action_type: act.is_stabilized ? "stabilization" : "propagation",
-      target_id: act.variable_id || act.target_id,
-      result_value: act.new_value || act.result_value,
-      description: act.description
-    }));
-
-    const execution_trace = {
-      iterations: motorTrace.total_iterations ?? motorTrace.iterations ?? 0,
-      stabilized: motorTrace.stabilized ?? false,
-      actions: actions,
-      final_logic: {
-        variables: variables,
-        sets: sets,
-        relations: relations
-      }
-    };
+    snapshot.logic.relations.forEach(r => {
+      motorLogic.relations[r.id] = {
+        id: r.id,
+        source: r.from_variable,
+        target: r.to_variable,
+        connective: r.connective || "PROPAGATION",
+        is_contrapositive: false
+      };
+    });
 
     return {
-      meta: snapshot.meta,
-      logic: {
-        variables,
-        sets,
-        relations
+      meta: {
+        max_iterations: snapshot.meta.max_iterations || 100,
+        version: "1.1"
       },
-      visual: snapshot.visual,
-      execution_trace
+      logic: motorLogic,
+      visual: snapshot.visual || {},
+      execution_trace: snapshot.execution_trace || null
+    };
+  }
+
+  /**
+   * Convierte el formato del Motor (diccionarios) de vuelta al formato del Editor (arrays)
+   */
+  private _convertFromMotorFormat(motorSnapshot: any, originalSnapshot?: PlaygroundSnapshot): PlaygroundSnapshot {
+    const logic: any = {
+      variables: [],
+      sets: [],
+      relations: []
+    };
+
+    // Convertir diccionarios a arrays
+    if (motorSnapshot.logic?.variables) {
+      logic.variables = Object.values(motorSnapshot.logic.variables).map((v: any) => {
+        const originalVar = originalSnapshot?.logic?.variables?.find(ov => ov.id === v.id);
+        return {
+          id: v.id,
+          truth_value: v.value || "N",
+          memberships: originalVar?.memberships || []
+        };
+      });
+    }
+
+    if (motorSnapshot.logic?.sets) {
+      logic.sets = Object.values(motorSnapshot.logic.sets).map((s: any) => {
+        const originalSet = originalSnapshot?.logic?.sets?.find(os => os.id === s.id);
+        return {
+          id: s.id,
+          connective: originalSet?.connective || "PROPAGATION",
+          subsets: s.elements || originalSet?.subsets || [],
+          result_alias: originalSet?.result_alias || null
+        };
+      });
+    }
+
+    if (motorSnapshot.logic?.relations) {
+      logic.relations = Object.values(motorSnapshot.logic.relations).map((r: any) => {
+        const originalRelation = originalSnapshot?.logic?.relations?.find(or => or.id === r.id);
+        return {
+          id: r.id,
+          from_variable: r.source || originalRelation?.from_variable,
+          to_variable: r.target || originalRelation?.to_variable,
+          connective: r.connective || originalRelation?.connective || "PROPAGATION"
+        };
+      });
+    }
+
+    return {
+      meta: {
+        schema_version: "1.0",
+        editor_mode: "ejecucion",
+        belnap_domain: ["V", "F", "N", "B"],
+        max_iterations: motorSnapshot.meta?.max_iterations || 100
+      },
+      logic,
+      visual: motorSnapshot.visual || {},
+      execution_trace: motorSnapshot.execution_trace
+        ? {
+            ...motorSnapshot.execution_trace,
+            actions: (motorSnapshot.execution_trace.actions || []).map((a: any) => ({
+              step: a.step,
+              // Normalizar: motor usa target_id/result_value, simulador usa variable_id/new_value
+              variable_id: a.variable_id ?? a.target_id,
+              new_value: a.new_value ?? a.result_value,
+              // Normalizar: motor usa action_type:"stabilization", simulador usa is_stabilized
+              is_stabilized: a.is_stabilized ?? (a.action_type === "stabilization" || a.target_id === "*"),
+              description: a.description,
+              action_type: a.action_type,
+            })),
+          }
+        : undefined,
     };
   }
 

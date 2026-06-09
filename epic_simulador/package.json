@@ -3,15 +3,20 @@
   "version": "3.0.0",
   "description": "Visualizador y Simulador de Propagación Lógica para EPiC Playground",
   "main": "index.html",
+  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "npm run build:editor && vite",
+    "build": "npm run build:editor && vite build",
+    "build:editor": "node node_modules/typescript/lib/tsc.js --project ../tsconfig.json",
     "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.9.3",
     "vite": "^5.0.0"
   }
 }
