@@ -107,6 +107,26 @@ export function deleteSet(id) {
   return editorController.eliminarContexto(id);
 }
 
+/**
+ * Actualiza un conjunto del editor
+ * @param {string} id - ID del conjunto a actualizar
+ * @param {Object} payload - Objeto con los datos a actualizar (connective, x, y, radius, shape)
+ * @returns {Object} Resultado de la operación
+ */
+export function updateSet(id, payload) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+  
+  const result = editorController.actualizarContexto(id, payload);
+  
+  if (!result.ok && errorCallback) {
+    errorCallback(result.errors);
+  }
+  
+  return result;
+}
+
 // ==========================================
 // API de Gestión de Variables
 // ==========================================
@@ -166,6 +186,26 @@ export function deleteVariable(id) {
   return editorController.eliminarVariable(id);
 }
 
+/**
+ * Actualiza una variable del editor
+ * @param {string} id - ID de la variable a actualizar
+ * @param {Object} payload - Objeto con los datos a actualizar (truth_value, set_id)
+ * @returns {Object} Resultado de la operación
+ */
+export function updateVariable(id, payload) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+  
+  const result = editorController.actualizarVariable(id, payload);
+  
+  if (!result.ok && errorCallback) {
+    errorCallback(result.errors);
+  }
+  
+  return result;
+}
+
 // ==========================================
 // API de Gestión de Relaciones
 // ==========================================
@@ -190,6 +230,39 @@ export function createRelation(id, fromVariable, toVariable, connective) {
   }
   
   return result;
+}
+
+/**
+ * Actualiza una relación del editor
+ * @param {string} id - ID de la relación a actualizar
+ * @param {Object} payload - Objeto con los datos a actualizar (connective, color, thickness)
+ * @returns {Object} Resultado de la operación
+ */
+export function updateRelation(id, payload) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+  
+  const result = editorController.actualizarRelacion(id, payload);
+  
+  if (!result.ok && errorCallback) {
+    errorCallback(result.errors);
+  }
+  
+  return result;
+}
+
+/**
+ * Elimina una relación del editor
+ * @param {string} id - ID de la relación a eliminar
+ * @returns {Object} Resultado de la operación
+ */
+export function deleteRelation(id) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+  
+  return editorController.eliminarRelacion(id);
 }
 
 // ==========================================

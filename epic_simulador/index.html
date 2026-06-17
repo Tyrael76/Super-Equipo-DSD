@@ -227,6 +227,25 @@
                   </div>
                 </div>
 
+                <!-- Manage Entities Form -->
+                <div class="editor-form-card">
+                  <h3><i data-lucide="settings"></i> Gestionar Elementos</h3>
+                  <div class="form-row">
+                    <select id="manageEntityType">
+                      <option value="">Tipo...</option>
+                      <option value="set">Conjunto</option>
+                      <option value="variable">Variable</option>
+                      <option value="relation">Relación</option>
+                    </select>
+                    <select id="manageEntityId">
+                      <option value="">Elemento...</option>
+                    </select>
+                    <button class="btn btn-secondary btn-icon" id="btnManageDelete" title="Eliminar"><i data-lucide="trash"></i></button>
+                  </div>
+                  <!-- Dynamic edit fields injected via JS -->
+                  <div id="manageEditFields" class="form-row" style="display: none; margin-top: 10px; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+
                 <!-- Action Button -->
                 <button class="btn btn-primary btn-large" id="btnCalculateAPI">
                   <i data-lucide="zap"></i> ⚡ Calcular con el Motor API
