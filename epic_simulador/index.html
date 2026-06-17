@@ -72,28 +72,6 @@
           </div>
         </section>
 
-        <!-- Section 3: Simulation Trace Log -->
-        <section class="card trace-section">
-          <div class="card-header">
-            <i data-lucide="list-ordered"></i>
-            <h2>Historial de Propagación</h2>
-          </div>
-          <div class="card-body flex-grow">
-            <div class="trace-info">
-              <div class="info-row">
-                <span>Estado:</span>
-                <span id="stabilizedBadge" class="badge badge-neutral">-</span>
-              </div>
-              <div class="info-row">
-                <span>Iteraciones:</span>
-                <span id="iterationCount">-</span>
-              </div>
-            </div>
-            <div class="trace-list" id="traceList">
-              <div class="trace-placeholder">Carga un snapshot para ver la traza.</div>
-            </div>
-          </div>
-        </section>
       </aside>
 
       <!-- Main Visualizing Workspace -->
@@ -228,7 +206,12 @@
                       <option value="unidirectional">Unidireccional &rarr;</option>
                       <option value="bidirectional">Bidireccional &harr;</option>
                     </select>
-                    <input type="color" id="editRelColor" value="#94a3b8" title="Color de la Flecha">
+                    <select id="editRelColor" title="Color de la Flecha">
+                      <option value="#10B981">Verde (Verdadero)</option>
+                      <option value="#EF4444">Rojo (Falso)</option>
+                      <option value="#6B7280">Gris (Neutral)</option>
+                      <option value="#8B5CF6">Morado (Ambos)</option>
+                    </select>
                     <button class="btn btn-primary" id="btnEditAddRel">Conectar</button>
                   </div>
                 </div>
@@ -282,6 +265,31 @@
           </div>
         </div>
       </main>
+
+      <!-- Right Sidebar for Trace Log -->
+      <aside class="right-sidebar">
+        <section class="card trace-section">
+          <div class="card-header">
+            <i data-lucide="list-ordered"></i>
+            <h2>Historial de Propagación</h2>
+          </div>
+          <div class="card-body flex-grow">
+            <div class="trace-info">
+              <div class="info-row">
+                <span>Estado:</span>
+                <span id="stabilizedBadge" class="badge badge-neutral">-</span>
+              </div>
+              <div class="info-row">
+                <span>Iteraciones:</span>
+                <span id="iterationCount">-</span>
+              </div>
+            </div>
+            <div class="trace-list" id="traceList">
+              <div class="trace-placeholder">Carga un snapshot para ver la traza.</div>
+            </div>
+          </div>
+        </section>
+      </aside>
     </div>
   </div>
 

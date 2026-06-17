@@ -262,6 +262,8 @@ let simState = {
   pan: { x: 0, y: 0 },
   isDragging: false,
   dragStart: { x: 0, y: 0 },
+  draggedSetId: null,
+  dragStartOffset: { x: 0, y: 0 },
   activeTab: "box-view",
   variableHistory: {},
   boxPairs: [],
@@ -280,12 +282,23 @@ let editorGraph = {
   }
 };
 
+const editorDragState = {
+  draggedBallId: null,
+  draggedSetId: null,
+  dragStartOffset: { x: 0, y: 0 },
+  pan: { x: 0, y: 0 },
+  isPanning: false,
+  panStart: { x: 0, y: 0 }
+};
+
 // ==========================================
 // 3. Initialization
 // ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
   lucide.createIcons();
   
+  initEditorDragEvents();
+
   // Inicializar el Editor Bridge
   console.log('[Simulator] Inicializando Editor Bridge...');
   const motorUrl = import.meta.env.VITE_MOTOR_URL ?? 'http://localhost:8000';
@@ -386,20 +399,81 @@ function setupEventListeners() {
   });
 
   const canvasContainer = document.getElementById("globalCanvasContainer");
+  
   canvasContainer.addEventListener("mousedown", (e) => {
-    simState.isDragging = true;
-    simState.dragStart = { x: e.clientX - simState.pan.x, y: e.clientY - simState.pan.y };
+    // Check if dragging a set or a ball inside a set
+    const setNode = e.target.closest('.g-set-container');
+    const ballNode = e.target.closest('.g-ball-container');
+    
+    let setIdToDrag = null;
+    if (setNode) {
+      setIdToDrag = setNode.getAttribute("data-set-id");
+    } else if (ballNode) {
+      const instId = ballNode.getAttribute("data-instance-id");
+      if (simState.relativeCoordinates && simState.relativeCoordinates[instId]) {
+        setIdToDrag = simState.relativeCoordinates[instId].setId;
+      }
+    }
+
+    if (setIdToDrag) {
+      simState.draggedSetId = setIdToDrag;
+      const setVal = simState.snapshot.visual.sets[setIdToDrag];
+      
+      // Calculate screen coordinates to SVG coordinates
+      const svgRect = canvasContainer.getBoundingClientRect();
+      const ptX = (e.clientX - svgRect.left - simState.pan.x) / simState.zoom;
+      const ptY = (e.clientY - svgRect.top - simState.pan.y) / simState.zoom;
+      
+      simState.dragStartOffset = { x: setVal.x - ptX, y: setVal.y - ptY };
+    } else {
+      // Pan canvas
+      simState.isDragging = true;
+      simState.dragStart = { x: e.clientX - simState.pan.x, y: e.clientY - simState.pan.y };
+    }
   });
 
   window.addEventListener("mousemove", (e) => {
-    if (!simState.isDragging || simState.activeTab !== "global-view") return;
-    simState.pan.x = e.clientX - simState.dragStart.x;
-    simState.pan.y = e.clientY - simState.dragStart.y;
-    applyZoomPan();
+    if (simState.activeTab !== "global-view") return;
+
+    if (simState.draggedSetId) {
+      const setId = simState.draggedSetId;
+      const setVal = simState.snapshot.visual.sets[setId];
+      const svgRect = canvasContainer.getBoundingClientRect();
+      
+      const ptX = (e.clientX - svgRect.left - simState.pan.x) / simState.zoom;
+      const ptY = (e.clientY - svgRect.top - simState.pan.y) / simState.zoom;
+      
+      const newX = ptX + simState.dragStartOffset.x;
+      const newY = ptY + simState.dragStartOffset.y;
+      
+      const dx = newX - setVal.x;
+      const dy = newY - setVal.y;
+      
+      setVal.x = newX;
+      setVal.y = newY;
+      
+      // Update coordinates of all balls belonging to this set
+      Object.entries(simState.snapshot.visual.instances).forEach(([instId, inst]) => {
+        if (simState.relativeCoordinates && simState.relativeCoordinates[instId] && simState.relativeCoordinates[instId].setId === setId) {
+          inst.x += dx;
+          inst.y += dy;
+        }
+      });
+      
+      updateGlobalViewPositions();
+      return;
+    }
+
+    if (simState.isDragging) {
+      simState.pan.x = e.clientX - simState.dragStart.x;
+      simState.pan.y = e.clientY - simState.dragStart.y;
+      applyZoomPan();
+    }
   });
 
   window.addEventListener("mouseup", () => {
     simState.isDragging = false;
+    simState.draggedSetId = null;
   });
 
   canvasContainer.addEventListener("wheel", (e) => {
@@ -1099,11 +1173,90 @@ function renderGlobalView() {
   applyZoomPan();
 }
 
+function updateGlobalViewPositions() {
+  const visual = simState.snapshot.visual;
+  const logic = simState.snapshot.logic;
+  const container = document.getElementById("globalCanvasContainer");
+  if (!container) return;
+
+  // 1. Update Sets SVG positions
+  Object.entries(visual.sets).forEach(([setId, setVal]) => {
+    const circle = container.querySelector(`#set-circle-${setId}`);
+    if (circle) {
+      circle.setAttribute("cx", setVal.x);
+      circle.setAttribute("cy", setVal.y);
+    }
+    const label = container.querySelector(`#set-label-${setId}`);
+    if (label) {
+      label.setAttribute("x", setVal.x);
+      label.setAttribute("y", setVal.y - setVal.radius + 14);
+    }
+    const conn = container.querySelector(`#set-conn-${setId}`);
+    if (conn) {
+      conn.setAttribute("x", setVal.x);
+      conn.setAttribute("y", setVal.y - setVal.radius + 25);
+    }
+  });
+
+  const ballCoords = {};
+
+  // 2. Update Balls SVG positions
+  Object.entries(visual.instances).forEach(([instId, inst]) => {
+    const circle = container.querySelector(`#ball-circle-${instId}`);
+    if (circle) {
+      circle.setAttribute("cx", inst.x);
+      circle.setAttribute("cy", inst.y);
+    }
+    const label = container.querySelector(`#ball-label-${instId}`);
+    if (label) {
+      label.setAttribute("x", inst.x);
+      label.setAttribute("y", inst.y + 4);
+    }
+    const varLog = logic.variables.find(v => v.id === inst.variable_id);
+    if (varLog) {
+      ballCoords[varLog.id] = { x: inst.x, y: inst.y };
+    }
+  });
+
+  // 3. Update Path/Arrow SVG positions
+  logic.relations.forEach(rel => {
+    const fromCoord = ballCoords[rel.from_variable];
+    const toCoord = ballCoords[rel.to_variable];
+
+    if (fromCoord && toCoord) {
+      const dx = toCoord.x - fromCoord.x;
+      const dy = toCoord.y - fromCoord.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len === 0) return;
+      const radiusBall = 15;
+
+      const startX = fromCoord.x + (dx / len) * radiusBall;
+      const startY = fromCoord.y + (dy / len) * radiusBall;
+      const endX = toCoord.x - (dx / len) * (radiusBall + 6);
+      const endY = toCoord.y - (dy / len) * (radiusBall + 6);
+
+      const path = container.querySelector(`#global-path-${rel.id}`);
+      if (path) {
+        let pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
+        if (Math.abs(dx) > 10 && Math.abs(dy) > 10) {
+          const midX = (startX + endX) / 2 + (dy / len) * 15;
+          const midY = (startY + endY) / 2 - (dx / len) * 15;
+          pathD = `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`;
+        }
+        path.setAttribute("d", pathD);
+      }
+    }
+  });
+}
+
 function drawSetSVG(setId, setVal, cx, cy, radius) {
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
   g.setAttribute("class", "g-set-container");
+  g.setAttribute("data-set-id", setId);
+  g.setAttribute("id", `set-group-${setId}`);
 
   const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("id", `set-circle-${setId}`);
   circle.setAttribute("cx", cx);
   circle.setAttribute("cy", cy);
   circle.setAttribute("r", radius);
@@ -1115,6 +1268,7 @@ function drawSetSVG(setId, setVal, cx, cy, radius) {
   g.appendChild(circle);
 
   const textId = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  textId.setAttribute("id", `set-label-${setId}`);
   textId.setAttribute("x", cx);
   textId.setAttribute("y", cy - radius + 14);
   textId.setAttribute("class", "svg-set-label");
@@ -1123,6 +1277,7 @@ function drawSetSVG(setId, setVal, cx, cy, radius) {
 
   if (setVal.connective) {
     const textConn = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    textConn.setAttribute("id", `set-conn-${setId}`);
     textConn.setAttribute("x", cx);
     textConn.setAttribute("y", cy - radius + 25);
     textConn.setAttribute("class", "svg-set-connective");
@@ -1138,9 +1293,11 @@ function drawBallSVG(varId, instId, x, y, value, isVisible = true) {
   g.setAttribute("class", "g-ball-container");
   g.setAttribute("data-instance-id", instId);
   g.setAttribute("data-variable-id", varId);
+  g.setAttribute("id", `ball-group-${instId}`);
   g.setAttribute("style", `opacity: ${isVisible ? 1 : 0}; transition: opacity 0.35s ease-in-out;`);
 
   const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("id", `ball-circle-${instId}`);
   circle.setAttribute("cx", x);
   circle.setAttribute("cy", y);
   circle.setAttribute("r", 15);
@@ -1148,8 +1305,9 @@ function drawBallSVG(varId, instId, x, y, value, isVisible = true) {
   g.appendChild(circle);
 
   const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  text.setAttribute("id", `ball-label-${instId}`);
   text.setAttribute("x", x);
-  text.setAttribute("y", y);
+  text.setAttribute("y", y + 4);
   text.setAttribute("class", "svg-instance-label");
   text.textContent = `${varId}:${value}`;
   g.appendChild(text);
@@ -1197,10 +1355,16 @@ function stepForward() {
     return;
   }
 
-  // Clear any existing animation timeout to force-complete previous step if clicking rapidly
+  // Clear any existing animation timeout to force-complete previous step if clicking rapidly or playing fast
   if (simState.animationTimeout) {
     clearTimeout(simState.animationTimeout);
     simState.animationTimeout = null;
+    simState.currentStep++;
+    updateUI();
+    if (simState.currentStep >= actions.length) {
+      pause();
+      return;
+    }
   }
 
   const nextStepNum = simState.currentStep + 1;
@@ -1212,34 +1376,36 @@ function stepForward() {
     return;
   }
 
+  const animDuration = Math.min(750, Math.max(50, simState.speed - 50));
+
   // 1. Run parallel animations on top of the DOM at step s-1
   stepActions.forEach(action => {
     if (action.is_stabilized || action.variable_id === "*") {
-      pulseStabilization();
+      pulseStabilization(animDuration);
     } else {
-      triggerSingleActionAnimation(action);
+      triggerSingleActionAnimation(action, animDuration);
     }
   });
 
-  // 2. Set fail-safe timeout to update state and redraw statically after animation completes (750ms)
+  // 2. Set fail-safe timeout to update state and redraw statically after animation completes
   simState.animationTimeout = setTimeout(() => {
     simState.animationTimeout = null;
     simState.currentStep = nextStepNum;
     updateUI();
-  }, 750);
+  }, animDuration);
 }
 
-function pulseStabilization() {
+function pulseStabilization(animDuration = 600) {
   document.querySelectorAll(".svg-instance").forEach(el => {
     el.animate([
       { transform: "scale(1)", filter: "drop-shadow(0 0 0px transparent)" },
       { transform: "scale(1.15)", filter: "drop-shadow(0 0 15px rgba(59, 130, 246, 0.8))" },
       { transform: "scale(1)", filter: "none" }
-    ], { duration: 600, easing: "ease-out" });
+    ], { duration: animDuration, easing: "ease-out" });
   });
 }
 
-function triggerSingleActionAnimation(action) {
+function triggerSingleActionAnimation(action, animDuration = 750) {
   const logic = simState.snapshot.logic;
   const targetVarId = action.variable_id;
   const newVal = action.new_value;
@@ -1255,14 +1421,13 @@ function triggerSingleActionAnimation(action) {
           const pathEl = document.getElementById(`box-path-${boxIdx}-${rel.id}`);
           if (pathEl) {
             // Fade-out source ball inside set as particle departs
-            animateElementOpacity(`box-svg-${boxIdx}`, rel.from_variable, 1, 0, 250);
+            animateElementOpacity(`box-svg-${boxIdx}`, rel.from_variable, 1, 0, 0);
 
             // Animate particle along path
-            animateParticleOnPath(pathEl, newVal, () => {
+            animateParticleOnPath(pathEl, newVal, animDuration, () => {
               // Update target ball text/color and fade it in on arrival
               updateBallValAndShow(`box-svg-${boxIdx}`, targetVarId, newVal);
               animateElementOpacity(`box-svg-${boxIdx}`, targetVarId, 0, 1, 300);
-              pulseTargetBall(boxIdx, targetVarId);
             });
           }
         }
@@ -1276,14 +1441,13 @@ function triggerSingleActionAnimation(action) {
         const pathEl = document.getElementById(`global-path-${rel.id}`);
         if (pathEl) {
           // Fade-out source
-          animateElementOpacityGlobal(rel.from_variable, 1, 0, 250);
+          animateElementOpacityGlobal(rel.from_variable, 1, 0, 0);
 
           // Animate particle
-          animateParticleOnPath(pathEl, newVal, () => {
+          animateParticleOnPath(pathEl, newVal, animDuration, () => {
             // Update target and fade-in
             updateBallValAndShowGlobal(targetVarId, newVal);
             animateElementOpacityGlobal(targetVarId, 0, 1, 300);
-            pulseTargetBallGlobal(targetVarId);
           });
         }
       }
@@ -1294,33 +1458,43 @@ function triggerSingleActionAnimation(action) {
 function animateElementOpacity(boxIdx, variableId, fromOpacity, toOpacity, duration) {
   const boxSvg = document.getElementById(`box-svg-${boxIdx}`);
   if (!boxSvg) return;
-  const ballGroup = boxSvg.querySelector(`[data-variable-id="${variableId}"]`);
-  if (ballGroup) {
-    ballGroup.animate([
-      { opacity: fromOpacity },
-      { opacity: toOpacity }
-    ], { duration: duration, fill: "forwards", easing: "ease-in-out" });
-    
-    setTimeout(() => {
-      ballGroup.style.opacity = toOpacity;
-    }, duration);
-  }
+  const ballGroups = boxSvg.querySelectorAll(`[data-variable-id="${variableId}"]`);
+  ballGroups.forEach(ballGroup => {
+    if (duration === 0) {
+      ballGroup.style.display = 'none';
+    } else {
+      ballGroup.style.display = '';
+      ballGroup.animate([
+        { opacity: fromOpacity },
+        { opacity: toOpacity }
+      ], { duration: duration, fill: "forwards", easing: "ease-in-out" });
+      
+      setTimeout(() => {
+        ballGroup.style.opacity = toOpacity;
+      }, duration);
+    }
+  });
 }
 
 function animateElementOpacityGlobal(variableId, fromOpacity, toOpacity, duration) {
   const globalContainer = document.getElementById("globalCanvasContainer");
   if (!globalContainer) return;
-  const ballGroup = globalContainer.querySelector(`[data-variable-id="${variableId}"]`);
-  if (ballGroup) {
-    ballGroup.animate([
-      { opacity: fromOpacity },
-      { opacity: toOpacity }
-    ], { duration: duration, fill: "forwards", easing: "ease-in-out" });
-    
-    setTimeout(() => {
-      ballGroup.style.opacity = toOpacity;
-    }, duration);
-  }
+  const ballGroups = globalContainer.querySelectorAll(`[data-variable-id="${variableId}"]`);
+  ballGroups.forEach(ballGroup => {
+    if (duration === 0) {
+      ballGroup.style.display = 'none';
+    } else {
+      ballGroup.style.display = '';
+      ballGroup.animate([
+        { opacity: fromOpacity },
+        { opacity: toOpacity }
+      ], { duration: duration, fill: "forwards", easing: "ease-in-out" });
+      
+      setTimeout(() => {
+        ballGroup.style.opacity = toOpacity;
+      }, duration);
+    }
+  });
 }
 
 function updateBallValAndShow(boxIdx, variableId, value) {
@@ -1347,7 +1521,7 @@ function updateBallValAndShowGlobal(variableId, value) {
   }
 }
 
-function animateParticleOnPath(pathEl, value, onComplete) {
+function animateParticleOnPath(pathEl, value, duration, onComplete) {
   const svg = pathEl.ownerSVGElement;
   if (!svg) return;
 
@@ -1365,7 +1539,6 @@ function animateParticleOnPath(pathEl, value, onComplete) {
   const endLength = isNegative ? 0 : totalLength;
 
   let start = null;
-  const duration = 750;
 
   function animate(timestamp) {
     if (!start) start = timestamp;
@@ -1393,6 +1566,8 @@ function pulseTargetBall(boxIdx, variableId) {
   if (!boxSvgContainer) return;
 
   const balls = boxSvgContainer.querySelectorAll(`[data-variable-id="${variableId}"] circle`);
+  // User requested ball to be static on arrival
+  /*
   balls.forEach(ball => {
     ball.animate([
       { transform: "scale(1)" },
@@ -1400,12 +1575,15 @@ function pulseTargetBall(boxIdx, variableId) {
       { transform: "scale(1)" }
     ], { duration: 300, easing: "ease-out" });
   });
+  */
 }
 
 // Pulse visual instances of a variable in the Global Canvas
 function pulseTargetBallGlobal(variableId) {
   const gCanvas = document.getElementById("globalCanvasContainer");
   const balls = gCanvas.querySelectorAll(`[data-variable-id="${variableId}"] circle`);
+  // User requested ball to be static on arrival
+  /*
   balls.forEach(ball => {
     ball.animate([
       { transform: "scale(1)" },
@@ -1413,6 +1591,7 @@ function pulseTargetBallGlobal(variableId) {
       { transform: "scale(1)" }
     ], { duration: 300, easing: "ease-out" });
   });
+  */
 }
 
 function stepBackward() {
@@ -1470,6 +1649,189 @@ function pause() {
   document.getElementById("playIcon").setAttribute("data-lucide", "play");
   document.getElementById("playText").textContent = "Reproducir";
   lucide.createIcons();
+}
+
+function initEditorDragEvents() {
+  const container = document.getElementById("editorPreviewContainer");
+  if (!container) return;
+
+  container.addEventListener("mousedown", (e) => {
+    const setNode = e.target.closest('.g-set-container');
+    const ballNode = e.target.closest('.g-ball-container');
+    
+    let setIdToDrag = null;
+    let ballIdToDrag = null;
+    
+    if (setNode) {
+      setIdToDrag = setNode.getAttribute("data-set-id");
+    } else if (ballNode) {
+      const instId = ballNode.getAttribute("data-instance-id");
+      if (instId && editorGraph.instances[instId]) {
+        // If the ball belongs to a set, drag the set instead
+        const varId = editorGraph.instances[instId].variable_id;
+        const vLogic = editorGraph.logic.variables.find(v => v.id === varId);
+        if (vLogic && vLogic.memberships && vLogic.memberships.length > 0) {
+          setIdToDrag = vLogic.memberships[0]; // drag the parent set
+        } else {
+          ballIdToDrag = instId; // standalone ball
+        }
+      }
+    }
+
+    const svgRect = container.getBoundingClientRect();
+    const ptX = e.clientX - svgRect.left;
+    const ptY = e.clientY - svgRect.top;
+
+    if (setIdToDrag && editorGraph.sets[setIdToDrag]) {
+      editorDragState.draggedSetId = setIdToDrag;
+      const setVal = editorGraph.sets[setIdToDrag];
+      const currentX = setVal.editor_x !== undefined ? setVal.editor_x : setVal.x;
+      const currentY = setVal.editor_y !== undefined ? setVal.editor_y : setVal.y;
+      editorDragState.dragStartOffset = { x: currentX - ptX, y: currentY - ptY };
+    } else if (ballIdToDrag) {
+      editorDragState.draggedBallId = ballIdToDrag;
+      const inst = editorGraph.instances[ballIdToDrag];
+      const currentX = inst.editor_x !== undefined ? inst.editor_x : inst.x;
+      const currentY = inst.editor_y !== undefined ? inst.editor_y : inst.y;
+      editorDragState.dragStartOffset = { x: currentX - ptX, y: currentY - ptY };
+    }
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (simState.activeTab !== "editor-view") return;
+    const svgRect = document.getElementById("editorPreviewContainer").getBoundingClientRect();
+    const ptX = e.clientX - svgRect.left;
+    const ptY = e.clientY - svgRect.top;
+
+    if (editorDragState.draggedSetId) {
+      const setId = editorDragState.draggedSetId;
+      const setVal = editorGraph.sets[setId];
+      
+      const newX = ptX + editorDragState.dragStartOffset.x;
+      const newY = ptY + editorDragState.dragStartOffset.y;
+      
+      const prevX = setVal.editor_x !== undefined ? setVal.editor_x : setVal.x;
+      const prevY = setVal.editor_y !== undefined ? setVal.editor_y : setVal.y;
+      
+      const dx = newX - prevX;
+      const dy = newY - prevY;
+      
+      setVal.editor_x = newX;
+      setVal.editor_y = newY;
+      
+      // Update coordinates of all balls belonging to this set
+      editorGraph.logic.variables.forEach(v => {
+        if (v.memberships && v.memberships.includes(setId)) {
+          const inst = Object.values(editorGraph.instances).find(i => i.variable_id === v.id);
+          if (inst) {
+            inst.editor_x = (inst.editor_x !== undefined ? inst.editor_x : inst.x) + dx;
+            inst.editor_y = (inst.editor_y !== undefined ? inst.editor_y : inst.y) + dy;
+          }
+        }
+      });
+      
+      updateEditorViewPositions();
+    } else if (editorDragState.draggedBallId) {
+      const instId = editorDragState.draggedBallId;
+      const inst = editorGraph.instances[instId];
+      
+      const newX = ptX + editorDragState.dragStartOffset.x;
+      const newY = ptY + editorDragState.dragStartOffset.y;
+      
+      inst.editor_x = newX;
+      inst.editor_y = newY;
+      
+      updateEditorViewPositions();
+    }
+  });
+
+  window.addEventListener("mouseup", () => {
+    editorDragState.draggedBallId = null;
+    editorDragState.draggedSetId = null;
+  });
+}
+
+function updateEditorViewPositions() {
+  const container = document.getElementById("editorPreviewContainer");
+  if (!container) return;
+
+  // 1. Update Sets SVG positions
+  Object.entries(editorGraph.sets).forEach(([setId, setVal]) => {
+    const currentX = setVal.editor_x !== undefined ? setVal.editor_x : setVal.x;
+    const currentY = setVal.editor_y !== undefined ? setVal.editor_y : setVal.y;
+    
+    const circle = container.querySelector(`#set-circle-${setId}`);
+    if (circle) {
+      circle.setAttribute("cx", currentX);
+      circle.setAttribute("cy", currentY);
+    }
+    const label = container.querySelector(`#set-label-${setId}`);
+    if (label) {
+      label.setAttribute("x", currentX);
+      label.setAttribute("y", currentY - setVal.radius + 14);
+    }
+    const conn = container.querySelector(`#set-conn-${setId}`);
+    if (conn) {
+      conn.setAttribute("x", currentX);
+      conn.setAttribute("y", currentY - setVal.radius + 25);
+    }
+  });
+
+  const ballCoords = {};
+
+  // Update Balls SVG positions
+  Object.entries(editorGraph.instances).forEach(([instId, inst]) => {
+    const currentX = inst.editor_x !== undefined ? inst.editor_x : inst.x;
+    const currentY = inst.editor_y !== undefined ? inst.editor_y : inst.y;
+
+    const circle = container.querySelector(`#ball-circle-${instId}`);
+    if (circle) {
+      circle.setAttribute("cx", currentX);
+      circle.setAttribute("cy", currentY);
+    }
+    const label = container.querySelector(`#ball-label-${instId}`);
+    if (label) {
+      label.setAttribute("x", currentX);
+      label.setAttribute("y", currentY + 4);
+    }
+    ballCoords[inst.variable_id] = { x: currentX, y: currentY };
+  });
+
+  // Update Path/Arrow SVG positions
+  editorGraph.logic.relations.forEach(rel => {
+    const fromCoord = ballCoords[rel.from_variable];
+    const toCoord = ballCoords[rel.to_variable];
+
+    if (fromCoord && toCoord) {
+      const dx = toCoord.x - fromCoord.x;
+      const dy = toCoord.y - fromCoord.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len === 0) return;
+      const radiusBall = 15;
+
+      const startX = fromCoord.x + (dx / len) * radiusBall;
+      const startY = fromCoord.y + (dy / len) * radiusBall;
+      const endX = toCoord.x - (dx / len) * (radiusBall + 6);
+      const endY = toCoord.y - (dy / len) * (radiusBall + 6);
+
+      const path = container.querySelector(`#editor-path-${rel.id}`);
+      if (path) {
+        let pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
+        if (Math.abs(dx) > 10 && Math.abs(dy) > 10) {
+          const midX = (startX + endX) / 2 + (dy / len) * 15;
+          const midY = (startY + endY) / 2 - (dx / len) * 15;
+          pathD = `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`;
+        }
+        path.setAttribute("d", pathD);
+      }
+
+      const label = container.querySelector(`#editor-path-label-${rel.id}`);
+      if (label) {
+        label.setAttribute("x", (startX + endX) / 2);
+        label.setAttribute("y", (startY + endY) / 2 - 10);
+      }
+    }
+  });
 }
 
 function jumpToStep(stepIdx) {
@@ -1630,8 +1992,22 @@ function handleManageDelete() {
     if (res.ok) {
       delete editorGraph.sets[id];
       editorGraph.logic.sets = editorGraph.logic.sets.filter(s => s.id !== id);
-      editorGraph.logic.variables.forEach(v => {
-        v.memberships = v.memberships.filter(m => m !== id);
+      
+      editorGraph.logic.variables = editorGraph.logic.variables.filter(v => {
+        if (v.memberships.includes(id)) {
+          if (v.memberships.length === 1) {
+            // Remove relations involving this orphaned variable
+            editorGraph.logic.relations = editorGraph.logic.relations.filter(r => r.from_variable !== v.id && r.to_variable !== v.id);
+            // Remove instance visual
+            const instId = `inst_${v.id}`;
+            delete editorGraph.instances[instId];
+            return false; // exclude from variables array
+          } else {
+            v.memberships = v.memberships.filter(m => m !== id);
+            return true;
+          }
+        }
+        return true;
       });
     }
   } else if (type === "variable") {
@@ -1918,7 +2294,9 @@ function renderEditorPreview() {
   });
 
   sets.forEach(([setId, val]) => {
-    const gSet = drawSetSVG(setId, val, val.x, val.y, val.radius);
+    const currentX = val.editor_x !== undefined ? val.editor_x : val.x;
+    const currentY = val.editor_y !== undefined ? val.editor_y : val.y;
+    const gSet = drawSetSVG(setId, val, currentX, currentY, val.radius);
     svg.appendChild(gSet);
   });
 
@@ -1928,10 +2306,13 @@ function renderEditorPreview() {
     const inst = Object.values(editorGraph.instances).find(i => i.variable_id === v.id);
     if (!inst) return;
 
-    const gBall = drawBallSVG(v.id, inst.id, inst.x, inst.y, v.truth_value);
+    const currentX = inst.editor_x !== undefined ? inst.editor_x : inst.x;
+    const currentY = inst.editor_y !== undefined ? inst.editor_y : inst.y;
+
+    const gBall = drawBallSVG(v.id, inst.id, currentX, currentY, v.truth_value);
     svg.appendChild(gBall);
 
-    ballCoords[v.id] = { x: inst.x, y: inst.y };
+    ballCoords[v.id] = { x: currentX, y: currentY };
   });
 
   rels.forEach(rel => {
@@ -1951,6 +2332,7 @@ function renderEditorPreview() {
       const endY = toCoord.y - (dy / len) * (radiusBall + 6);
 
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("id", `editor-path-${rel.id}`);
       
       let pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
       if (Math.abs(dy) > 10 && Math.abs(dx) > 10) {
@@ -1972,6 +2354,7 @@ function renderEditorPreview() {
 
       // Label for connective
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("id", `editor-path-label-${rel.id}`);
       text.setAttribute("x", (startX + endX) / 2);
       text.setAttribute("y", (startY + endY) / 2 - 10);
       text.setAttribute("text-anchor", "middle");
