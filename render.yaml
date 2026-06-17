@@ -1,0 +1,21 @@
+services:
+  # Backend (Motor API)
+  - type: web
+    name: epic-motor-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    rootDir: epic_motor
+    plan: free
+
+  # Frontend (Simulador Static Site)
+  - type: web
+    name: epic-simulador-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    rootDir: epic_simulador
+    envVars:
+      - key: VITE_MOTOR_URL
+        # Reemplaza esta URL si Render le asigna un sufijo aleatorio a tu backend
+        value: https://epic-motor-backend.onrender.com

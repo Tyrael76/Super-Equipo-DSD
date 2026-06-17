@@ -1,87 +1,100 @@
 from models.snapshot import PlaygroundSnapshot, ExecutionTrace, ExecutionAction
-from core.belnap import bv_kjoin
-from core.connectives import get_connective
-import copy
+from motorv2 import EPICEngine
+
+FRONTEND_TO_ENGINE = {"V": "T", "F": "F", "N": "N", "B": "B"}
+ENGINE_TO_FRONTEND = {"T": "V", "F": "F", "N": "N", "B": "B"}
 
 def run_propagation(snapshot: PlaygroundSnapshot) -> PlaygroundSnapshot:
     """
-    Recibe el Snapshot, calcula la propagación matricial sobre el grafo lógico
-    y devuelve el mismo Snapshot mutado con el execution_trace inyectado.
+    Recibe el Snapshot, calcula la propagación matricial sobre el nuevo EPICEngine
+    y devuelve el mismo Snapshot mutado con el execution_trace sintético inyectado.
     """
-    # 1. Inicializar el rastro de ejecución
-    trace = ExecutionTrace()
-    snapshot.execution_trace = trace
+    # 1. Instanciación del nuevo motor
+    engine = EPICEngine()
     
-    variables = snapshot.logic.variables
-    relations = snapshot.logic.relations.values()
-    max_iter = snapshot.meta.max_iterations
+    variables_in = snapshot.logic.variables
+    relations_in = snapshot.logic.relations.values()
     
-    paso_actual = 0
-    estabilizado = False
-
-    # 2. Bucle de Estabilización
-    for iteracion in range(1, max_iter + 1):
-        paso_actual = iteracion
-        cambios_en_esta_iteracion = 0
+    engine_vars = {}
+    estado_previo = {}
+    
+    # 2. Desempaquetado y Traducción de Variables
+    for var_id, var_obj in variables_in.items():
+        # Instanciar en el motor
+        v = engine.add_variable(var_id)
+        engine_vars[var_id] = v
         
-        # Iteramos sobre todas las aristas (relaciones) del grafo
-        for rel in relations:
-            source_var = variables.get(rel.source)
-            target_var = variables.get(rel.target)
+        # Traducir valor V -> T
+        val_frontend = var_obj.value
+        val_engine = FRONTEND_TO_ENGINE.get(val_frontend, "N")
+        estado_previo[var_id] = val_engine
+        
+        # Inyectar evidencia si no es Neutro
+        if val_engine != "N":
+            v.restrict({val_engine})
             
-            if not source_var or not target_var:
-                continue
-
-            # Determinar la dirección del flujo según la lógica contrapuesta
-            if rel.is_contrapositive:
-                # Modus Tollens: Flujo inverso (Target -> Source)
-                origen = target_var
-                destino = source_var
-                # Usualmente la contrapositiva aplica la matriz en orden inverso
-                conectivo = get_connective("CONTRAPOSITIONAL")
-            else:
-                # Flujo directo (Source -> Target)
-                origen = source_var
-                destino = target_var
-                conectivo = get_connective(rel.connective)
-
-            # Aplicar la matriz del conectivo
-            evidencia_entrante = conectivo.apply(origen.bv, destino.bv)
+    # 3. Traducción de Relaciones e inyección de variables Z
+    for rel in relations_in:
+        source_id = rel.source
+        target_id = rel.target
+        
+        # Validar que los nodos existan
+        if source_id not in engine_vars or target_id not in engine_vars:
+            continue
             
-            # Unir la evidencia entrante con el valor actual del destino (k-join)
-            nuevo_valor = bv_kjoin(destino.bv, evidencia_entrante)
-            
-            # Si el valor de la variable mutó, registramos la acción
-            if nuevo_valor != destino.bv:
-                old_val_str = destino.value
-                destino.value = nuevo_valor.value  # Mutamos el estado
-                
-                accion = ExecutionAction(
-                    step=paso_actual,
-                    variable_id=destino.id,
-                    old_value=old_val_str,
-                    new_value=destino.value,
-                    description=f"La variable '{destino.id}' cambió de {old_val_str} a {destino.value} vía {rel.connective} desde '{origen.id}'"
-                )
-                trace.actions.append(accion)
-                cambios_en_esta_iteracion += 1
-
-        # 3. Condición de salida temprana
-        if cambios_en_esta_iteracion == 0:
-            estabilizado = True
-            # Registrar la acción final de estabilización
-            trace.actions.append(ExecutionAction(
-                step=paso_actual,
-                variable_id="*",
-                old_value="*",
-                new_value="*",
-                description=f"El sistema se estabilizó en la iteración {iteracion}.",
-                is_stabilized=True
-            ))
-            break
-
-    # 4. Finalizar el Trace
-    trace.stabilized = estabilizado
-    trace.total_iterations = paso_actual
+        # Generar variable sintética Z para la implicación
+        z_name = f"Z_{rel.id}"
+        v_z = engine.add_variable(z_name)
+        v_z.restrict({"T"})  # Asumimos que la regla es verdadera/activa
+        
+        # Añadir al motor
+        engine.add_implication(source_id, target_id, z_name)
+        
+    # 4. Ejecución del motor (Estabilización síncrona hasta punto fijo)
+    engine.stabilize()
     
+    # 5. Empaquetado: Comparación de estados y generación de traza sintética
+    trace = ExecutionTrace()
+    trace.stabilized = True
+    trace.total_iterations = 1
+    
+    paso_actual = 1
+    
+    for var_id, engine_var in engine_vars.items():
+        # Extraer estado resultante del motor
+        val_engine_final = engine_var.effective
+        val_frontend_final = ENGINE_TO_FRONTEND.get(val_engine_final, "N")
+        
+        # Si la variable mutó respecto a su estado inicial, generamos una acción
+        if val_engine_final != estado_previo[var_id]:
+            old_frontend = ENGINE_TO_FRONTEND.get(estado_previo[var_id], "N")
+            
+            accion = ExecutionAction(
+                step=paso_actual,
+                variable_id=var_id,
+                old_value=old_frontend,
+                new_value=val_frontend_final,
+                description=f"La variable '{var_id}' cambió de {old_frontend} a {val_frontend_final} vía propagación lógica.",
+                is_stabilized=False
+            )
+            trace.actions.append(accion)
+            paso_actual += 1
+            
+        # Actualizamos el valor final en el modelo Pydantic in-place
+        # Este es el valor que consumirá el Frontend
+        if var_id in variables_in:
+            variables_in[var_id].value = val_frontend_final
+
+    # 6. Acción obligatoria de finalización/estabilización
+    trace.actions.append(ExecutionAction(
+        step=paso_actual,
+        variable_id="*",
+        old_value="*",
+        new_value="*",
+        description="El sistema se estabilizó tras la inferencia.",
+        is_stabilized=True
+    ))
+    
+    # 7. Retorno compatible
+    snapshot.execution_trace = trace
     return snapshot

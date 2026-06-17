@@ -1,3 +1,9 @@
+/*
+Creacion de todo el archivo editorController.ts utilizando Gemini, prompt utilizado:
+Con el anterior contexto de la conversacion y tomando en cuenta los cambios utilizados por el profesor,
+realiza primero el editorController.ts, siendo este el cerebro del sistema:
+coordina el estado, valida que no haya basura y se comunica con el Motor usando el nuevo estándar.
+*/
 import type {
   PlaygroundSnapshot,
   BelnapValue,
@@ -10,7 +16,6 @@ import type { EditorState } from "../domain/editorState";
 import * as actions from "../domain/editorActions";
 import { validarSnapshot } from "../validators/editorValidation";
 import type { IMotorClient } from "../services/motorApiClient";
-import { MotorApiClient } from "../services/motorApiClient";
 
 export type ControllerResult<T = void> =
   | { ok: true; data: T }
@@ -21,9 +26,9 @@ export class EditorController {
   private readonly motorClient: IMotorClient;
   private readonly subscribers: Array<(state: EditorState) => void> = [];
 
-  constructor(motorClient?: IMotorClient) {
+  constructor(motorClient: IMotorClient) {
     this.state = createInitialState();
-    this.motorClient = motorClient ?? new MotorApiClient();
+    this.motorClient = motorClient;
   }
 
   subscribe(cb: (state: EditorState) => void): () => void {
@@ -66,6 +71,11 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  asignarVariableAContexto(variable_id: string, set_id: string): ControllerResult {
+    this.setState(actions.asignarVariableAContexto(this.state, variable_id, set_id));
+    return { ok: true, data: undefined };
+  }
+
   dibujarInstancia(
     instance_id: string,
     variable_id: string,
@@ -101,8 +111,11 @@ export class EditorController {
     connective: MotorConnective,
     x: number,
     y: number,
+    radius: number = 65,
+    shape: string = "circle",
+    color?: string,
   ): ControllerResult {
-    this.setState(actions.crearContexto(this.state, id, connective, x, y));
+    this.setState(actions.crearContexto(this.state, id, connective, x, y, radius, shape, color));
     return { ok: true, data: undefined };
   }
 
@@ -116,8 +129,54 @@ export class EditorController {
     from: string,
     to: string,
     connective: MotorConnective,
+    color?: string,
+    direction?: "unidirectional" | "bidirectional",
   ): ControllerResult {
-    this.setState(actions.crearRelacion(this.state, id, from, to, connective));
+    this.setState(actions.crearRelacion(this.state, id, from, to, connective, color, 2, direction));
+    return { ok: true, data: undefined };
+  }
+
+  eliminarRelacion(id: string): ControllerResult {
+    this.setState(actions.eliminarRelacion(this.state, id));
+    return { ok: true, data: undefined };
+  }
+
+  actualizarContexto(
+    id: string,
+    payload: { connective?: MotorConnective; x?: number; y?: number; radius?: number; shape?: string }
+  ): ControllerResult {
+    this.setState(actions.actualizarContexto(this.state, id, payload));
+    return { ok: true, data: undefined };
+  }
+
+  actualizarVariable(
+    id: string,
+    payload: { truth_value?: BelnapValue; set_id?: string }
+  ): ControllerResult {
+    let newState = this.state;
+    if (payload.truth_value) {
+      newState = actions.actualizarValorVerdad(newState, id, payload.truth_value);
+    }
+    if (payload.set_id !== undefined) {
+      const currentVar = newState.snapshot.logic.variables.find((v) => v.id === id);
+      if (currentVar) {
+        currentVar.memberships.forEach((m) => {
+          newState = actions.quitarVariableDeContexto(newState, id, m);
+        });
+        if (payload.set_id !== "") {
+          newState = actions.asignarVariableAContexto(newState, id, payload.set_id);
+        }
+      }
+    }
+    this.setState(newState);
+    return { ok: true, data: undefined };
+  }
+
+  actualizarRelacion(
+    id: string,
+    payload: { connective?: MotorConnective; color?: string; thickness?: number }
+  ): ControllerResult {
+    this.setState(actions.actualizarRelacion(this.state, id, payload));
     return { ok: true, data: undefined };
   }
 

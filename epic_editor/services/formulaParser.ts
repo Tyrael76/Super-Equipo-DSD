@@ -1,0 +1,114 @@
+import type { EditorController } from "../controllers/editorController";
+
+export class FormulaParser {
+  private controller: EditorController;
+  private setCounter: number = 0;
+
+  constructor(controller: EditorController) {
+    this.controller = controller;
+    this.setCounter = 0;
+  }
+
+  /**
+   * Genera un nombre de conjunto simple (A, B, C, ...)
+   */
+  private getNextSetName(): string {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const name = letters[this.setCounter % letters.length];
+    this.setCounter++;
+    return name;
+  }
+
+  /**
+   * Parsea una fórmula simple y genera el grafo en el estado.
+   * Ejemplos soportados:
+   * "p -> q"
+   * "p AND q -> r"
+   * "A OR B IMPLIES C"
+   */
+  public parse(formula: string): void {
+    const tokens = formula.split(/\s+/).filter((t) => t.length > 0);
+    if (tokens.length === 0) return;
+
+    // Reiniciar editor para lienzo limpio
+    // En lugar de reiniciar, solo añadimos al lienzo con offset
+
+    // Identificar variables y conectivos
+    const variables = new Set<string>();
+    const relations: Array<{from: string, to: string, connective: string}> = [];
+
+    let currentLhs: string[] = [];
+    let currentConnective = "PROPAGATION";
+    let target: string | null = null;
+    let setConnective = "PROPAGATION";
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      const upperToken = token.toUpperCase();
+
+      if (upperToken === "->" || upperToken === "IMPLIES") {
+        currentConnective = "PROPAGATION";
+        if (i + 1 < tokens.length) {
+          target = tokens[i + 1];
+          variables.add(target);
+          i++; // Skip target
+        }
+      } else if (upperToken === "<->" || upperToken === "BICONDITIONAL") {
+        currentConnective = "BICONDITIONAL";
+        if (i + 1 < tokens.length) {
+          target = tokens[i + 1];
+          variables.add(target);
+          i++;
+        }
+      } else if (upperToken === "AND") {
+        setConnective = "AND";
+      } else if (upperToken === "OR") {
+        setConnective = "OR";
+      } else {
+        // Es una variable
+        currentLhs.push(token);
+        variables.add(token);
+      }
+    }
+
+    // Dibujar
+    let startX = 100;
+    let startY = 150;
+
+    // Crear el conjunto fuente con nombre simple
+    const sourceSetId = this.getNextSetName();
+    this.controller.crearContexto(sourceSetId, setConnective as any, startX, startY, 80, "circle", "#3b82f6");
+
+    let varOffsetX = -30;
+    for (const v of currentLhs) {
+      // Asignar valor inicial V (verdadero) a las variables del lado izquierdo
+      this.controller.crearVariable(v, "V");
+      this.controller.dibujarInstancia(`inst_${v}`, v, startX + varOffsetX, startY);
+      this.controller.asignarVariableAContexto?.(v, sourceSetId);
+      varOffsetX += 60;
+    }
+
+    if (target) {
+      const targetSetId = this.getNextSetName();
+      const targetX = startX + 300;
+      this.controller.crearContexto(targetSetId, "PROPAGATION", targetX, startY, 80, "circle", "#22c55e");
+      
+      // Asignar valor inicial N (neutro) a la variable objetivo
+      this.controller.crearVariable(target, "N");
+      this.controller.dibujarInstancia(`inst_${target}`, target, targetX, startY);
+      this.controller.asignarVariableAContexto?.(target, targetSetId);
+
+      // Conectar lhs a target con nombres simples
+      for (const v of currentLhs) {
+        this.controller.conectar(
+          `rel_${v}_to_${target}`,
+          v,
+          target,
+          currentConnective as any,
+          "#94a3b8",
+          currentConnective === "BICONDITIONAL" ? "bidirectional" : "unidirectional"
+        );
+      }
+    }
+  }
+}

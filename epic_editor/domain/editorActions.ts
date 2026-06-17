@@ -1,3 +1,9 @@
+/*
+Creacion de todo el archivo editorActions.ts utilizando Gemini, prompt utilizado:
+Con el anterior contexto de la conversacion y tomando en cuenta los cambios utilizados por el profesor,
+realiza el editorActions.ts, Las acciones ahora deben operar en dos capas. Si borras un círculo visual, solo se borra 
+de la capa visual. La variable en la capa logic sigue existiendo (quizás en el inventario) hasta que el usuario decida purgarla.
+*/
 import type { EditorState } from "./editorState";
 import type {
   BelnapValue,
@@ -116,6 +122,7 @@ export function crearContexto(
   y: number,
   radius: number = 100,
   shape: string = "ellipse",
+  color?: string,
 ): EditorState {
   if (state.snapshot.logic.sets.some((s) => s.id === id)) return state;
 
@@ -134,7 +141,7 @@ export function crearContexto(
         ...state.snapshot.visual,
         sets: {
           ...state.snapshot.visual.sets,
-          [id]: { x, y, radius, shape },
+          [id]: { x, y, radius, shape, color },
         },
       },
     },
@@ -175,6 +182,7 @@ export function crearRelacion(
   connective: MotorConnective,
   color: string = "#000000",
   thickness: number = 2,
+  direction: "unidirectional" | "bidirectional" = "unidirectional",
 ): EditorState {
   if (state.snapshot.logic.relations.some((r) => r.id === id)) return state;
 
@@ -193,7 +201,7 @@ export function crearRelacion(
         ...state.snapshot.visual,
         relations: {
           ...state.snapshot.visual.relations,
-          [id]: { color, thickness },
+          [id]: { color, thickness, direction },
         },
       },
     },
@@ -271,6 +279,64 @@ export function actualizarValorVerdad(
     snapshot: {
       ...state.snapshot,
       logic: { ...state.snapshot.logic, variables },
+    },
+  };
+}
+
+export function actualizarContexto(
+  state: EditorState,
+  id: string,
+  payload: { connective?: MotorConnective; x?: number; y?: number; radius?: number; shape?: string }
+): EditorState {
+  const sets = state.snapshot.logic.sets.map((s) =>
+    s.id === id ? { ...s, connective: payload.connective ?? s.connective } : s
+  );
+
+  const visualSets = { ...state.snapshot.visual.sets };
+  if (visualSets[id]) {
+    visualSets[id] = {
+      ...visualSets[id],
+      x: payload.x ?? visualSets[id].x,
+      y: payload.y ?? visualSets[id].y,
+      radius: payload.radius ?? visualSets[id].radius,
+      shape: payload.shape ?? visualSets[id].shape,
+    };
+  }
+
+  return {
+    ...state,
+    snapshot: {
+      ...state.snapshot,
+      logic: { ...state.snapshot.logic, sets },
+      visual: { ...state.snapshot.visual, sets: visualSets },
+    },
+  };
+}
+
+export function actualizarRelacion(
+  state: EditorState,
+  id: string,
+  payload: { connective?: MotorConnective; color?: string; thickness?: number }
+): EditorState {
+  const relations = state.snapshot.logic.relations.map((r) =>
+    r.id === id ? { ...r, connective: payload.connective ?? r.connective } : r
+  );
+
+  const visualRelations = { ...state.snapshot.visual.relations };
+  if (visualRelations[id]) {
+    visualRelations[id] = {
+      ...visualRelations[id],
+      color: payload.color ?? visualRelations[id].color,
+      thickness: payload.thickness ?? visualRelations[id].thickness,
+    };
+  }
+
+  return {
+    ...state,
+    snapshot: {
+      ...state.snapshot,
+      logic: { ...state.snapshot.logic, relations },
+      visual: { ...state.snapshot.visual, relations: visualRelations },
     },
   };
 }
