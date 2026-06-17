@@ -44,11 +44,23 @@ class TestBelnap:
     def test_and_b_f(self):
         assert bv_and(BV.B, BV.F) == BV.F
 
+    def test_and_n_b(self):
+        assert bv_and(BV.N, BV.B) == BV.F
+        assert bv_and(BV.B, BV.N) == BV.F
+
     def test_or_v_f(self):
         assert bv_or(BV.V, BV.F) == BV.V
 
     def test_or_n_n(self):
         assert bv_or(BV.N, BV.N) == BV.N
+
+    def test_or_n_b(self):
+        assert bv_or(BV.N, BV.B) == BV.V
+        assert bv_or(BV.B, BV.N) == BV.V
+
+    def test_or_n_f(self):
+        assert bv_or(BV.N, BV.F) == BV.N
+        assert bv_or(BV.F, BV.N) == BV.N
 
     def test_kjoin_v_f_da_b(self):
         assert bv_kjoin(BV.V, BV.F) == BV.B
@@ -89,9 +101,11 @@ class TestConectivos:
         with pytest.raises(KeyError):
             get_connective("XOR_CUANTICO")
 
-    def test_contrapositional_f_f(self):
+    def test_contrapositional_extrae_falsedad(self):
         cp = get_connective("CONTRAPOSITIONAL")
-        assert cp.apply(BV.F, BV.F) == BV.V
+        assert cp.apply(BV.F, BV.N) == BV.F
+        assert cp.apply(BV.V, BV.N) == BV.N
+        assert cp.apply(BV.B, BV.N) == BV.F
 
 
 # ═══════════════════════════════════════════
