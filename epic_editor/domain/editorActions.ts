@@ -283,6 +283,64 @@ export function actualizarValorVerdad(
   };
 }
 
+export function actualizarContexto(
+  state: EditorState,
+  id: string,
+  payload: { connective?: MotorConnective; x?: number; y?: number; radius?: number; shape?: string }
+): EditorState {
+  const sets = state.snapshot.logic.sets.map((s) =>
+    s.id === id ? { ...s, connective: payload.connective ?? s.connective } : s
+  );
+
+  const visualSets = { ...state.snapshot.visual.sets };
+  if (visualSets[id]) {
+    visualSets[id] = {
+      ...visualSets[id],
+      x: payload.x ?? visualSets[id].x,
+      y: payload.y ?? visualSets[id].y,
+      radius: payload.radius ?? visualSets[id].radius,
+      shape: payload.shape ?? visualSets[id].shape,
+    };
+  }
+
+  return {
+    ...state,
+    snapshot: {
+      ...state.snapshot,
+      logic: { ...state.snapshot.logic, sets },
+      visual: { ...state.snapshot.visual, sets: visualSets },
+    },
+  };
+}
+
+export function actualizarRelacion(
+  state: EditorState,
+  id: string,
+  payload: { connective?: MotorConnective; color?: string; thickness?: number }
+): EditorState {
+  const relations = state.snapshot.logic.relations.map((r) =>
+    r.id === id ? { ...r, connective: payload.connective ?? r.connective } : r
+  );
+
+  const visualRelations = { ...state.snapshot.visual.relations };
+  if (visualRelations[id]) {
+    visualRelations[id] = {
+      ...visualRelations[id],
+      color: payload.color ?? visualRelations[id].color,
+      thickness: payload.thickness ?? visualRelations[id].thickness,
+    };
+  }
+
+  return {
+    ...state,
+    snapshot: {
+      ...state.snapshot,
+      logic: { ...state.snapshot.logic, relations },
+      visual: { ...state.snapshot.visual, relations: visualRelations },
+    },
+  };
+}
+
 export function guardarResultadoEjecucion(
   state: EditorState,
   execution_trace: ExecutionTrace | undefined,

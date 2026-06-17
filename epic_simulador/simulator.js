@@ -1505,7 +1505,155 @@ function setupEditorEventListeners() {
     }
   });
 
+  document.getElementById("manageEntityType").addEventListener("change", syncManageDropdown);
+  document.getElementById("manageEntityId").addEventListener("change", renderManageEditFields);
+  document.getElementById("btnManageDelete").addEventListener("click", handleManageDelete);
+
   syncEditorDropdowns();
+}
+
+function syncManageDropdown() {
+  const type = document.getElementById("manageEntityType").value;
+  const idDropdown = document.getElementById("manageEntityId");
+  idDropdown.innerHTML = '<option value="">Elemento...</option>';
+  
+  if (type === "set") {
+    Object.keys(editorGraph.sets).forEach(id => {
+      idDropdown.innerHTML += `<option value="${id}">${id}</option>`;
+    });
+  } else if (type === "variable") {
+    editorGraph.logic.variables.forEach(v => {
+      idDropdown.innerHTML += `<option value="${v.id}">${v.id}</option>`;
+    });
+  } else if (type === "relation") {
+    editorGraph.logic.relations.forEach(r => {
+      idDropdown.innerHTML += `<option value="${r.id}">${r.id} (${r.from_variable}->${r.to_variable})</option>`;
+    });
+  }
+  
+  renderManageEditFields();
+}
+
+function renderManageEditFields() {
+  const type = document.getElementById("manageEntityType").value;
+  const id = document.getElementById("manageEntityId").value;
+  const fieldsContainer = document.getElementById("manageEditFields");
+  
+  if (!id || !type) {
+    fieldsContainer.style.display = "none";
+    fieldsContainer.innerHTML = "";
+    return;
+  }
+  
+  fieldsContainer.style.display = "flex";
+  fieldsContainer.innerHTML = "";
+  
+  if (type === "set") {
+    const setLog = editorGraph.logic.sets.find(s => s.id === id);
+    const conn = setLog ? setLog.connective : "PROPAGATION";
+    fieldsContainer.innerHTML = `
+      <select id="editManageSetConn">
+        <option value="PROPAGATION" ${conn === 'PROPAGATION' ? 'selected' : ''}>PROPAGATION</option>
+        <option value="CONTRAPOSITIONAL" ${conn === 'CONTRAPOSITIONAL' ? 'selected' : ''}>CONTRAPOSITIONAL</option>
+        <option value="AND" ${conn === 'AND' ? 'selected' : ''}>AND</option>
+        <option value="OR" ${conn === 'OR' ? 'selected' : ''}>OR</option>
+        <option value="IMPLIES" ${conn === 'IMPLIES' ? 'selected' : ''}>IMPLIES</option>
+        <option value="BICONDITIONAL" ${conn === 'BICONDITIONAL' ? 'selected' : ''}>BICONDITIONAL</option>
+      </select>
+      <button class="btn btn-primary" onclick="handleManageUpdate()">Guardar</button>
+    `;
+  } else if (type === "variable") {
+    const vLog = editorGraph.logic.variables.find(v => v.id === id);
+    const val = vLog ? vLog.truth_value : "N";
+    fieldsContainer.innerHTML = `
+      <select id="editManageVarVal">
+        <option value="N" ${val === 'N' ? 'selected' : ''}>N</option>
+        <option value="V" ${val === 'V' ? 'selected' : ''}>V</option>
+        <option value="F" ${val === 'F' ? 'selected' : ''}>F</option>
+        <option value="B" ${val === 'B' ? 'selected' : ''}>B</option>
+      </select>
+      <button class="btn btn-primary" onclick="handleManageUpdate()">Guardar</button>
+    `;
+  } else if (type === "relation") {
+    const rLog = editorGraph.logic.relations.find(r => r.id === id);
+    const conn = rLog ? rLog.connective : "PROPAGATION";
+    fieldsContainer.innerHTML = `
+      <select id="editManageRelConn">
+        <option value="PROPAGATION" ${conn === 'PROPAGATION' ? 'selected' : ''}>PROPAGATION</option>
+        <option value="CONTRAPOSITIONAL" ${conn === 'CONTRAPOSITIONAL' ? 'selected' : ''}>CONTRAPOSITIONAL</option>
+        <option value="IMPLIES" ${conn === 'IMPLIES' ? 'selected' : ''}>IMPLIES</option>
+      </select>
+      <button class="btn btn-primary" onclick="handleManageUpdate()">Guardar</button>
+    `;
+  }
+}
+
+window.handleManageUpdate = function() {
+  const type = document.getElementById("manageEntityType").value;
+  const id = document.getElementById("manageEntityId").value;
+  if (!id || !type) return;
+  
+  if (type === "set") {
+    const conn = document.getElementById("editManageSetConn").value;
+    const res = EditorBridge.updateSet(id, { connective: conn });
+    if (res.ok) {
+      const setLog = editorGraph.logic.sets.find(s => s.id === id);
+      if (setLog) setLog.connective = conn;
+    }
+  } else if (type === "variable") {
+    const val = document.getElementById("editManageVarVal").value;
+    const res = EditorBridge.updateVariable(id, { truth_value: val });
+    if (res.ok) {
+      const vLog = editorGraph.logic.variables.find(v => v.id === id);
+      if (vLog) vLog.truth_value = val;
+    }
+  } else if (type === "relation") {
+    const conn = document.getElementById("editManageRelConn").value;
+    const res = EditorBridge.updateRelation(id, { connective: conn });
+    if (res.ok) {
+      const rLog = editorGraph.logic.relations.find(r => r.id === id);
+      if (rLog) rLog.connective = conn;
+    }
+  }
+  
+  renderEditorPreview();
+  console.log('[Simulator] Elemento modificado:', id);
+};
+
+function handleManageDelete() {
+  const type = document.getElementById("manageEntityType").value;
+  const id = document.getElementById("manageEntityId").value;
+  if (!id || !type) return;
+  
+  if (type === "set") {
+    const res = EditorBridge.deleteSet(id);
+    if (res.ok) {
+      delete editorGraph.sets[id];
+      editorGraph.logic.sets = editorGraph.logic.sets.filter(s => s.id !== id);
+      editorGraph.logic.variables.forEach(v => {
+        v.memberships = v.memberships.filter(m => m !== id);
+      });
+    }
+  } else if (type === "variable") {
+    const res = EditorBridge.deleteVariable(id);
+    if (res.ok) {
+      editorGraph.logic.variables = editorGraph.logic.variables.filter(v => v.id !== id);
+      editorGraph.logic.relations = editorGraph.logic.relations.filter(r => r.from_variable !== id && r.to_variable !== id);
+      const instId = `inst_${id}`;
+      delete editorGraph.instances[instId];
+    }
+  } else if (type === "relation") {
+    const res = EditorBridge.deleteRelation(id);
+    if (res.ok) {
+      editorGraph.logic.relations = editorGraph.logic.relations.filter(r => r.id !== id);
+      delete editorGraph.relations[id];
+    }
+  }
+  
+  syncManageDropdown();
+  syncEditorDropdowns();
+  renderEditorPreview();
+  console.log('[Simulator] Elemento eliminado:', id);
 }
 
 function resetEditorGraph() {
@@ -1723,6 +1871,8 @@ function syncEditorDropdowns() {
     relFromDropdown.innerHTML += `<option value="${v.id}">${v.id}</option>`;
     relToDropdown.innerHTML += `<option value="${v.id}">${v.id}</option>`;
   });
+  
+  syncManageDropdown();
 }
 
 function renderEditorPreview() {

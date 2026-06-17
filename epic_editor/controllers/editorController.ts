@@ -136,6 +136,50 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  eliminarRelacion(id: string): ControllerResult {
+    this.setState(actions.eliminarRelacion(this.state, id));
+    return { ok: true, data: undefined };
+  }
+
+  actualizarContexto(
+    id: string,
+    payload: { connective?: MotorConnective; x?: number; y?: number; radius?: number; shape?: string }
+  ): ControllerResult {
+    this.setState(actions.actualizarContexto(this.state, id, payload));
+    return { ok: true, data: undefined };
+  }
+
+  actualizarVariable(
+    id: string,
+    payload: { truth_value?: BelnapValue; set_id?: string }
+  ): ControllerResult {
+    let newState = this.state;
+    if (payload.truth_value) {
+      newState = actions.actualizarValorVerdad(newState, id, payload.truth_value);
+    }
+    if (payload.set_id !== undefined) {
+      const currentVar = newState.snapshot.logic.variables.find((v) => v.id === id);
+      if (currentVar) {
+        currentVar.memberships.forEach((m) => {
+          newState = actions.quitarVariableDeContexto(newState, id, m);
+        });
+        if (payload.set_id !== "") {
+          newState = actions.asignarVariableAContexto(newState, id, payload.set_id);
+        }
+      }
+    }
+    this.setState(newState);
+    return { ok: true, data: undefined };
+  }
+
+  actualizarRelacion(
+    id: string,
+    payload: { connective?: MotorConnective; color?: string; thickness?: number }
+  ): ControllerResult {
+    this.setState(actions.actualizarRelacion(this.state, id, payload));
+    return { ok: true, data: undefined };
+  }
+
   async cargarConectivos(): Promise<void> {
     try {
       const conectivos = await this.motorClient.getConectivos();

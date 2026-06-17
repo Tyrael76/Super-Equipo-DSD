@@ -30,24 +30,24 @@ let errorCallback = null;
  */
 export function initializeEditorBridge(motorUrl) {
   console.log('[EditorBridge] Inicializando bridge con motor en:', motorUrl);
-  
+
   // Crear instancia del cliente del motor
   motorClient = new MotorApiClient(motorUrl);
-  
+
   // Crear instancia del controlador del editor
   editorController = new EditorController(motorClient);
-  
+
   // Suscribirse a cambios de estado
   editorController.subscribe((state) => {
     console.log('[EditorBridge] Estado actualizado:', state);
     currentSnapshot = state.snapshot;
-    
+
     // Notificar al simulador si hay callback registrado
     if (renderCallback) {
       renderCallback(state.snapshot);
     }
   });
-  
+
   console.log('[EditorBridge] Bridge inicializado correctamente');
   return editorController;
 }
@@ -85,13 +85,13 @@ export function createSet(id, connective, x, y, radius = 65, color = "#3b82f6") 
   if (!editorController) {
     return { ok: false, error: 'Bridge no inicializado' };
   }
-  
+
   const result = editorController.crearContexto(id, connective, x, y, radius, "circle", color);
-  
+
   if (!result.ok && errorCallback) {
     errorCallback(result.errors);
   }
-  
+
   return result;
 }
 
@@ -104,8 +104,28 @@ export function deleteSet(id) {
   if (!editorController) {
     return { ok: false, error: 'Bridge no inicializado' };
   }
-  
+
   return editorController.eliminarContexto(id);
+}
+
+/**
+ * Actualiza un conjunto del editor
+ * @param {string} id - ID del conjunto a actualizar
+ * @param {Object} payload - Objeto con los datos a actualizar (connective, x, y, radius, shape)
+ * @returns {Object} Resultado de la operación
+ */
+export function updateSet(id, payload) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+
+  const result = editorController.actualizarContexto(id, payload);
+
+  if (!result.ok && errorCallback) {
+    errorCallback(result.errors);
+  }
+
+  return result;
 }
 
 // ==========================================
@@ -122,13 +142,13 @@ export function createVariable(id, truthValue = 'N') {
   if (!editorController) {
     return { ok: false, error: 'Bridge no inicializado' };
   }
-  
+
   const result = editorController.crearVariable(id, truthValue);
-  
+
   if (!result.ok && errorCallback) {
     errorCallback(result.errors);
   }
-  
+
   return result;
 }
 
@@ -144,13 +164,13 @@ export function createVariableInstance(instanceId, variableId, x, y) {
   if (!editorController) {
     return { ok: false, error: 'Bridge no inicializado' };
   }
-  
+
   const result = editorController.dibujarInstancia(instanceId, variableId, x, y);
-  
+
   if (!result.ok && errorCallback) {
     errorCallback(result.errors);
   }
-  
+
   return result;
 }
 
@@ -163,8 +183,28 @@ export function deleteVariable(id) {
   if (!editorController) {
     return { ok: false, error: 'Bridge no inicializado' };
   }
-  
+
   return editorController.eliminarVariable(id);
+}
+
+/**
+ * Actualiza una variable del editor
+ * @param {string} id - ID de la variable a actualizar
+ * @param {Object} payload - Objeto con los datos a actualizar (truth_value, set_id)
+ * @returns {Object} Resultado de la operación
+ */
+export function updateVariable(id, payload) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+
+  const result = editorController.actualizarVariable(id, payload);
+
+  if (!result.ok && errorCallback) {
+    errorCallback(result.errors);
+  }
+
+  return result;
 }
 
 // ==========================================
@@ -183,13 +223,13 @@ export function createRelation(id, fromVariable, toVariable, connective, color =
   if (!editorController) {
     return { ok: false, error: 'Bridge no inicializado' };
   }
-  
+
   const result = editorController.conectar(id, fromVariable, toVariable, connective, color, direction);
-  
+
   if (!result.ok && errorCallback) {
     errorCallback(result.errors);
   }
-  
+
   return result;
 }
 
@@ -204,6 +244,39 @@ export function assignVariableToSet(variableId, setId) {
   return { ok: true };
 }
 
+/**
+ * Actualiza una relación del editor
+ * @param {string} id - ID de la relación a actualizar
+ * @param {Object} payload - Objeto con los datos a actualizar (connective, color, thickness)
+ * @returns {Object} Resultado de la operación
+ */
+export function updateRelation(id, payload) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+
+  const result = editorController.actualizarRelacion(id, payload);
+
+  if (!result.ok && errorCallback) {
+    errorCallback(result.errors);
+  }
+
+  return result;
+}
+
+/**
+ * Elimina una relación del editor
+ * @param {string} id - ID de la relación a eliminar
+ * @returns {Object} Resultado de la operación
+ */
+export function deleteRelation(id) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+
+  return editorController.eliminarRelacion(id);
+}
+
 // ==========================================
 // API de Validación y Ejecución
 // ==========================================
@@ -216,7 +289,7 @@ export function validateSnapshot() {
   if (!editorController) {
     return { valid: false, errors: [{ field: 'bridge', message: 'Bridge no inicializado', severity: 'error' }] };
   }
-  
+
   return editorController.validar();
 }
 
@@ -228,10 +301,10 @@ export async function executeWithMotor() {
   if (!editorController) {
     throw new Error('Bridge no inicializado');
   }
-  
+
   console.log('[EditorBridge] Validando snapshot antes de ejecutar...');
   const validation = validateSnapshot();
-  
+
   if (!validation.valid) {
     console.error('[EditorBridge] Validación fallida:', validation.errors);
     if (errorCallback) {
@@ -239,12 +312,12 @@ export async function executeWithMotor() {
     }
     return { ok: false, errors: validation.errors };
   }
-  
+
   console.log('[EditorBridge] Snapshot válido, ejecutando con motor...');
-  
+
   try {
     const result = await editorController.ejecutar();
-    
+
     if (result.ok) {
       console.log('[EditorBridge] Ejecución exitosa:', result.data);
       return { ok: true, data: result.data, snapshot: currentSnapshot };
@@ -265,11 +338,11 @@ export async function executeWithMotor() {
         severity: 'error'
       }]
     };
-    
+
     if (errorCallback) {
       errorCallback(errorObj.errors);
     }
-    
+
     return errorObj;
   }
 }
@@ -286,7 +359,7 @@ export function getEditorState() {
   if (!editorController) {
     return null;
   }
-  
+
   return editorController.getState();
 }
 
@@ -306,9 +379,9 @@ export function resetEditor() {
     console.warn('[EditorBridge] Motor client no inicializado, usando URL por defecto');
     motorClient = new MotorApiClient(motorUrl ?? 'http://localhost:8000');
   }
-  
+
   editorController = new EditorController(motorClient);
-  
+
   // Re-suscribirse a cambios
   editorController.subscribe((state) => {
     currentSnapshot = state.snapshot;
@@ -316,7 +389,7 @@ export function resetEditor() {
       renderCallback(state.snapshot);
     }
   });
-  
+
   console.log('[EditorBridge] Editor reiniciado');
 }
 
@@ -328,7 +401,7 @@ export async function loadConnectives() {
   if (!editorController) {
     throw new Error('Bridge no inicializado');
   }
-  
+
   await editorController.cargarConectivos();
 }
 
