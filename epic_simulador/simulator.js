@@ -357,6 +357,113 @@ const PRESETS = {
       ],
     },
   },
+
+  deduction: {
+    meta: {
+      version: "3.0",
+      max_iterations: 1,
+      belnap_domain: ["V", "F", "N", "B"],
+      editor_mode: "ejecucion",
+    },
+    logic: {
+      variables: [
+        { id: "¬C(a) ∧ ¬A(a)", truth_value: "V", memberships: ["set_3"] },
+        { id: "¬C(a)", truth_value: "N", memberships: ["set_4"] },
+        { id: "¬A(a)", truth_value: "N", memberships: ["set_5"] },
+        { id: "A(a)", truth_value: "F", memberships: ["set_6"] },
+        { id: "B(a)", truth_value: "F", memberships: ["set_7"] },
+        { id: "¬B(a)", truth_value: "N", memberships: ["set_8"] },
+        { id: "¬C(a) ∧ ¬B", truth_value: "V", memberships: ["set_9"] },
+      ],
+      sets: [
+        { id: "set_3", connective: "PROPAGATION", subsets: [] },
+        { id: "set_4", connective: "PROPAGATION", subsets: [] },
+        { id: "set_5", connective: "PROPAGATION", subsets: [] },
+        { id: "set_6", connective: "PROPAGATION", subsets: [] },
+        { id: "set_7", connective: "PROPAGATION", subsets: [] },
+        { id: "set_8", connective: "PROPAGATION", subsets: [] },
+        { id: "set_9", connective: "PROPAGATION", subsets: [] },
+      ],
+      relations: [
+        { id: "rel_3_4", from_variable: "¬C(a) ∧ ¬A(a)", to_variable: "¬C(a)", connective: "PROPAGATION" },
+        { id: "rel_3_5", from_variable: "¬C(a) ∧ ¬A(a)", to_variable: "¬A(a)", connective: "PROPAGATION" },
+        { id: "rel_6_5", from_variable: "A(a)", to_variable: "¬A(a)", connective: "PROPAGATION" },
+        { id: "rel_7_6", from_variable: "B(a)", to_variable: "A(a)", connective: "CONTRAPOSITIONAL" },
+        { id: "rel_7_8", from_variable: "B(a)", to_variable: "¬B(a)", connective: "PROPAGATION" },
+        { id: "rel_9_4", from_variable: "¬C(a) ∧ ¬B", to_variable: "¬C(a)", connective: "PROPAGATION" },
+        { id: "rel_9_8", from_variable: "¬C(a) ∧ ¬B", to_variable: "¬B(a)", connective: "PROPAGATION" },
+        { id: "rel_5_8", from_variable: "¬A(a)", to_variable: "¬B(a)", connective: "PROPAGATION" },
+      ],
+    },
+    visual: {
+      sets: {
+        set_3: { x: 200, y: 150, radius: 95, shape: "circle" },
+        set_4: { x: 500, y: 150, radius: 65, shape: "circle" },
+        set_9: { x: 800, y: 150, radius: 95, shape: "circle" },
+        set_5: { x: 200, y: 400, radius: 65, shape: "circle" },
+        set_6: { x: 400, y: 400, radius: 65, shape: "circle" },
+        set_7: { x: 600, y: 400, radius: 65, shape: "circle" },
+        set_8: { x: 800, y: 400, radius: 65, shape: "circle" },
+      },
+      instances: {
+        inst_v3: { id: "inst_v3", variable_id: "¬C(a) ∧ ¬A(a)", x: 200, y: 150 },
+        inst_v4: { id: "inst_v4", variable_id: "¬C(a)", x: 500, y: 150 },
+        inst_v9: { id: "inst_v9", variable_id: "¬C(a) ∧ ¬B", x: 800, y: 150 },
+        inst_v5: { id: "inst_v5", variable_id: "¬A(a)", x: 200, y: 400 },
+        inst_v6: { id: "inst_v6", variable_id: "A(a)", x: 400, y: 400 },
+        inst_v7: { id: "inst_v7", variable_id: "B(a)", x: 600, y: 400 },
+        inst_v8: { id: "inst_v8", variable_id: "¬B(a)", x: 800, y: 400 },
+      },
+      relations: {
+        rel_3_4: { color: "#10B981", thickness: 2 },
+        rel_3_5: { color: "#10B981", thickness: 2 },
+        rel_6_5: { color: "#10B981", thickness: 2 },
+        rel_7_6: { color: "#10B981", thickness: 2 },
+        rel_7_8: { color: "#10B981", thickness: 2 },
+        rel_9_4: { color: "#10B981", thickness: 2 },
+        rel_9_8: { color: "#10B981", thickness: 2 },
+        rel_5_8: { color: "#10B981", thickness: 2 },
+      },
+    },
+    execution_trace: {
+      total_iterations: 2,
+      stabilized: true,
+      actions: [
+        {
+          step: 1,
+          variable_id: "¬C(a)",
+          old_value: "N",
+          new_value: "V",
+          description: "La variable '¬C(a)' se propaga a V",
+          is_stabilized: false,
+        },
+        {
+          step: 1,
+          variable_id: "¬A(a)",
+          old_value: "N",
+          new_value: "V",
+          description: "La variable '¬A(a)' se propaga a V",
+          is_stabilized: false,
+        },
+        {
+          step: 1,
+          variable_id: "¬B(a)",
+          old_value: "N",
+          new_value: "V",
+          description: "La variable '¬B(a)' se propaga a V",
+          is_stabilized: false,
+        },
+        {
+          step: 2,
+          variable_id: "*",
+          old_value: "*",
+          new_value: "*",
+          description: "El sistema se estabilizó.",
+          is_stabilized: true,
+        },
+      ],
+    },
+  },
 };
 
 // ==========================================
@@ -365,6 +472,7 @@ const PRESETS = {
 let simState = {
   snapshot: null,
   currentStep: 0,
+  maxStep: 0,
   isPlaying: false,
   playInterval: null,
   animationTimeout: null,
@@ -398,6 +506,7 @@ const editorDragState = {
   draggedSetId: null,
   dragStartOffset: { x: 0, y: 0 },
   pan: { x: 0, y: 0 },
+  zoom: 1,
   isPanning: false,
   panStart: { x: 0, y: 0 },
 };
@@ -420,6 +529,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log(
       "[Simulator] Estado del editor actualizado, renderizando preview...",
     );
+    editorGraph.logic = JSON.parse(JSON.stringify(snapshot.logic));
+    editorGraph.sets = JSON.parse(JSON.stringify(snapshot.visual.sets));
+    editorGraph.instances = JSON.parse(JSON.stringify(snapshot.visual.instances));
+    editorGraph.relations = JSON.parse(JSON.stringify(snapshot.visual.relations));
+    syncEditorDropdowns();
     renderEditorPreview();
   });
 
@@ -680,6 +794,12 @@ function isBallVisibleAtStep(varId, step) {
   const val = valHistory[step];
   if (val === "N") return false;
 
+  // Show all non-N balls at the final stabilized step
+  const totalIterations = simState.snapshot.execution_trace?.total_iterations || 0;
+  if (step >= totalIterations) {
+    return true;
+  }
+
   const logic = simState.snapshot.logic;
   const actions = simState.snapshot.execution_trace.actions;
 
@@ -861,6 +981,10 @@ function loadSnapshot(snapshot) {
   );
   console.groupEnd();
 
+  if (EditorBridge && EditorBridge.isInitialized && EditorBridge.isInitialized()) {
+    EditorBridge.loadSnapshot(simState.snapshot);
+  }
+
   updateUI();
 
   simState.zoom = 1;
@@ -905,6 +1029,7 @@ function buildVariableHistory() {
   }
 
   simState.variableHistory = history;
+  simState.maxStep = maxStep;
 }
 
 /**
@@ -1051,7 +1176,7 @@ function updateUI() {
 
   iterationsEl.textContent = trace.total_iterations;
 
-  const totalSteps = trace.actions.length;
+  const totalSteps = simState.maxStep;
   totalStepsEl.textContent = totalSteps;
   currentStepEl.textContent = simState.currentStep;
 
@@ -1821,7 +1946,7 @@ function applyZoomPan() {
  */
 function stepForward() {
   const actions = simState.snapshot.execution_trace.actions;
-  if (simState.currentStep >= actions.length) {
+  if (simState.currentStep >= simState.maxStep) {
     pause();
     return;
   }
@@ -1832,7 +1957,7 @@ function stepForward() {
     simState.animationTimeout = null;
     simState.currentStep++;
     updateUI();
-    if (simState.currentStep >= actions.length) {
+    if (simState.currentStep >= simState.maxStep) {
       pause();
       return;
     }
@@ -2192,8 +2317,7 @@ function play() {
   lucide.createIcons();
 
   simState.playInterval = setInterval(() => {
-    const actions = simState.snapshot.execution_trace.actions;
-    if (simState.currentStep >= actions.length) {
+    if (simState.currentStep >= simState.maxStep) {
       pause();
     } else {
       stepForward();
@@ -2241,8 +2365,8 @@ function initEditorDragEvents() {
     }
 
     const svgRect = container.getBoundingClientRect();
-    const ptX = e.clientX - svgRect.left;
-    const ptY = e.clientY - svgRect.top;
+    const ptX = (e.clientX - svgRect.left - editorDragState.pan.x) / editorDragState.zoom;
+    const ptY = (e.clientY - svgRect.top - editorDragState.pan.y) / editorDragState.zoom;
 
     if (setIdToDrag && editorGraph.sets[setIdToDrag]) {
       editorDragState.draggedSetId = setIdToDrag;
@@ -2264,6 +2388,12 @@ function initEditorDragEvents() {
         x: currentX - ptX,
         y: currentY - ptY,
       };
+    } else {
+      editorDragState.isPanning = true;
+      editorDragState.panStart = {
+        x: e.clientX - editorDragState.pan.x,
+        y: e.clientY - editorDragState.pan.y,
+      };
     }
   });
 
@@ -2272,8 +2402,8 @@ function initEditorDragEvents() {
     const svgRect = document
       .getElementById("editorPreviewContainer")
       .getBoundingClientRect();
-    const ptX = e.clientX - svgRect.left;
-    const ptY = e.clientY - svgRect.top;
+    const ptX = (e.clientX - svgRect.left - editorDragState.pan.x) / editorDragState.zoom;
+    const ptY = (e.clientY - svgRect.top - editorDragState.pan.y) / editorDragState.zoom;
 
     if (editorDragState.draggedSetId) {
       const setId = editorDragState.draggedSetId;
@@ -2318,12 +2448,40 @@ function initEditorDragEvents() {
       inst.editor_y = newY;
 
       updateEditorViewPositions();
+    } else if (editorDragState.isPanning) {
+      editorDragState.pan.x = e.clientX - editorDragState.panStart.x;
+      editorDragState.pan.y = e.clientY - editorDragState.panStart.y;
+      
+      const g = document.getElementById("editorCanvasGroup");
+      if (g) {
+        g.setAttribute("transform", `translate(${editorDragState.pan.x}, ${editorDragState.pan.y}) scale(${editorDragState.zoom})`);
+      }
     }
   });
 
   window.addEventListener("mouseup", () => {
     editorDragState.draggedBallId = null;
     editorDragState.draggedSetId = null;
+    editorDragState.isPanning = false;
+  });
+
+  container.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const zoomFactor = 1.1;
+    if (e.deltaY < 0) {
+      editorDragState.zoom *= zoomFactor;
+    } else {
+      editorDragState.zoom /= zoomFactor;
+    }
+    editorDragState.zoom = Math.min(Math.max(editorDragState.zoom, 0.2), 5);
+    
+    const g = document.getElementById("editorCanvasGroup");
+    if (g) {
+      g.setAttribute(
+        "transform",
+        `translate(${editorDragState.pan.x}, ${editorDragState.pan.y}) scale(${editorDragState.zoom})`
+      );
+    }
   });
 }
 
@@ -2460,6 +2618,42 @@ function setupEditorEventListeners() {
         renderEditorPreview();
       }
     });
+
+  const zoomFactor = 1.2;
+
+  document.getElementById("btnEditorZoomIn")?.addEventListener("click", () => {
+    editorDragState.zoom = Math.min((editorDragState.zoom || 1) * zoomFactor, 5);
+    const g = document.getElementById("editorCanvasGroup");
+    if (g) {
+      g.setAttribute(
+        "transform",
+        `translate(${editorDragState.pan.x}, ${editorDragState.pan.y}) scale(${editorDragState.zoom})`
+      );
+    }
+  });
+
+  document.getElementById("btnEditorZoomOut")?.addEventListener("click", () => {
+    editorDragState.zoom = Math.max((editorDragState.zoom || 1) / zoomFactor, 0.2);
+    const g = document.getElementById("editorCanvasGroup");
+    if (g) {
+      g.setAttribute(
+        "transform",
+        `translate(${editorDragState.pan.x}, ${editorDragState.pan.y}) scale(${editorDragState.zoom})`
+      );
+    }
+  });
+
+  document.getElementById("btnEditorZoomReset")?.addEventListener("click", () => {
+    editorDragState.zoom = 1;
+    editorDragState.pan = { x: 0, y: 0 };
+    const g = document.getElementById("editorCanvasGroup");
+    if (g) {
+      g.setAttribute(
+        "transform",
+        `translate(${editorDragState.pan.x}, ${editorDragState.pan.y}) scale(${editorDragState.zoom})`
+      );
+    }
+  });
 
   document
     .getElementById("manageEntityType")
@@ -2908,10 +3102,20 @@ function renderEditorPreview() {
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 650 300");
+  svg.style.width = "100%";
+  svg.style.height = "100%";
   container.appendChild(svg);
 
+  const mainGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  mainGroup.setAttribute("id", "editorCanvasGroup");
+  mainGroup.setAttribute(
+    "transform",
+    `translate(${editorDragState.pan.x}, ${editorDragState.pan.y}) scale(${editorDragState.zoom})`
+  );
+  svg.appendChild(mainGroup);
+
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  svg.appendChild(defs);
+  svg.appendChild(defs); // defs can be appended to svg directly
 
   // Create dynamic markers for each relation with its specific color
   rels.forEach((rel) => {
@@ -2961,7 +3165,7 @@ function renderEditorPreview() {
     const currentX = val.editor_x !== undefined ? val.editor_x : val.x;
     const currentY = val.editor_y !== undefined ? val.editor_y : val.y;
     const gSet = drawSetSVG(setId, val, currentX, currentY, val.radius);
-    svg.appendChild(gSet);
+    mainGroup.appendChild(gSet);
   });
 
   const ballCoords = {};
@@ -2976,7 +3180,7 @@ function renderEditorPreview() {
     const currentY = inst.editor_y !== undefined ? inst.editor_y : inst.y;
 
     const gBall = drawBallSVG(v.id, inst.id, currentX, currentY, v.truth_value);
-    svg.appendChild(gBall);
+    mainGroup.appendChild(gBall);
 
     ballCoords[v.id] = { x: currentX, y: currentY };
   });
@@ -3038,7 +3242,7 @@ function renderEditorPreview() {
         path.setAttribute("marker-start", `url(#arrow-editor-${rel.id})`);
       }
 
-      svg.appendChild(path);
+      mainGroup.appendChild(path);
 
       // Label for connective
       const text = document.createElementNS(
@@ -3053,7 +3257,7 @@ function renderEditorPreview() {
       text.setAttribute("font-size", "12px");
       text.setAttribute("font-family", "Arial");
       text.textContent = rel.connective;
-      svg.appendChild(text);
+      mainGroup.appendChild(text);
     }
   });
 }

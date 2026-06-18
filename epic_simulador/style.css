@@ -983,6 +983,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   box-shadow: var(--glass-shadow);
+  position: relative;
 }
 
 .preview-header {

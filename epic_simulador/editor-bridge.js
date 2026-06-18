@@ -399,6 +399,18 @@ export function resetEditor() {
 }
 
 /**
+ * Carga un snapshot en el editor
+ * @param {Object} snapshot - El snapshot a cargar
+ */
+export function loadSnapshot(snapshot) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+
+  return editorController.cargarSnapshot(snapshot);
+}
+
+/**
  * Carga conectivos disponibles desde el motor
  * @returns {Promise<void>}
  */
