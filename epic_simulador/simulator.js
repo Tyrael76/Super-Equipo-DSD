@@ -900,6 +900,101 @@ function buildTraceLogHTML() {
   }
 }
 
+function getColorForValue(val) {
+  switch (val?.toUpperCase()) {
+    case 'V': return "#10B981";
+    case 'F': return "#EF4444";
+    case 'N': return "#6B7280";
+    case 'B': return "#8B5CF6";
+    default: return "#6B7280";
+  }
+}
+
+function evaluateBelnapMatrix(op, val1, val2) {
+  const v1 = val1?.toUpperCase() || 'N';
+  const v2 = val2?.toUpperCase() || 'N';
+  
+  if (op === 'AND' || op === 'CONJUNCTION') {
+    if (v1 === 'N') {
+      if (v2 === 'N') return 'N';
+      if (v2 === 'F') return 'F';
+      if (v2 === 'V') return 'N';
+      if (v2 === 'B') return 'F';
+    } else if (v1 === 'F') return 'F';
+    else if (v1 === 'V') {
+      if (v2 === 'N') return 'N';
+      if (v2 === 'F') return 'F';
+      if (v2 === 'V') return 'V';
+      if (v2 === 'B') return 'B';
+    } else if (v1 === 'B') {
+      if (v2 === 'N') return 'F';
+      if (v2 === 'F') return 'F';
+      if (v2 === 'V') return 'B';
+      if (v2 === 'B') return 'B';
+    }
+  } else if (op === 'OR' || op === 'DISJUNCTION') {
+    if (v1 === 'N') {
+      if (v2 === 'N') return 'N';
+      if (v2 === 'F') return 'N';
+      if (v2 === 'V') return 'V';
+      if (v2 === 'B') return 'V';
+    } else if (v1 === 'F') {
+      if (v2 === 'N') return 'N';
+      if (v2 === 'F') return 'F';
+      if (v2 === 'V') return 'V';
+      if (v2 === 'B') return 'B';
+    } else if (v1 === 'V') return 'V';
+    else if (v1 === 'B') {
+      if (v2 === 'N') return 'V';
+      if (v2 === 'F') return 'B';
+      if (v2 === 'V') return 'V';
+      if (v2 === 'B') return 'B';
+    }
+  } else if (op === 'PROPAGATION' || op === 'KJOIN') {
+    if (v1 === v2) return v1;
+    if (v1 === 'N') return v2;
+    if (v2 === 'N') return v1;
+    if (v1 === 'B' || v2 === 'B') return 'B';
+    if ((v1 === 'V' && v2 === 'F') || (v1 === 'F' && v2 === 'V')) return 'B';
+    return 'B';
+  }
+  return 'N';
+}
+
+function getRelationEffectiveOp(rel, logic) {
+  try {
+    let explicitOp = rel.connective;
+    
+    if (!logic || !logic.variables || !logic.sets) return explicitOp || 'PROPAGATION';
+    
+    let varsArray = logic.variables;
+    if (!Array.isArray(varsArray)) {
+      if (typeof varsArray === 'object') varsArray = Object.values(varsArray);
+      else return explicitOp || 'PROPAGATION';
+    }
+    
+    const targetVar = varsArray.find(v => v.id === rel.to_variable);
+    if (!targetVar || !targetVar.memberships || !Array.isArray(targetVar.memberships)) return explicitOp || 'PROPAGATION';
+    
+    let setsArray = logic.sets;
+    if (!Array.isArray(setsArray)) {
+      if (typeof setsArray === 'object') setsArray = Object.values(setsArray);
+      else return explicitOp || 'PROPAGATION';
+    }
+    
+    for (const setId of targetVar.memberships) {
+      const set = setsArray.find(s => s.id === setId);
+      if (set && set.connective) {
+        return set.connective.toUpperCase();
+      }
+    }
+    return explicitOp ? explicitOp.toUpperCase() : 'PROPAGATION';
+  } catch (e) {
+    console.error("getRelationEffectiveOp error", e);
+  }
+  return 'PROPAGATION';
+}
+
 // ==========================================
 // 8. SVG Rendering Engine
 // ==========================================
@@ -963,7 +1058,16 @@ function renderBoxView() {
     // Create dynamic markers for each relation with its specific color
     logic.relations.forEach(rel => {
       const relVisual = visual.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
-      const markerColor = relVisual.color || "#3B82F6";
+      let markerColor = relVisual.color || "#3B82F6";
+      
+      const effectiveOp = getRelationEffectiveOp(rel, logic);
+      if (effectiveOp) {
+        const fromHistory = simState.variableHistory[rel.from_variable];
+        const toHistory = simState.variableHistory[rel.to_variable];
+        const valFrom = fromHistory ? fromHistory[simState.currentStep] : "N";
+        const valTo = toHistory ? toHistory[simState.currentStep] : "N";
+        markerColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+      }
       
       const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
       marker.setAttribute("id", `arrow-box-${boxIdx}-${rel.id}`);
@@ -1061,8 +1165,17 @@ function renderBoxView() {
         }
 
         path.setAttribute("d", pathD);
+        let strokeColor = relVisual.color || "#3B82F6";
+        const effectiveOp = getRelationEffectiveOp(rel, logic);
+        if (effectiveOp) {
+          const fromHistory = simState.variableHistory[rel.from_variable];
+          const toHistory = simState.variableHistory[rel.to_variable];
+          const valFrom = fromHistory ? fromHistory[simState.currentStep] : "N";
+          const valTo = toHistory ? toHistory[simState.currentStep] : "N";
+          strokeColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+        }
         path.setAttribute("class", `svg-relation-path ${relVisual.is_contrapositive ? 'contrapositive' : ''}`);
-        path.setAttribute("stroke", relVisual.color || "#3B82F6");
+        path.setAttribute("stroke", strokeColor);
         path.setAttribute("stroke-width", relVisual.thickness || 2);
         path.setAttribute("marker-end", `url(#arrow-box-${boxIdx}-${rel.id})`);
         
@@ -1094,7 +1207,16 @@ function renderGlobalView() {
   // Create dynamic markers for each relation with its specific color
   logic.relations.forEach(rel => {
     const relVisual = visual.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
-    const markerColor = relVisual.color || "#3B82F6";
+    let markerColor = relVisual.color || "#3B82F6";
+    
+    const effectiveOp = getRelationEffectiveOp(rel, logic);
+    if (effectiveOp) {
+      const fromHistory = simState.variableHistory[rel.from_variable];
+      const toHistory = simState.variableHistory[rel.to_variable];
+      const valFrom = fromHistory ? fromHistory[simState.currentStep] : "N";
+      const valTo = toHistory ? toHistory[simState.currentStep] : "N";
+      markerColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+    }
     
     const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
     marker.setAttribute("id", `arrow-global-${rel.id}`);
@@ -1163,8 +1285,17 @@ function renderGlobalView() {
       }
 
       path.setAttribute("d", pathD);
+      let strokeColor = relVisual.color || "#3B82F6";
+      const effectiveOp = getRelationEffectiveOp(rel, logic);
+      if (effectiveOp) {
+        const fromHistory = simState.variableHistory[rel.from_variable];
+        const toHistory = simState.variableHistory[rel.to_variable];
+        const valFrom = fromHistory ? fromHistory[simState.currentStep] : "N";
+        const valTo = toHistory ? toHistory[simState.currentStep] : "N";
+        strokeColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+      }
       path.setAttribute("class", `svg-relation-path ${relVisual.is_contrapositive ? 'contrapositive' : ''}`);
-      path.setAttribute("stroke", relVisual.color || "#3B82F6");
+      path.setAttribute("stroke", strokeColor);
       path.setAttribute("stroke-width", relVisual.thickness || 2);
       path.setAttribute("marker-end", `url(#arrow-global-${rel.id})`);
       
@@ -2276,7 +2407,16 @@ function renderEditorPreview() {
   // Create dynamic markers for each relation with its specific color
   rels.forEach(rel => {
     const visualRel = editorGraph.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
-    const markerColor = visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6");
+    let markerColor = visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6");
+    
+    const effectiveOp = getRelationEffectiveOp(rel, editorGraph.logic);
+    if (effectiveOp) {
+      const fromVar = vars.find(v => v.id === rel.from_variable);
+      const toVar = vars.find(v => v.id === rel.to_variable);
+      const valFrom = fromVar ? fromVar.truth_value : 'N';
+      const valTo = toVar ? toVar.truth_value : 'N';
+      markerColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+    }
     
     const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
     marker.setAttribute("id", `arrow-editor-${rel.id}`);
@@ -2344,8 +2484,17 @@ function renderEditorPreview() {
       }
 
       path.setAttribute("d", pathD);
+      let strokeColor = visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6");
+      const effectiveOp = getRelationEffectiveOp(rel, editorGraph.logic);
+      if (effectiveOp) {
+        const fromVar = vars.find(v => v.id === rel.from_variable);
+        const toVar = vars.find(v => v.id === rel.to_variable);
+        const valFrom = fromVar ? fromVar.truth_value : 'N';
+        const valTo = toVar ? toVar.truth_value : 'N';
+        strokeColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+      }
       path.setAttribute("class", `svg-relation-path ${rel.connective === 'CONTRAPOSITIONAL' ? 'contrapositive' : ''}`);
-      path.setAttribute("stroke", visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6"));
+      path.setAttribute("stroke", strokeColor);
       path.setAttribute("stroke-width", visualRel.thickness || 2);
       path.setAttribute("marker-end", `url(#arrow-editor-${rel.id})`);
       if (visualRel.direction === "bidirectional") {
@@ -2360,7 +2509,7 @@ function renderEditorPreview() {
       text.setAttribute("x", (startX + endX) / 2);
       text.setAttribute("y", (startY + endY) / 2 - 10);
       text.setAttribute("text-anchor", "middle");
-      text.setAttribute("fill", visualRel.color || "#94a3b8");
+      text.setAttribute("fill", strokeColor);
       text.setAttribute("font-size", "12px");
       text.setAttribute("font-family", "Arial");
       text.textContent = rel.connective;
