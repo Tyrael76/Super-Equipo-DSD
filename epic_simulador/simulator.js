@@ -6,39 +6,59 @@
 // ==========================================
 // SOLID - DIP: el runtime visual depende de la API estable del bridge y no
 // construye EditorController ni MotorApiClient directamente.
-import * as EditorBridge from './editor-bridge.js';
+import * as EditorBridge from "./editor-bridge.js";
 
 // ==========================================
 // 1. Preset Simulation Examples (JSON snapshots)
 // ==========================================
 const PRESETS = {
   simple: {
-    meta: { version: "3.0", max_iterations: 10, belnap_domain: ["V", "F", "N", "B"], editor_mode: "ejecucion" },
+    meta: {
+      version: "3.0",
+      max_iterations: 10,
+      belnap_domain: ["V", "F", "N", "B"],
+      editor_mode: "ejecucion",
+    },
     logic: {
       variables: [
         { id: "p", truth_value: "V", memberships: ["set_A"] },
-        { id: "q", truth_value: "N", memberships: ["set_B"] }
+        { id: "q", truth_value: "N", memberships: ["set_B"] },
       ],
       sets: [
-        { id: "set_A", connective: "PROPAGATION", subsets: [], result_alias: null },
-        { id: "set_B", connective: "PROPAGATION", subsets: [], result_alias: null }
+        {
+          id: "set_A",
+          connective: "PROPAGATION",
+          subsets: [],
+          result_alias: null,
+        },
+        {
+          id: "set_B",
+          connective: "PROPAGATION",
+          subsets: [],
+          result_alias: null,
+        },
       ],
       relations: [
-        { id: "rel1", from_variable: "p", to_variable: "q", connective: "PROPAGATION" }
-      ]
+        {
+          id: "rel1",
+          from_variable: "p",
+          to_variable: "q",
+          connective: "PROPAGATION",
+        },
+      ],
     },
     visual: {
       sets: {
         set_A: { x: 150, y: 200, radius: 80, shape: "circle" },
-        set_B: { x: 450, y: 200, radius: 80, shape: "circle" }
+        set_B: { x: 450, y: 200, radius: 80, shape: "circle" },
       },
       instances: {
         inst_p: { id: "inst_p", variable_id: "p", x: 150, y: 200 },
-        inst_q: { id: "inst_q", variable_id: "q", x: 450, y: 200 }
+        inst_q: { id: "inst_q", variable_id: "q", x: 450, y: 200 },
       },
       relations: {
-        rel1: { color: "#3B82F6", thickness: 2 }
-      }
+        rel1: { color: "#3B82F6", thickness: 2 },
+      },
     },
     execution_trace: {
       total_iterations: 2,
@@ -49,8 +69,9 @@ const PRESETS = {
           variable_id: "q",
           old_value: "N",
           new_value: "V",
-          description: "La variable 'q' cambió de N a V vía PROPAGATION desde 'p'",
-          is_stabilized: false
+          description:
+            "La variable 'q' cambió de N a V vía PROPAGATION desde 'p'",
+          is_stabilized: false,
         },
         {
           step: 2,
@@ -58,39 +79,59 @@ const PRESETS = {
           old_value: "*",
           new_value: "*",
           description: "El sistema se estabilizó en la iteración 2.",
-          is_stabilized: true
-        }
-      ]
-    }
+          is_stabilized: true,
+        },
+      ],
+    },
   },
 
   contrapositive: {
-    meta: { version: "3.0", max_iterations: 10, belnap_domain: ["V", "F", "N", "B"], editor_mode: "ejecucion" },
+    meta: {
+      version: "3.0",
+      max_iterations: 10,
+      belnap_domain: ["V", "F", "N", "B"],
+      editor_mode: "ejecucion",
+    },
     logic: {
       variables: [
         { id: "p", truth_value: "N", memberships: ["set_A"] },
-        { id: "q", truth_value: "F", memberships: ["set_B"] }
+        { id: "q", truth_value: "F", memberships: ["set_B"] },
       ],
       sets: [
-        { id: "set_A", connective: "CONTRAPOSITIONAL", subsets: [], result_alias: null },
-        { id: "set_B", connective: "CONTRAPOSITIONAL", subsets: [], result_alias: null }
+        {
+          id: "set_A",
+          connective: "CONTRAPOSITIONAL",
+          subsets: [],
+          result_alias: null,
+        },
+        {
+          id: "set_B",
+          connective: "CONTRAPOSITIONAL",
+          subsets: [],
+          result_alias: null,
+        },
       ],
       relations: [
-        { id: "rel1", from_variable: "p", to_variable: "q", connective: "CONTRAPOSITIONAL" }
-      ]
+        {
+          id: "rel1",
+          from_variable: "p",
+          to_variable: "q",
+          connective: "CONTRAPOSITIONAL",
+        },
+      ],
     },
     visual: {
       sets: {
         set_A: { x: 150, y: 200, radius: 80, shape: "circle" },
-        set_B: { x: 450, y: 200, radius: 80, shape: "circle" }
+        set_B: { x: 450, y: 200, radius: 80, shape: "circle" },
       },
       instances: {
         inst_p: { id: "inst_p", variable_id: "p", x: 150, y: 200 },
-        inst_q: { id: "inst_q", variable_id: "q", x: 450, y: 200 }
+        inst_q: { id: "inst_q", variable_id: "q", x: 450, y: 200 },
       },
       relations: {
-        rel1: { color: "#EC4899", thickness: 2 }
-      }
+        rel1: { color: "#EC4899", thickness: 2 },
+      },
     },
     execution_trace: {
       total_iterations: 2,
@@ -101,8 +142,9 @@ const PRESETS = {
           variable_id: "p",
           old_value: "N",
           new_value: "F",
-          description: "La variable 'p' cambió de N a F vía CONTRAPOSITIONAL (Modus Tollens) desde 'q'",
-          is_stabilized: false
+          description:
+            "La variable 'p' cambió de N a F vía CONTRAPOSITIONAL (Modus Tollens) desde 'q'",
+          is_stabilized: false,
         },
         {
           step: 2,
@@ -110,45 +152,75 @@ const PRESETS = {
           old_value: "*",
           new_value: "*",
           description: "El sistema se estabilizó en la iteración 2.",
-          is_stabilized: true
-        }
-      ]
-    }
+          is_stabilized: true,
+        },
+      ],
+    },
   },
 
   contradiction: {
-    meta: { version: "3.0", max_iterations: 10, belnap_domain: ["V", "F", "N", "B"], editor_mode: "ejecucion" },
+    meta: {
+      version: "3.0",
+      max_iterations: 10,
+      belnap_domain: ["V", "F", "N", "B"],
+      editor_mode: "ejecucion",
+    },
     logic: {
       variables: [
         { id: "p1", truth_value: "V", memberships: ["set_A"] },
         { id: "p2", truth_value: "F", memberships: ["set_B"] },
-        { id: "q", truth_value: "N", memberships: ["set_C"] }
+        { id: "q", truth_value: "N", memberships: ["set_C"] },
       ],
       sets: [
-        { id: "set_A", connective: "PROPAGATION", subsets: [], result_alias: null },
-        { id: "set_B", connective: "PROPAGATION", subsets: [], result_alias: null },
-        { id: "set_C", connective: "PROPAGATION", subsets: [], result_alias: null }
+        {
+          id: "set_A",
+          connective: "PROPAGATION",
+          subsets: [],
+          result_alias: null,
+        },
+        {
+          id: "set_B",
+          connective: "PROPAGATION",
+          subsets: [],
+          result_alias: null,
+        },
+        {
+          id: "set_C",
+          connective: "PROPAGATION",
+          subsets: [],
+          result_alias: null,
+        },
       ],
       relations: [
-        { id: "rel1", from_variable: "p1", to_variable: "q", connective: "PROPAGATION" },
-        { id: "rel2", from_variable: "p2", to_variable: "q", connective: "PROPAGATION" }
-      ]
+        {
+          id: "rel1",
+          from_variable: "p1",
+          to_variable: "q",
+          connective: "PROPAGATION",
+        },
+        {
+          id: "rel2",
+          from_variable: "p2",
+          to_variable: "q",
+          connective: "PROPAGATION",
+        },
+      ],
     },
     visual: {
       sets: {
         set_A: { x: 150, y: 110, radius: 70, shape: "circle" },
         set_B: { x: 150, y: 290, radius: 70, shape: "circle" },
-        set_C: { x: 450, y: 200, radius: 85, shape: "circle" }
+        set_C: { x: 450, y: 200, radius: 85, shape: "circle" },
       },
       instances: {
         inst_p1: { id: "inst_p1", variable_id: "p1", x: 150, y: 110 },
         inst_p2: { id: "inst_p2", variable_id: "p2", x: 150, y: 290 },
-        inst_q: { id: "inst_q", variable_id: "q", x: 450, y: 200 }
+        inst_q: { id: "inst_q", variable_id: "q", x: 450, y: 200 },
       },
       relations: {
         rel1: { color: "#3B82F6", thickness: 2 },
-        rel2: { color: "#EF4444", thickness: 2 }
-      }
+        rel2: { color: "#EF4444", thickness: 2 },
+      },
     },
     execution_trace: {
       total_iterations: 2,
@@ -159,8 +231,9 @@ const PRESETS = {
           variable_id: "q",
           old_value: "N",
           new_value: "B",
-          description: "La variable 'q' cambió de N a B (Contradicción/Ambos) al recibir evidencia V y F",
-          is_stabilized: false
+          description:
+            "La variable 'q' cambió de N a B (Contradicción/Ambos) al recibir evidencia V y F",
+          is_stabilized: false,
         },
         {
           step: 2,
@@ -168,47 +241,82 @@ const PRESETS = {
           old_value: "*",
           new_value: "*",
           description: "El sistema se estabilizó en la iteración 2.",
-          is_stabilized: true
-        }
-      ]
-    }
+          is_stabilized: true,
+        },
+      ],
+    },
   },
 
   loop: {
-    meta: { version: "3.0", max_iterations: 15, belnap_domain: ["V", "F", "N", "B"], editor_mode: "ejecucion" },
+    meta: {
+      version: "3.0",
+      max_iterations: 15,
+      belnap_domain: ["V", "F", "N", "B"],
+      editor_mode: "ejecucion",
+    },
     logic: {
       variables: [
         { id: "p", truth_value: "V", memberships: ["set_A"] },
         { id: "q", truth_value: "N", memberships: ["set_B"] },
-        { id: "r", truth_value: "N", memberships: ["set_C"] }
+        { id: "r", truth_value: "N", memberships: ["set_C"] },
       ],
       sets: [
-        { id: "set_A", connective: "PROPAGATION", subsets: [], result_alias: null },
-        { id: "set_B", connective: "PROPAGATION", subsets: [], result_alias: null },
-        { id: "set_C", connective: "PROPAGATION", subsets: [], result_alias: null }
+        {
+          id: "set_A",
+          connective: "PROPAGATION",
+          subsets: [],
+          result_alias: null,
+        },
+        {
+          id: "set_B",
+          connective: "PROPAGATION",
+          subsets: [],
+          result_alias: null,
+        },
+        {
+          id: "set_C",
+          connective: "PROPAGATION",
+          subsets: [],
+          result_alias: null,
+        },
       ],
       relations: [
-        { id: "rel1", from_variable: "p", to_variable: "q", connective: "PROPAGATION" },
-        { id: "rel2", from_variable: "q", to_variable: "r", connective: "PROPAGATION" },
-        { id: "rel3", from_variable: "r", to_variable: "p", connective: "PROPAGATION" }
-      ]
+        {
+          id: "rel1",
+          from_variable: "p",
+          to_variable: "q",
+          connective: "PROPAGATION",
+        },
+        {
+          id: "rel2",
+          from_variable: "q",
+          to_variable: "r",
+          connective: "PROPAGATION",
+        },
+        {
+          id: "rel3",
+          from_variable: "r",
+          to_variable: "p",
+          connective: "PROPAGATION",
+        },
+      ],
     },
     visual: {
       sets: {
         set_A: { x: 150, y: 150, radius: 70, shape: "circle" },
         set_B: { x: 450, y: 150, radius: 70, shape: "circle" },
-        set_C: { x: 300, y: 340, radius: 70, shape: "circle" }
+        set_C: { x: 300, y: 340, radius: 70, shape: "circle" },
       },
       instances: {
         inst_p: { id: "inst_p", variable_id: "p", x: 150, y: 150 },
         inst_q: { id: "inst_q", variable_id: "q", x: 450, y: 150 },
-        inst_r: { id: "inst_r", variable_id: "r", x: 300, y: 340 }
+        inst_r: { id: "inst_r", variable_id: "r", x: 300, y: 340 },
       },
       relations: {
         rel1: { color: "#3B82F6", thickness: 2 },
         rel2: { color: "#3B82F6", thickness: 2 },
-        rel3: { color: "#3B82F6", thickness: 2 }
-      }
+        rel3: { color: "#3B82F6", thickness: 2 },
+      },
     },
     execution_trace: {
       total_iterations: 4,
@@ -220,7 +328,7 @@ const PRESETS = {
           old_value: "N",
           new_value: "V",
           description: "La variable 'q' se propaga a V desde 'p'",
-          is_stabilized: false
+          is_stabilized: false,
         },
         {
           step: 2,
@@ -228,7 +336,7 @@ const PRESETS = {
           old_value: "N",
           new_value: "V",
           description: "La variable 'r' se propaga a V desde 'q'",
-          is_stabilized: false
+          is_stabilized: false,
         },
         {
           step: 3,
@@ -236,7 +344,7 @@ const PRESETS = {
           old_value: "V",
           new_value: "V",
           description: "La variable 'p' recibe V desde 'r' (Refuerzo)",
-          is_stabilized: false
+          is_stabilized: false,
         },
         {
           step: 4,
@@ -244,11 +352,11 @@ const PRESETS = {
           old_value: "*",
           new_value: "*",
           description: "El sistema se estabilizó.",
-          is_stabilized: true
-        }
-      ]
-    }
-  }
+          is_stabilized: true,
+        },
+      ],
+    },
+  },
 };
 
 // ==========================================
@@ -270,7 +378,7 @@ let simState = {
   activeTab: "box-view",
   variableHistory: {},
   boxPairs: [],
-  relativeCoordinates: {}
+  relativeCoordinates: {},
 };
 
 // State for custom visual designer built in-browser
@@ -281,8 +389,8 @@ let editorGraph = {
   logic: {
     variables: [],
     sets: [],
-    relations: []
-  }
+    relations: [],
+  },
 };
 
 const editorDragState = {
@@ -291,7 +399,7 @@ const editorDragState = {
   dragStartOffset: { x: 0, y: 0 },
   pan: { x: 0, y: 0 },
   isPanning: false,
-  panStart: { x: 0, y: 0 }
+  panStart: { x: 0, y: 0 },
 };
 
 // ==========================================
@@ -299,37 +407,43 @@ const editorDragState = {
 // ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
   lucide.createIcons();
-  
+
   initEditorDragEvents();
 
   // Inicializar el Editor Bridge
-  console.log('[Simulator] Inicializando Editor Bridge...');
-  const motorUrl = import.meta.env.VITE_MOTOR_URL ?? 'http://localhost:8000';
+  console.log("[Simulator] Inicializando Editor Bridge...");
+  const motorUrl = import.meta.env.VITE_MOTOR_URL ?? "http://localhost:8000";
   EditorBridge.initializeEditorBridge(motorUrl);
-  
+
   // Registrar callback para actualizar la vista cuando cambie el estado del editor
   EditorBridge.onStateChange((snapshot) => {
-    console.log('[Simulator] Estado del editor actualizado, renderizando preview...');
+    console.log(
+      "[Simulator] Estado del editor actualizado, renderizando preview...",
+    );
     renderEditorPreview();
   });
-  
+
   // Registrar callback para manejar errores
   EditorBridge.onError((errors) => {
-    console.error('[Simulator] Errores del editor:', errors);
+    console.error("[Simulator] Errores del editor:", errors);
     displayEditorErrors(errors);
   });
-  
+
   setupEventListeners();
   setupEditorEventListeners();
   loadSnapshot(PRESETS.simple);
-  
-  console.log('[Simulator] Inicialización completa');
+
+  console.log("[Simulator] Inicialización completa");
 });
 
 // ==========================================
 // 4. File and JSON Upload handlers
 // 📌 [PROMPT_FEATURE_UI_Y_RENDERIZADO_ESTATICO.md]
 // ==========================================
+/**
+ * Configura todos los event listeners del simulador EPiC.
+ * Maneja drag & drop, controles de reproducción, zoom/pan y tabs de visualización.
+ */
 function setupEventListeners() {
   const dropZone = document.getElementById("dropZone");
   const fileInput = document.getElementById("fileInput");
@@ -341,7 +455,9 @@ function setupEventListeners() {
     e.preventDefault();
     dropZone.classList.add("dragover");
   });
-  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+  dropZone.addEventListener("dragleave", () =>
+    dropZone.classList.remove("dragover"),
+  );
   dropZone.addEventListener("drop", (e) => {
     e.preventDefault();
     dropZone.classList.remove("dragover");
@@ -363,7 +479,7 @@ function setupEventListeners() {
     }
   });
 
-  document.querySelectorAll(".btn-preset").forEach(btn => {
+  document.querySelectorAll(".btn-preset").forEach((btn) => {
     btn.addEventListener("click", () => {
       const presetName = btn.getAttribute("data-preset");
       if (PRESETS[presetName]) {
@@ -375,7 +491,9 @@ function setupEventListeners() {
   document.getElementById("btnPlay").addEventListener("click", togglePlay);
   document.getElementById("btnNext").addEventListener("click", stepForward);
   document.getElementById("btnPrev").addEventListener("click", stepBackward);
-  document.getElementById("btnReset").addEventListener("click", resetSimulation);
+  document
+    .getElementById("btnReset")
+    .addEventListener("click", resetSimulation);
 
   const speedSlider = document.getElementById("speedSlider");
   const speedValue = document.getElementById("speedValue");
@@ -388,10 +506,14 @@ function setupEventListeners() {
     }
   });
 
-  document.querySelectorAll(".tab-btn").forEach(btn => {
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      document
+        .querySelectorAll(".tab-btn")
+        .forEach((b) => b.classList.remove("active"));
+      document
+        .querySelectorAll(".tab-content")
+        .forEach((c) => c.classList.remove("active"));
 
       btn.classList.add("active");
       const tabId = btn.getAttribute("data-tab");
@@ -403,18 +525,21 @@ function setupEventListeners() {
   });
 
   const canvasContainer = document.getElementById("globalCanvasContainer");
-  
+
   canvasContainer.addEventListener("mousedown", (e) => {
     // Check if dragging a set or a ball inside a set
-    const setNode = e.target.closest('.g-set-container');
-    const ballNode = e.target.closest('.g-ball-container');
-    
+    const setNode = e.target.closest(".g-set-container");
+    const ballNode = e.target.closest(".g-ball-container");
+
     let setIdToDrag = null;
     if (setNode) {
       setIdToDrag = setNode.getAttribute("data-set-id");
     } else if (ballNode) {
       const instId = ballNode.getAttribute("data-instance-id");
-      if (simState.relativeCoordinates && simState.relativeCoordinates[instId]) {
+      if (
+        simState.relativeCoordinates &&
+        simState.relativeCoordinates[instId]
+      ) {
         setIdToDrag = simState.relativeCoordinates[instId].setId;
       }
     }
@@ -422,17 +547,20 @@ function setupEventListeners() {
     if (setIdToDrag) {
       simState.draggedSetId = setIdToDrag;
       const setVal = simState.snapshot.visual.sets[setIdToDrag];
-      
+
       // Calculate screen coordinates to SVG coordinates
       const svgRect = canvasContainer.getBoundingClientRect();
       const ptX = (e.clientX - svgRect.left - simState.pan.x) / simState.zoom;
       const ptY = (e.clientY - svgRect.top - simState.pan.y) / simState.zoom;
-      
+
       simState.dragStartOffset = { x: setVal.x - ptX, y: setVal.y - ptY };
     } else {
       // Pan canvas
       simState.isDragging = true;
-      simState.dragStart = { x: e.clientX - simState.pan.x, y: e.clientY - simState.pan.y };
+      simState.dragStart = {
+        x: e.clientX - simState.pan.x,
+        y: e.clientY - simState.pan.y,
+      };
     }
   });
 
@@ -443,27 +571,33 @@ function setupEventListeners() {
       const setId = simState.draggedSetId;
       const setVal = simState.snapshot.visual.sets[setId];
       const svgRect = canvasContainer.getBoundingClientRect();
-      
+
       const ptX = (e.clientX - svgRect.left - simState.pan.x) / simState.zoom;
       const ptY = (e.clientY - svgRect.top - simState.pan.y) / simState.zoom;
-      
+
       const newX = ptX + simState.dragStartOffset.x;
       const newY = ptY + simState.dragStartOffset.y;
-      
+
       const dx = newX - setVal.x;
       const dy = newY - setVal.y;
-      
+
       setVal.x = newX;
       setVal.y = newY;
-      
+
       // Update coordinates of all balls belonging to this set
-      Object.entries(simState.snapshot.visual.instances).forEach(([instId, inst]) => {
-        if (simState.relativeCoordinates && simState.relativeCoordinates[instId] && simState.relativeCoordinates[instId].setId === setId) {
-          inst.x += dx;
-          inst.y += dy;
-        }
-      });
-      
+      Object.entries(simState.snapshot.visual.instances).forEach(
+        ([instId, inst]) => {
+          if (
+            simState.relativeCoordinates &&
+            simState.relativeCoordinates[instId] &&
+            simState.relativeCoordinates[instId].setId === setId
+          ) {
+            inst.x += dx;
+            inst.y += dy;
+          }
+        },
+      );
+
       updateGlobalViewPositions();
       return;
     }
@@ -507,13 +641,21 @@ function setupEventListeners() {
   });
 }
 
+/**
+ * Procesa un archivo JSON cargado y lo convierte en snapshot EPiC.
+ * Lee el archivo, parsea el JSON y carga el snapshot en el simulador.
+ */
 function handleFile(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
       const parsed = JSON.parse(e.target.result);
       loadSnapshot(parsed);
-      document.getElementById("jsonTextArea").value = JSON.stringify(parsed, null, 2);
+      document.getElementById("jsonTextArea").value = JSON.stringify(
+        parsed,
+        null,
+        2,
+      );
     } catch (err) {
       alert("Error al parsear el archivo: " + err.message);
     }
@@ -527,6 +669,11 @@ function handleFile(file) {
 // ==========================================
 // A ball is visible at step 's' if its value is not "N" (neutral/none)
 // AND it has not propagated its value to any target with a newer update.
+/**
+ * Determina si una variable (bola) debe ser visible en un paso específico.
+ * Una bola es visible si tiene valor no-N y no ha propagado a un objetivo más reciente.
+ * Implementa la lógica de flujo directo (Modus Ponens) y contrapositivo (Modus Tollens).
+ */
 function isBallVisibleAtStep(varId, step) {
   const valHistory = simState.variableHistory[varId];
   if (!valHistory) return false;
@@ -543,8 +690,8 @@ function isBallVisibleAtStep(varId, step) {
     if (initialVal && initialVal !== "N") {
       last = 0; // Starts active at initial step
     }
-    
-    actions.forEach(act => {
+
+    actions.forEach((act) => {
       if (act.step <= step && act.variable_id === vId) {
         last = act.step;
       }
@@ -556,7 +703,9 @@ function isBallVisibleAtStep(varId, step) {
 
   // 1. Direct Flow Check: If we propagated to a target and the target has a newer update,
   // then the ball has left this circle and moved forward.
-  const directRelations = logic.relations.filter(r => r.from_variable === varId && r.connective !== "CONTRAPOSITIONAL");
+  const directRelations = logic.relations.filter(
+    (r) => r.from_variable === varId && r.connective !== "CONTRAPOSITIONAL",
+  );
   for (const rel of directRelations) {
     const targetVal = simState.variableHistory[rel.to_variable]?.[step];
     if (targetVal && targetVal !== "N") {
@@ -570,7 +719,9 @@ function isBallVisibleAtStep(varId, step) {
   // 2. Contrapositive Flow Check: Modus Tollens.
   // The flow travels backward (target to source).
   // If we are the target and the source has been updated more recently, the ball retroceded.
-  const contraRelations = logic.relations.filter(r => r.to_variable === varId && r.connective === "CONTRAPOSITIONAL");
+  const contraRelations = logic.relations.filter(
+    (r) => r.to_variable === varId && r.connective === "CONTRAPOSITIONAL",
+  );
   for (const rel of contraRelations) {
     const sourceVal = simState.variableHistory[rel.from_variable]?.[step];
     if (sourceVal && sourceVal !== "N") {
@@ -587,18 +738,28 @@ function isBallVisibleAtStep(varId, step) {
 // ==========================================
 // 6. Core Parser & Setup State
 // ==========================================
+/**
+ * Carga un snapshot EPiC completo en el simulador.
+ * Normaliza el formato, construye historial de variables, calcula coordenadas relativas
+ * y prepara las vistas de visualización (box view y global view).
+ */
 function loadSnapshot(snapshot) {
-  if (!snapshot.logic) snapshot.logic = { variables: [], sets: [], relations: [] };
-  if (!snapshot.visual) snapshot.visual = { instances: {}, sets: {}, relations: {} };
-  
+  if (!snapshot.logic)
+    snapshot.logic = { variables: [], sets: [], relations: [] };
+  if (!snapshot.visual)
+    snapshot.visual = { instances: {}, sets: {}, relations: {} };
+
   let variablesList = [];
   if (Array.isArray(snapshot.logic.variables)) {
     variablesList = snapshot.logic.variables;
-  } else if (snapshot.logic.variables && typeof snapshot.logic.variables === "object") {
+  } else if (
+    snapshot.logic.variables &&
+    typeof snapshot.logic.variables === "object"
+  ) {
     variablesList = Object.values(snapshot.logic.variables);
   }
-  
-  variablesList.forEach(v => {
+
+  variablesList.forEach((v) => {
     if (v.truth_value === undefined && v.value !== undefined) {
       v.truth_value = v.value;
     }
@@ -608,11 +769,14 @@ function loadSnapshot(snapshot) {
   let relationsList = [];
   if (Array.isArray(snapshot.logic.relations)) {
     relationsList = snapshot.logic.relations;
-  } else if (snapshot.logic.relations && typeof snapshot.logic.relations === "object") {
+  } else if (
+    snapshot.logic.relations &&
+    typeof snapshot.logic.relations === "object"
+  ) {
     relationsList = Object.values(snapshot.logic.relations);
   }
-  
-  relationsList.forEach(r => {
+
+  relationsList.forEach((r) => {
     if (r.from_variable === undefined && r.source !== undefined) {
       r.from_variable = r.source;
     }
@@ -628,8 +792,8 @@ function loadSnapshot(snapshot) {
   } else if (snapshot.logic.sets && typeof snapshot.logic.sets === "object") {
     setsList = Object.values(snapshot.logic.sets);
   }
-  
-  setsList.forEach(s => {
+
+  setsList.forEach((s) => {
     if (s.subsets === undefined) s.subsets = [];
     if (s.connective === undefined) s.connective = "PROPAGATION";
   });
@@ -645,14 +809,15 @@ function loadSnapshot(snapshot) {
           variable_id: "*",
           old_value: "*",
           new_value: "*",
-          description: "Sistema inicial (Sin acciones de propagación en la traza).",
-          is_stabilized: true
-        }
-      ]
+          description:
+            "Sistema inicial (Sin acciones de propagación en la traza).",
+          is_stabilized: true,
+        },
+      ],
     };
   } else {
     let actions = snapshot.execution_trace.actions || [];
-    actions.forEach(act => {
+    actions.forEach((act) => {
       if (act.variable_id === undefined && act.target_id !== undefined) {
         act.variable_id = act.target_id;
       }
@@ -660,12 +825,17 @@ function loadSnapshot(snapshot) {
         act.new_value = act.result_value;
       }
       if (act.is_stabilized === undefined) {
-        act.is_stabilized = act.action_type === "stabilization" || act.variable_id === "*";
+        act.is_stabilized =
+          act.action_type === "stabilization" || act.variable_id === "*";
       }
     });
     snapshot.execution_trace.actions = actions;
-    if (snapshot.execution_trace.total_iterations === undefined && snapshot.execution_trace.iterations !== undefined) {
-      snapshot.execution_trace.total_iterations = snapshot.execution_trace.iterations;
+    if (
+      snapshot.execution_trace.total_iterations === undefined &&
+      snapshot.execution_trace.iterations !== undefined
+    ) {
+      snapshot.execution_trace.total_iterations =
+        snapshot.execution_trace.iterations;
     }
   }
 
@@ -678,14 +848,17 @@ function loadSnapshot(snapshot) {
   extractBoxPairs();
 
   // DIAGNOSTIC — ver F12
-  console.group('🔍 loadSnapshot DIAGNOSTIC');
-  console.log('logic.variables:', simState.snapshot.logic.variables);
-  console.log('logic.relations:', simState.snapshot.logic.relations);
-  console.log('visual.instances:', simState.snapshot.visual.instances);
-  console.log('visual.sets:', simState.snapshot.visual.sets);
-  console.log('relativeCoordinates:', simState.relativeCoordinates);
-  console.log('boxPairs:', simState.boxPairs);
-  console.log('execution_trace actions:', simState.snapshot.execution_trace?.actions);
+  console.group("🔍 loadSnapshot DIAGNOSTIC");
+  console.log("logic.variables:", simState.snapshot.logic.variables);
+  console.log("logic.relations:", simState.snapshot.logic.relations);
+  console.log("visual.instances:", simState.snapshot.visual.instances);
+  console.log("visual.sets:", simState.snapshot.visual.sets);
+  console.log("relativeCoordinates:", simState.relativeCoordinates);
+  console.log("boxPairs:", simState.boxPairs);
+  console.log(
+    "execution_trace actions:",
+    simState.snapshot.execution_trace?.actions,
+  );
   console.groupEnd();
 
   updateUI();
@@ -697,28 +870,32 @@ function loadSnapshot(snapshot) {
   setTimeout(fitGlobalCanvas, 50);
 }
 
+/**
+ * Construye el historial completo de valores de cada variable a través de todos los pasos.
+ * Crea un array temporal donde history[varId][step] = valor en ese paso.
+ */
 function buildVariableHistory() {
   const vars = simState.snapshot.logic.variables;
   const actions = simState.snapshot.execution_trace.actions;
-  
+
   const history = {};
-  vars.forEach(v => {
+  vars.forEach((v) => {
     history[v.id] = [v.truth_value || "N"];
   });
 
   let maxStep = 0;
-  actions.forEach(a => {
+  actions.forEach((a) => {
     if (a.step > maxStep) maxStep = a.step;
   });
 
   for (let s = 1; s <= maxStep; s++) {
-    vars.forEach(v => {
+    vars.forEach((v) => {
       const prevVal = history[v.id][s - 1];
       history[v.id][s] = prevVal;
     });
 
-    const stepActions = actions.filter(a => a.step === s);
-    stepActions.forEach(act => {
+    const stepActions = actions.filter((a) => a.step === s);
+    stepActions.forEach((act) => {
       if (act.variable_id && act.variable_id !== "*") {
         if (history[act.variable_id]) {
           history[act.variable_id][s] = act.new_value;
@@ -730,19 +907,23 @@ function buildVariableHistory() {
   simState.variableHistory = history;
 }
 
+/**
+ * Calcula las coordenadas relativas de cada instancia visual respecto a su conjunto padre.
+ * Determina membresía por declaración explícita o proximidad geométrica.
+ */
 function calculateRelativeCoordinates() {
   const visual = simState.snapshot.visual;
   const logic = simState.snapshot.logic;
   simState.relativeCoordinates = {};
 
   Object.entries(visual.instances).forEach(([instId, inst]) => {
-    const varLog = logic.variables.find(v => v.id === inst.variable_id);
+    const varLog = logic.variables.find((v) => v.id === inst.variable_id);
     if (!varLog) return;
 
     let parentSetId = null;
-    
+
     if (varLog.memberships && varLog.memberships.length > 0) {
-      parentSetId = varLog.memberships.find(setId => visual.sets[setId]);
+      parentSetId = varLog.memberships.find((setId) => visual.sets[setId]);
     }
 
     if (!parentSetId) {
@@ -763,24 +944,27 @@ function calculateRelativeCoordinates() {
       simState.relativeCoordinates[instId] = {
         setId: parentSetId,
         dx: inst.x - parentSet.x,
-        dy: inst.y - parentSet.y
+        dy: inst.y - parentSet.y,
       };
     } else {
       simState.relativeCoordinates[instId] = {
         setId: null,
         dx: 0,
-        dy: 0
+        dy: 0,
       };
     }
   });
 }
 
-// 📌 [PROMPT_FEATURE_VISTA_CAJITAS.md]
+/**
+ * Extrae pares de conjuntos conectados por relaciones para la vista Box.
+ * Identifica transiciones entre conjuntos basándose en las relaciones lógicas.
+ */
 function extractBoxPairs() {
   const logic = simState.snapshot.logic;
   const visual = simState.snapshot.visual;
   const setList = Object.keys(visual.sets);
-  
+
   if (setList.length === 0) {
     simState.boxPairs = [];
     return;
@@ -789,13 +973,17 @@ function extractBoxPairs() {
   const setTransitions = [];
   const addedPairs = new Set();
 
-  logic.relations.forEach(rel => {
-    const fromVar = logic.variables.find(v => v.id === rel.from_variable);
-    const toVar = logic.variables.find(v => v.id === rel.to_variable);
+  logic.relations.forEach((rel) => {
+    const fromVar = logic.variables.find((v) => v.id === rel.from_variable);
+    const toVar = logic.variables.find((v) => v.id === rel.to_variable);
     if (!fromVar || !toVar) return;
 
-    const fromInst = Object.values(visual.instances).find(inst => inst.variable_id === fromVar.id);
-    const toInst = Object.values(visual.instances).find(inst => inst.variable_id === toVar.id);
+    const fromInst = Object.values(visual.instances).find(
+      (inst) => inst.variable_id === fromVar.id,
+    );
+    const toInst = Object.values(visual.instances).find(
+      (inst) => inst.variable_id === toVar.id,
+    );
     if (!fromInst || !toInst) return;
 
     const fromSetId = simState.relativeCoordinates[fromInst.id]?.setId;
@@ -805,24 +993,29 @@ function extractBoxPairs() {
       const pairKey = `${fromSetId}->${toSetId}`;
       if (!addedPairs.has(pairKey)) {
         addedPairs.add(pairKey);
-        setTransitions.push({ from: fromSetId, to: toSetId, relationId: rel.id });
+        setTransitions.push({
+          from: fromSetId,
+          to: toSetId,
+          relationId: rel.id,
+        });
       }
     }
   });
 
   let pairs = [];
   if (setTransitions.length > 0) {
-    setTransitions.forEach(trans => {
+    setTransitions.forEach((trans) => {
       pairs.push([trans.from, trans.to]);
     });
   }
 
   if (pairs.length === 0 && setList.length > 1) {
-    const sortedSets = setList.map(id => ({ id, x: visual.sets[id].x }))
-                            .sort((a, b) => a.x - b.x)
-                            .map(s => s.id);
+    const sortedSets = setList
+      .map((id) => ({ id, x: visual.sets[id].x }))
+      .sort((a, b) => a.x - b.x)
+      .map((s) => s.id);
     for (let i = 0; i < sortedSets.length - 1; i++) {
-      pairs.push([sortedSets[i], sortedSets[i+1]]);
+      pairs.push([sortedSets[i], sortedSets[i + 1]]);
     }
   }
 
@@ -836,6 +1029,10 @@ function extractBoxPairs() {
 // ==========================================
 // 7. UI Updates
 // ==========================================
+/**
+ * Actualiza todos los elementos de la interfaz con el estado actual del simulador.
+ * Sincroniza badges, contadores de pasos y renderiza la vista activa.
+ */
 function updateUI() {
   const trace = simState.snapshot.execution_trace;
   const badge = document.getElementById("stabilizedBadge");
@@ -852,7 +1049,7 @@ function updateUI() {
   }
 
   iterationsEl.textContent = trace.total_iterations;
-  
+
   const totalSteps = trace.actions.length;
   totalStepsEl.textContent = totalSteps;
   currentStepEl.textContent = simState.currentStep;
@@ -861,6 +1058,10 @@ function updateUI() {
   renderActiveTab();
 }
 
+/**
+ * Construye el HTML del log de trazas de ejecución.
+ * Muestra cada acción del execution_trace con su paso, descripción y valor resultante.
+ */
 function buildTraceLogHTML() {
   const traceList = document.getElementById("traceList");
   traceList.innerHTML = "";
@@ -873,8 +1074,8 @@ function buildTraceLogHTML() {
 
   actions.forEach((act, idx) => {
     const item = document.createElement("div");
-    item.className = `trace-item ${simState.currentStep === idx + 1 ? 'active' : ''}`;
-    
+    item.className = `trace-item ${simState.currentStep === idx + 1 ? "active" : ""}`;
+
     let valIndicator = "";
     if (act.new_value && act.new_value !== "*") {
       valIndicator = `<span class="val-badge val-${act.new_value.toLowerCase()}"></span>`;
@@ -886,7 +1087,7 @@ function buildTraceLogHTML() {
         <p class="trace-desc">${act.description}</p>
         <div class="trace-meta">
           ${valIndicator}
-          <span>${act.variable_id !== "*" ? `Variable: ${act.variable_id}` : 'Estabilización'}</span>
+          <span>${act.variable_id !== "*" ? `Variable: ${act.variable_id}` : "Estabilización"}</span>
         </div>
       </div>
     `;
@@ -904,99 +1105,122 @@ function buildTraceLogHTML() {
   }
 }
 
+/**
+ * Mapea un valor Belnap (V, F, N, B) a su color visual correspondiente.
+ * V=verde, F=rojo, N=gris, B=púrpura.
+ */
 function getColorForValue(val) {
   switch (val?.toUpperCase()) {
-    case 'V': return "#10B981";
-    case 'F': return "#EF4444";
-    case 'N': return "#6B7280";
-    case 'B': return "#8B5CF6";
-    default: return "#6B7280";
+    case "V":
+      return "#10B981";
+    case "F":
+      return "#EF4444";
+    case "N":
+      return "#6B7280";
+    case "B":
+      return "#8B5CF6";
+    default:
+      return "#6B7280";
   }
 }
 
+/**
+ * Evalúa una operación lógica Belnap entre dos valores.
+ * Implementa las matrices de verdad para AND, OR y PROPAGATION (k-join).
+ */
 function evaluateBelnapMatrix(op, val1, val2) {
-  const v1 = val1?.toUpperCase() || 'N';
-  const v2 = val2?.toUpperCase() || 'N';
-  
-  if (op === 'AND' || op === 'CONJUNCTION') {
-    if (v1 === 'N') {
-      if (v2 === 'N') return 'N';
-      if (v2 === 'F') return 'F';
-      if (v2 === 'V') return 'N';
-      if (v2 === 'B') return 'F';
-    } else if (v1 === 'F') return 'F';
-    else if (v1 === 'V') {
-      if (v2 === 'N') return 'N';
-      if (v2 === 'F') return 'F';
-      if (v2 === 'V') return 'V';
-      if (v2 === 'B') return 'B';
-    } else if (v1 === 'B') {
-      if (v2 === 'N') return 'F';
-      if (v2 === 'F') return 'F';
-      if (v2 === 'V') return 'B';
-      if (v2 === 'B') return 'B';
+  const v1 = val1?.toUpperCase() || "N";
+  const v2 = val2?.toUpperCase() || "N";
+
+  if (op === "AND" || op === "CONJUNCTION") {
+    if (v1 === "N") {
+      if (v2 === "N") return "N";
+      if (v2 === "F") return "F";
+      if (v2 === "V") return "N";
+      if (v2 === "B") return "F";
+    } else if (v1 === "F") return "F";
+    else if (v1 === "V") {
+      if (v2 === "N") return "N";
+      if (v2 === "F") return "F";
+      if (v2 === "V") return "V";
+      if (v2 === "B") return "B";
+    } else if (v1 === "B") {
+      if (v2 === "N") return "F";
+      if (v2 === "F") return "F";
+      if (v2 === "V") return "B";
+      if (v2 === "B") return "B";
     }
-  } else if (op === 'OR' || op === 'DISJUNCTION') {
-    if (v1 === 'N') {
-      if (v2 === 'N') return 'N';
-      if (v2 === 'F') return 'N';
-      if (v2 === 'V') return 'V';
-      if (v2 === 'B') return 'V';
-    } else if (v1 === 'F') {
-      if (v2 === 'N') return 'N';
-      if (v2 === 'F') return 'F';
-      if (v2 === 'V') return 'V';
-      if (v2 === 'B') return 'B';
-    } else if (v1 === 'V') return 'V';
-    else if (v1 === 'B') {
-      if (v2 === 'N') return 'V';
-      if (v2 === 'F') return 'B';
-      if (v2 === 'V') return 'V';
-      if (v2 === 'B') return 'B';
+  } else if (op === "OR" || op === "DISJUNCTION") {
+    if (v1 === "N") {
+      if (v2 === "N") return "N";
+      if (v2 === "F") return "N";
+      if (v2 === "V") return "V";
+      if (v2 === "B") return "V";
+    } else if (v1 === "F") {
+      if (v2 === "N") return "N";
+      if (v2 === "F") return "F";
+      if (v2 === "V") return "V";
+      if (v2 === "B") return "B";
+    } else if (v1 === "V") return "V";
+    else if (v1 === "B") {
+      if (v2 === "N") return "V";
+      if (v2 === "F") return "B";
+      if (v2 === "V") return "V";
+      if (v2 === "B") return "B";
     }
-  } else if (op === 'PROPAGATION' || op === 'KJOIN') {
+  } else if (op === "PROPAGATION" || op === "KJOIN") {
     if (v1 === v2) return v1;
-    if (v1 === 'N') return v2;
-    if (v2 === 'N') return v1;
-    if (v1 === 'B' || v2 === 'B') return 'B';
-    if ((v1 === 'V' && v2 === 'F') || (v1 === 'F' && v2 === 'V')) return 'B';
-    return 'B';
+    if (v1 === "N") return v2;
+    if (v2 === "N") return v1;
+    if (v1 === "B" || v2 === "B") return "B";
+    if ((v1 === "V" && v2 === "F") || (v1 === "F" && v2 === "V")) return "B";
+    return "B";
   }
-  return 'N';
+  return "N";
 }
 
+/**
+ * Determina el conectivo efectivo de una relación.
+ * Busca primero en la relación explícita, luego en el conjunto destino.
+ */
 function getRelationEffectiveOp(rel, logic) {
   try {
     let explicitOp = rel.connective;
-    
-    if (!logic || !logic.variables || !logic.sets) return explicitOp || 'PROPAGATION';
-    
+
+    if (!logic || !logic.variables || !logic.sets)
+      return explicitOp || "PROPAGATION";
+
     let varsArray = logic.variables;
     if (!Array.isArray(varsArray)) {
-      if (typeof varsArray === 'object') varsArray = Object.values(varsArray);
-      else return explicitOp || 'PROPAGATION';
+      if (typeof varsArray === "object") varsArray = Object.values(varsArray);
+      else return explicitOp || "PROPAGATION";
     }
-    
-    const targetVar = varsArray.find(v => v.id === rel.to_variable);
-    if (!targetVar || !targetVar.memberships || !Array.isArray(targetVar.memberships)) return explicitOp || 'PROPAGATION';
-    
+
+    const targetVar = varsArray.find((v) => v.id === rel.to_variable);
+    if (
+      !targetVar ||
+      !targetVar.memberships ||
+      !Array.isArray(targetVar.memberships)
+    )
+      return explicitOp || "PROPAGATION";
+
     let setsArray = logic.sets;
     if (!Array.isArray(setsArray)) {
-      if (typeof setsArray === 'object') setsArray = Object.values(setsArray);
-      else return explicitOp || 'PROPAGATION';
+      if (typeof setsArray === "object") setsArray = Object.values(setsArray);
+      else return explicitOp || "PROPAGATION";
     }
-    
+
     for (const setId of targetVar.memberships) {
-      const set = setsArray.find(s => s.id === setId);
+      const set = setsArray.find((s) => s.id === setId);
       if (set && set.connective) {
         return set.connective.toUpperCase();
       }
     }
-    return explicitOp ? explicitOp.toUpperCase() : 'PROPAGATION';
+    return explicitOp ? explicitOp.toUpperCase() : "PROPAGATION";
   } catch (e) {
     console.error("getRelationEffectiveOp error", e);
   }
-  return 'PROPAGATION';
+  return "PROPAGATION";
 }
 
 // ==========================================
@@ -1058,22 +1282,30 @@ function renderBoxView() {
 
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     svg.appendChild(defs);
-    
+
     // Create dynamic markers for each relation with its specific color
-    logic.relations.forEach(rel => {
-      const relVisual = visual.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
+    logic.relations.forEach((rel) => {
+      const relVisual = visual.relations[rel.id] || {
+        color: "#3B82F6",
+        thickness: 2,
+      };
       let markerColor = relVisual.color || "#3B82F6";
-      
+
       const effectiveOp = getRelationEffectiveOp(rel, logic);
       if (effectiveOp) {
         const fromHistory = simState.variableHistory[rel.from_variable];
         const toHistory = simState.variableHistory[rel.to_variable];
         const valFrom = fromHistory ? fromHistory[simState.currentStep] : "N";
         const valTo = toHistory ? toHistory[simState.currentStep] : "N";
-        markerColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+        markerColor = getColorForValue(
+          evaluateBelnapMatrix(effectiveOp, valFrom, valTo),
+        );
       }
-      
-      const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+
+      const marker = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "marker",
+      );
       marker.setAttribute("id", `arrow-box-${boxIdx}-${rel.id}`);
       marker.setAttribute("viewBox", "0 0 10 10");
       marker.setAttribute("refX", "6");
@@ -1081,11 +1313,14 @@ function renderBoxView() {
       marker.setAttribute("markerWidth", "6");
       marker.setAttribute("markerHeight", "6");
       marker.setAttribute("orient", "auto-start-reverse");
-      
-      const markerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+      const markerPath = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path",
+      );
       markerPath.setAttribute("d", "M 0 1 L 10 5 L 0 9 z");
       markerPath.setAttribute("fill", markerColor);
-      
+
       marker.appendChild(markerPath);
       defs.appendChild(marker);
     });
@@ -1093,16 +1328,28 @@ function renderBoxView() {
     const leftCenterX = 110;
     const rightCenterX = 310;
     const centerY = 100;
-    
+
     const leftRadius = Math.min(setLeft.radius, 70);
     const rightRadius = Math.min(setRight.radius, 70);
 
     // Draw sets
-    const gSetL = drawSetSVG(setIdLeft, setLeft, leftCenterX, centerY, leftRadius);
+    const gSetL = drawSetSVG(
+      setIdLeft,
+      setLeft,
+      leftCenterX,
+      centerY,
+      leftRadius,
+    );
     svg.appendChild(gSetL);
 
     if (setIdLeft !== setIdRight) {
-      const gSetR = drawSetSVG(setIdRight, setRight, rightCenterX, centerY, rightRadius);
+      const gSetR = drawSetSVG(
+        setIdRight,
+        setRight,
+        rightCenterX,
+        centerY,
+        rightRadius,
+      );
       svg.appendChild(gSetR);
     }
 
@@ -1112,22 +1359,37 @@ function renderBoxView() {
     const drawVariablesForSet = (setId, cx) => {
       Object.entries(visual.instances).forEach(([instId, inst]) => {
         const relData = simState.relativeCoordinates[instId];
-        console.log(`[drawVar] inst=${instId} relData.setId=${relData?.setId} expected=${setId} match=${relData?.setId === setId}`);
+        console.log(
+          `[drawVar] inst=${instId} relData.setId=${relData?.setId} expected=${setId} match=${relData?.setId === setId}`,
+        );
         if (relData && relData.setId === setId) {
-          const scale = cx === leftCenterX ? (leftRadius / setLeft.radius) : (rightRadius / setRight.radius);
+          const scale =
+            cx === leftCenterX
+              ? leftRadius / setLeft.radius
+              : rightRadius / setRight.radius;
           const bx = cx + relData.dx * scale;
           const by = centerY + relData.dy * scale;
 
-          const varLog = logic.variables.find(v => v.id === inst.variable_id);
+          const varLog = logic.variables.find((v) => v.id === inst.variable_id);
           if (!varLog) return;
 
           const valHistory = simState.variableHistory[varLog.id];
           const curVal = valHistory ? valHistory[simState.currentStep] : "N";
 
           // Calculate visual ball visibility for step
-          const isVisible = isBallVisibleAtStep(varLog.id, simState.currentStep);
+          const isVisible = isBallVisibleAtStep(
+            varLog.id,
+            simState.currentStep,
+          );
 
-          const gBall = drawBallSVG(inst.variable_id, instId, bx, by, curVal, isVisible);
+          const gBall = drawBallSVG(
+            inst.variable_id,
+            instId,
+            bx,
+            by,
+            curVal,
+            isVisible,
+          );
           svg.appendChild(gBall);
 
           ballCoords[varLog.id] = { x: bx, y: by };
@@ -1141,13 +1403,16 @@ function renderBoxView() {
     }
 
     // Draw implication arrows
-    logic.relations.forEach(rel => {
+    logic.relations.forEach((rel) => {
       const fromCoord = ballCoords[rel.from_variable];
       const toCoord = ballCoords[rel.to_variable];
 
       if (fromCoord && toCoord) {
-        const relVisual = visual.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
-        
+        const relVisual = visual.relations[rel.id] || {
+          color: "#3B82F6",
+          thickness: 2,
+        };
+
         const dx = toCoord.x - fromCoord.x;
         const dy = toCoord.y - fromCoord.y;
         const len = Math.sqrt(dx * dx + dy * dy);
@@ -1158,9 +1423,12 @@ function renderBoxView() {
         const endX = toCoord.x - (dx / len) * (radiusBall + 6);
         const endY = toCoord.y - (dy / len) * (radiusBall + 6);
 
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const path = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path",
+        );
         path.setAttribute("id", `box-path-${boxIdx}-${rel.id}`);
-        
+
         let pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
         if (Math.abs(dy) < 5) {
           const midX = (startX + endX) / 2;
@@ -1176,13 +1444,18 @@ function renderBoxView() {
           const toHistory = simState.variableHistory[rel.to_variable];
           const valFrom = fromHistory ? fromHistory[simState.currentStep] : "N";
           const valTo = toHistory ? toHistory[simState.currentStep] : "N";
-          strokeColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+          strokeColor = getColorForValue(
+            evaluateBelnapMatrix(effectiveOp, valFrom, valTo),
+          );
         }
-        path.setAttribute("class", `svg-relation-path ${relVisual.is_contrapositive ? 'contrapositive' : ''}`);
+        path.setAttribute(
+          "class",
+          `svg-relation-path ${relVisual.is_contrapositive ? "contrapositive" : ""}`,
+        );
         path.setAttribute("stroke", strokeColor);
         path.setAttribute("stroke-width", relVisual.thickness || 2);
         path.setAttribute("marker-end", `url(#arrow-box-${boxIdx}-${rel.id})`);
-        
+
         svg.appendChild(path);
       }
     });
@@ -1201,28 +1474,39 @@ function renderGlobalView() {
   svg.setAttribute("id", "globalSvg");
   container.appendChild(svg);
 
-  const gTransform = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  const gTransform = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "g",
+  );
   gTransform.setAttribute("id", "globalTransformGroup");
   svg.appendChild(gTransform);
 
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
   gTransform.appendChild(defs);
-  
+
   // Create dynamic markers for each relation with its specific color
-  logic.relations.forEach(rel => {
-    const relVisual = visual.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
+  logic.relations.forEach((rel) => {
+    const relVisual = visual.relations[rel.id] || {
+      color: "#3B82F6",
+      thickness: 2,
+    };
     let markerColor = relVisual.color || "#3B82F6";
-    
+
     const effectiveOp = getRelationEffectiveOp(rel, logic);
     if (effectiveOp) {
       const fromHistory = simState.variableHistory[rel.from_variable];
       const toHistory = simState.variableHistory[rel.to_variable];
       const valFrom = fromHistory ? fromHistory[simState.currentStep] : "N";
       const valTo = toHistory ? toHistory[simState.currentStep] : "N";
-      markerColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+      markerColor = getColorForValue(
+        evaluateBelnapMatrix(effectiveOp, valFrom, valTo),
+      );
     }
-    
-    const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+
+    const marker = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "marker",
+    );
     marker.setAttribute("id", `arrow-global-${rel.id}`);
     marker.setAttribute("viewBox", "0 0 10 10");
     marker.setAttribute("refX", "6");
@@ -1230,11 +1514,14 @@ function renderGlobalView() {
     marker.setAttribute("markerWidth", "6");
     marker.setAttribute("markerHeight", "6");
     marker.setAttribute("orient", "auto-start-reverse");
-    
-    const markerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+    const markerPath = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "path",
+    );
     markerPath.setAttribute("d", "M 0 1 L 10 5 L 0 9 z");
     markerPath.setAttribute("fill", markerColor);
-    
+
     marker.appendChild(markerPath);
     defs.appendChild(marker);
   });
@@ -1247,7 +1534,7 @@ function renderGlobalView() {
   const ballCoords = {};
 
   Object.entries(visual.instances).forEach(([instId, inst]) => {
-    const varLog = logic.variables.find(v => v.id === inst.variable_id);
+    const varLog = logic.variables.find((v) => v.id === inst.variable_id);
     if (!varLog) return;
 
     const valHistory = simState.variableHistory[varLog.id];
@@ -1255,19 +1542,29 @@ function renderGlobalView() {
 
     const isVisible = isBallVisibleAtStep(varLog.id, simState.currentStep);
 
-    const gBall = drawBallSVG(inst.variable_id, instId, inst.x, inst.y, curVal, isVisible);
+    const gBall = drawBallSVG(
+      inst.variable_id,
+      instId,
+      inst.x,
+      inst.y,
+      curVal,
+      isVisible,
+    );
     gTransform.appendChild(gBall);
 
     ballCoords[varLog.id] = { x: inst.x, y: inst.y };
   });
 
-  logic.relations.forEach(rel => {
+  logic.relations.forEach((rel) => {
     const fromCoord = ballCoords[rel.from_variable];
     const toCoord = ballCoords[rel.to_variable];
 
     if (fromCoord && toCoord) {
-      const relVisual = visual.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
-      
+      const relVisual = visual.relations[rel.id] || {
+        color: "#3B82F6",
+        thickness: 2,
+      };
+
       const dx = toCoord.x - fromCoord.x;
       const dy = toCoord.y - fromCoord.y;
       const len = Math.sqrt(dx * dx + dy * dy);
@@ -1278,9 +1575,12 @@ function renderGlobalView() {
       const endX = toCoord.x - (dx / len) * (radiusBall + 6);
       const endY = toCoord.y - (dy / len) * (radiusBall + 6);
 
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const path = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path",
+      );
       path.setAttribute("id", `global-path-${rel.id}`);
-      
+
       let pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
       if (Math.abs(dx) > 10 && Math.abs(dy) > 10) {
         const midX = (startX + endX) / 2 + (dy / len) * 15;
@@ -1296,13 +1596,18 @@ function renderGlobalView() {
         const toHistory = simState.variableHistory[rel.to_variable];
         const valFrom = fromHistory ? fromHistory[simState.currentStep] : "N";
         const valTo = toHistory ? toHistory[simState.currentStep] : "N";
-        strokeColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+        strokeColor = getColorForValue(
+          evaluateBelnapMatrix(effectiveOp, valFrom, valTo),
+        );
       }
-      path.setAttribute("class", `svg-relation-path ${relVisual.is_contrapositive ? 'contrapositive' : ''}`);
+      path.setAttribute(
+        "class",
+        `svg-relation-path ${relVisual.is_contrapositive ? "contrapositive" : ""}`,
+      );
       path.setAttribute("stroke", strokeColor);
       path.setAttribute("stroke-width", relVisual.thickness || 2);
       path.setAttribute("marker-end", `url(#arrow-global-${rel.id})`);
-      
+
       gTransform.appendChild(path);
     }
   });
@@ -1349,14 +1654,14 @@ function updateGlobalViewPositions() {
       label.setAttribute("x", inst.x);
       label.setAttribute("y", inst.y + 4);
     }
-    const varLog = logic.variables.find(v => v.id === inst.variable_id);
+    const varLog = logic.variables.find((v) => v.id === inst.variable_id);
     if (varLog) {
       ballCoords[varLog.id] = { x: inst.x, y: inst.y };
     }
   });
 
   // 3. Update Path/Arrow SVG positions
-  logic.relations.forEach(rel => {
+  logic.relations.forEach((rel) => {
     const fromCoord = ballCoords[rel.from_variable];
     const toCoord = ballCoords[rel.to_variable];
 
@@ -1392,7 +1697,10 @@ function drawSetSVG(setId, setVal, cx, cy, radius) {
   g.setAttribute("data-set-id", setId);
   g.setAttribute("id", `set-group-${setId}`);
 
-  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  const circle = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "circle",
+  );
   circle.setAttribute("id", `set-circle-${setId}`);
   circle.setAttribute("cx", cx);
   circle.setAttribute("cy", cy);
@@ -1413,7 +1721,10 @@ function drawSetSVG(setId, setVal, cx, cy, radius) {
   g.appendChild(textId);
 
   if (setVal.connective) {
-    const textConn = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const textConn = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "text",
+    );
     textConn.setAttribute("id", `set-conn-${setId}`);
     textConn.setAttribute("x", cx);
     textConn.setAttribute("y", cy - radius + 25);
@@ -1431,9 +1742,15 @@ function drawBallSVG(varId, instId, x, y, value, isVisible = true) {
   g.setAttribute("data-instance-id", instId);
   g.setAttribute("data-variable-id", varId);
   g.setAttribute("id", `ball-group-${instId}`);
-  g.setAttribute("style", `opacity: ${isVisible ? 1 : 0}; transition: opacity 0.35s ease-in-out;`);
+  g.setAttribute(
+    "style",
+    `opacity: ${isVisible ? 1 : 0}; transition: opacity 0.35s ease-in-out;`,
+  );
 
-  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  const circle = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "circle",
+  );
   circle.setAttribute("id", `ball-circle-${instId}`);
   circle.setAttribute("cx", x);
   circle.setAttribute("cy", y);
@@ -1452,6 +1769,10 @@ function drawBallSVG(varId, instId, x, y, value, isVisible = true) {
   return g;
 }
 
+/**
+ * Ajusta el zoom y pan del canvas global para que todo el contenido sea visible.
+ * Calcula el bounding box y centra la vista con margen.
+ */
 function fitGlobalCanvas() {
   const svg = document.getElementById("globalSvg");
   if (!svg) return;
@@ -1475,16 +1796,28 @@ function fitGlobalCanvas() {
   applyZoomPan();
 }
 
+/**
+ * Aplica la transformación de zoom y pan al grupo SVG principal.
+ * Actualiza el atributo transform con los valores actuales de simState.
+ */
 function applyZoomPan() {
   const group = document.getElementById("globalTransformGroup");
   if (group) {
-    group.setAttribute("transform", `translate(${simState.pan.x}, ${simState.pan.y}) scale(${simState.zoom})`);
+    group.setAttribute(
+      "transform",
+      `translate(${simState.pan.x}, ${simState.pan.y}) scale(${simState.zoom})`,
+    );
   }
 }
 
 // ==========================================
 // 9. Simulation Actions & Step Animations (Fail-safe Timeout Flow)
 // ==========================================
+/**
+ * Avanza un paso en la simulación EPiC.
+ * Ejecuta animaciones de propagación y actualiza el estado tras completarlas.
+ * Implementa timeout fail-safe para evitar bloqueos en reproducción rápida.
+ */
 function stepForward() {
   const actions = simState.snapshot.execution_trace.actions;
   if (simState.currentStep >= actions.length) {
@@ -1505,7 +1838,7 @@ function stepForward() {
   }
 
   const nextStepNum = simState.currentStep + 1;
-  const stepActions = actions.filter(a => a.step === nextStepNum);
+  const stepActions = actions.filter((a) => a.step === nextStepNum);
 
   if (stepActions.length === 0) {
     simState.currentStep = nextStepNum;
@@ -1516,7 +1849,7 @@ function stepForward() {
   const animDuration = Math.min(750, Math.max(50, simState.speed - 50));
 
   // 1. Run parallel animations on top of the DOM at step s-1
-  stepActions.forEach(action => {
+  stepActions.forEach((action) => {
     if (action.is_stabilized || action.variable_id === "*") {
       pulseStabilization(animDuration);
     } else {
@@ -1532,39 +1865,71 @@ function stepForward() {
   }, animDuration);
 }
 
+/**
+ * Anima un pulso de estabilización en todas las variables.
+ * Indica visualmente que el sistema EPiC alcanzó un punto fijo.
+ */
 function pulseStabilization(animDuration = 600) {
-  document.querySelectorAll(".svg-instance").forEach(el => {
-    el.animate([
-      { transform: "scale(1)", filter: "drop-shadow(0 0 0px transparent)" },
-      { transform: "scale(1.15)", filter: "drop-shadow(0 0 15px rgba(59, 130, 246, 0.8))" },
-      { transform: "scale(1)", filter: "none" }
-    ], { duration: animDuration, easing: "ease-out" });
+  document.querySelectorAll(".svg-instance").forEach((el) => {
+    el.animate(
+      [
+        { transform: "scale(1)", filter: "drop-shadow(0 0 0px transparent)" },
+        {
+          transform: "scale(1.15)",
+          filter: "drop-shadow(0 0 15px rgba(59, 130, 246, 0.8))",
+        },
+        { transform: "scale(1)", filter: "none" },
+      ],
+      { duration: animDuration, easing: "ease-out" },
+    );
   });
 }
 
+/**
+ * Dispara la animación de una acción individual de propagación.
+ * Anima partículas viajando por las relaciones desde fuente a destino.
+ * Implementa Modus Ponens visual (flujo directo) y Modus Tollens (flujo inverso).
+ */
 function triggerSingleActionAnimation(action, animDuration = 750) {
   const logic = simState.snapshot.logic;
   const targetVarId = action.variable_id;
   const newVal = action.new_value;
 
-  const activeRelations = logic.relations.filter(r => r.to_variable === targetVarId);
+  const activeRelations = logic.relations.filter(
+    (r) => r.to_variable === targetVarId,
+  );
 
   if (simState.activeTab === "box-view") {
     simState.boxPairs.forEach((pair, boxIdx) => {
-      activeRelations.forEach(rel => {
+      activeRelations.forEach((rel) => {
         // Only trigger animation if the source ball is active in current step (s-1)
-        const sourceVal = simState.variableHistory[rel.from_variable]?.[simState.currentStep];
+        const sourceVal =
+          simState.variableHistory[rel.from_variable]?.[simState.currentStep];
         if (sourceVal && sourceVal !== "N") {
-          const pathEl = document.getElementById(`box-path-${boxIdx}-${rel.id}`);
+          const pathEl = document.getElementById(
+            `box-path-${boxIdx}-${rel.id}`,
+          );
           if (pathEl) {
             // Fade-out source ball inside set as particle departs
-            animateElementOpacity(`box-svg-${boxIdx}`, rel.from_variable, 1, 0, 0);
+            animateElementOpacity(
+              `box-svg-${boxIdx}`,
+              rel.from_variable,
+              1,
+              0,
+              0,
+            );
 
             // Animate particle along path
             animateParticleOnPath(pathEl, newVal, animDuration, () => {
               // Update target ball text/color and fade it in on arrival
               updateBallValAndShow(`box-svg-${boxIdx}`, targetVarId, newVal);
-              animateElementOpacity(`box-svg-${boxIdx}`, targetVarId, 0, 1, 300);
+              animateElementOpacity(
+                `box-svg-${boxIdx}`,
+                targetVarId,
+                0,
+                1,
+                300,
+              );
             });
           }
         }
@@ -1572,8 +1937,9 @@ function triggerSingleActionAnimation(action, animDuration = 750) {
     });
   } else {
     // Global Canvas View
-    activeRelations.forEach(rel => {
-      const sourceVal = simState.variableHistory[rel.from_variable]?.[simState.currentStep];
+    activeRelations.forEach((rel) => {
+      const sourceVal =
+        simState.variableHistory[rel.from_variable]?.[simState.currentStep];
       if (sourceVal && sourceVal !== "N") {
         const pathEl = document.getElementById(`global-path-${rel.id}`);
         if (pathEl) {
@@ -1592,20 +1958,33 @@ function triggerSingleActionAnimation(action, animDuration = 750) {
   }
 }
 
-function animateElementOpacity(boxIdx, variableId, fromOpacity, toOpacity, duration) {
+/**
+ * Anima la opacidad de una variable en la vista Box.
+ * Usado para fade-in/fade-out durante propagación.
+ */
+function animateElementOpacity(
+  boxIdx,
+  variableId,
+  fromOpacity,
+  toOpacity,
+  duration,
+) {
   const boxSvg = document.getElementById(`box-svg-${boxIdx}`);
   if (!boxSvg) return;
-  const ballGroups = boxSvg.querySelectorAll(`[data-variable-id="${variableId}"]`);
-  ballGroups.forEach(ballGroup => {
+  const ballGroups = boxSvg.querySelectorAll(
+    `[data-variable-id="${variableId}"]`,
+  );
+  ballGroups.forEach((ballGroup) => {
     if (duration === 0) {
-      ballGroup.style.display = 'none';
+      ballGroup.style.display = "none";
     } else {
-      ballGroup.style.display = '';
-      ballGroup.animate([
-        { opacity: fromOpacity },
-        { opacity: toOpacity }
-      ], { duration: duration, fill: "forwards", easing: "ease-in-out" });
-      
+      ballGroup.style.display = "";
+      ballGroup.animate([{ opacity: fromOpacity }, { opacity: toOpacity }], {
+        duration: duration,
+        fill: "forwards",
+        easing: "ease-in-out",
+      });
+
       setTimeout(() => {
         ballGroup.style.opacity = toOpacity;
       }, duration);
@@ -1613,20 +1992,32 @@ function animateElementOpacity(boxIdx, variableId, fromOpacity, toOpacity, durat
   });
 }
 
-function animateElementOpacityGlobal(variableId, fromOpacity, toOpacity, duration) {
+/**
+ * Anima la opacidad de una variable en la vista Global.
+ * Versión global de animateElementOpacity.
+ */
+function animateElementOpacityGlobal(
+  variableId,
+  fromOpacity,
+  toOpacity,
+  duration,
+) {
   const globalContainer = document.getElementById("globalCanvasContainer");
   if (!globalContainer) return;
-  const ballGroups = globalContainer.querySelectorAll(`[data-variable-id="${variableId}"]`);
-  ballGroups.forEach(ballGroup => {
+  const ballGroups = globalContainer.querySelectorAll(
+    `[data-variable-id="${variableId}"]`,
+  );
+  ballGroups.forEach((ballGroup) => {
     if (duration === 0) {
-      ballGroup.style.display = 'none';
+      ballGroup.style.display = "none";
     } else {
-      ballGroup.style.display = '';
-      ballGroup.animate([
-        { opacity: fromOpacity },
-        { opacity: toOpacity }
-      ], { duration: duration, fill: "forwards", easing: "ease-in-out" });
-      
+      ballGroup.style.display = "";
+      ballGroup.animate([{ opacity: fromOpacity }, { opacity: toOpacity }], {
+        duration: duration,
+        fill: "forwards",
+        easing: "ease-in-out",
+      });
+
       setTimeout(() => {
         ballGroup.style.opacity = toOpacity;
       }, duration);
@@ -1634,6 +2025,10 @@ function animateElementOpacityGlobal(variableId, fromOpacity, toOpacity, duratio
   });
 }
 
+/**
+ * Actualiza el valor y apariencia de una variable en la vista Box.
+ * Cambia color y etiqueta según el nuevo valor Belnap.
+ */
 function updateBallValAndShow(boxIdx, variableId, value) {
   const boxSvg = document.getElementById(`box-svg-${boxIdx}`);
   if (!boxSvg) return;
@@ -1641,32 +2036,49 @@ function updateBallValAndShow(boxIdx, variableId, value) {
   if (ballGroup) {
     const circle = ballGroup.querySelector("circle");
     const text = ballGroup.querySelector("text");
-    if (circle) circle.className.baseVal = `svg-instance val-${value.toLowerCase()}`;
+    if (circle)
+      circle.className.baseVal = `svg-instance val-${value.toLowerCase()}`;
     if (text) text.textContent = `${variableId}:${value}`;
   }
 }
 
+/**
+ * Actualiza el valor y apariencia de una variable en la vista Global.
+ * Versión global de updateBallValAndShow.
+ */
 function updateBallValAndShowGlobal(variableId, value) {
   const globalContainer = document.getElementById("globalCanvasContainer");
   if (!globalContainer) return;
-  const ballGroup = globalContainer.querySelector(`[data-variable-id="${variableId}"]`);
+  const ballGroup = globalContainer.querySelector(
+    `[data-variable-id="${variableId}"]`,
+  );
   if (ballGroup) {
     const circle = ballGroup.querySelector("circle");
     const text = ballGroup.querySelector("text");
-    if (circle) circle.className.baseVal = `svg-instance val-${value.toLowerCase()}`;
+    if (circle)
+      circle.className.baseVal = `svg-instance val-${value.toLowerCase()}`;
     if (text) text.textContent = `${variableId}:${value}`;
   }
 }
 
+/**
+ * Anima una partícula de evidencia viajando por un path SVG.
+ * La dirección depende del valor: V avanza, F retrocede (Modus Tollens).
+ * Visualiza la propagación de evidencia en el grafo EPiC.
+ */
 function animateParticleOnPath(pathEl, value, duration, onComplete) {
   const svg = pathEl.ownerSVGElement;
   if (!svg) return;
 
   const totalLength = pathEl.getTotalLength();
-  const particle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  const particle = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "circle",
+  );
   particle.setAttribute("r", 6);
-  
-  const color = value === "V" ? "#10B981" : (value === "F" ? "#EF4444" : "#8B5CF6");
+
+  const color =
+    value === "V" ? "#10B981" : value === "F" ? "#EF4444" : "#8B5CF6";
   particle.setAttribute("fill", color);
   particle.setAttribute("filter", `drop-shadow(0 0 8px ${color})`);
   svg.appendChild(particle);
@@ -1680,10 +2092,10 @@ function animateParticleOnPath(pathEl, value, duration, onComplete) {
   function animate(timestamp) {
     if (!start) start = timestamp;
     const progress = Math.min((timestamp - start) / duration, 1);
-    
+
     const currentLength = startLength + (endLength - startLength) * progress;
     const point = pathEl.getPointAtLength(currentLength);
-    
+
     particle.setAttribute("cx", point.x);
     particle.setAttribute("cy", point.y);
 
@@ -1702,7 +2114,9 @@ function pulseTargetBall(boxIdx, variableId) {
   const boxSvgContainer = document.getElementById(`box-svg-${boxIdx}`);
   if (!boxSvgContainer) return;
 
-  const balls = boxSvgContainer.querySelectorAll(`[data-variable-id="${variableId}"] circle`);
+  const balls = boxSvgContainer.querySelectorAll(
+    `[data-variable-id="${variableId}"] circle`,
+  );
   // User requested ball to be static on arrival
   /*
   balls.forEach(ball => {
@@ -1718,7 +2132,9 @@ function pulseTargetBall(boxIdx, variableId) {
 // Pulse visual instances of a variable in the Global Canvas
 function pulseTargetBallGlobal(variableId) {
   const gCanvas = document.getElementById("globalCanvasContainer");
-  const balls = gCanvas.querySelectorAll(`[data-variable-id="${variableId}"] circle`);
+  const balls = gCanvas.querySelectorAll(
+    `[data-variable-id="${variableId}"] circle`,
+  );
   // User requested ball to be static on arrival
   /*
   balls.forEach(ball => {
@@ -1731,6 +2147,10 @@ function pulseTargetBallGlobal(variableId) {
   */
 }
 
+/**
+ * Retrocede un paso en la simulación.
+ * Cancela animaciones en curso y actualiza la UI.
+ */
 function stepBackward() {
   if (simState.animationTimeout) {
     clearTimeout(simState.animationTimeout);
@@ -1742,6 +2162,10 @@ function stepBackward() {
   updateUI();
 }
 
+/**
+ * Reinicia la simulación al paso 0.
+ * Pausa la reproducción y limpia animaciones pendientes.
+ */
 function resetSimulation() {
   if (simState.animationTimeout) {
     clearTimeout(simState.animationTimeout);
@@ -1793,12 +2217,12 @@ function initEditorDragEvents() {
   if (!container) return;
 
   container.addEventListener("mousedown", (e) => {
-    const setNode = e.target.closest('.g-set-container');
-    const ballNode = e.target.closest('.g-ball-container');
-    
+    const setNode = e.target.closest(".g-set-container");
+    const ballNode = e.target.closest(".g-ball-container");
+
     let setIdToDrag = null;
     let ballIdToDrag = null;
-    
+
     if (setNode) {
       setIdToDrag = setNode.getAttribute("data-set-id");
     } else if (ballNode) {
@@ -1806,7 +2230,7 @@ function initEditorDragEvents() {
       if (instId && editorGraph.instances[instId]) {
         // If the ball belongs to a set, drag the set instead
         const varId = editorGraph.instances[instId].variable_id;
-        const vLogic = editorGraph.logic.variables.find(v => v.id === varId);
+        const vLogic = editorGraph.logic.variables.find((v) => v.id === varId);
         if (vLogic && vLogic.memberships && vLogic.memberships.length > 0) {
           setIdToDrag = vLogic.memberships[0]; // drag the parent set
         } else {
@@ -1822,62 +2246,76 @@ function initEditorDragEvents() {
     if (setIdToDrag && editorGraph.sets[setIdToDrag]) {
       editorDragState.draggedSetId = setIdToDrag;
       const setVal = editorGraph.sets[setIdToDrag];
-      const currentX = setVal.editor_x !== undefined ? setVal.editor_x : setVal.x;
-      const currentY = setVal.editor_y !== undefined ? setVal.editor_y : setVal.y;
-      editorDragState.dragStartOffset = { x: currentX - ptX, y: currentY - ptY };
+      const currentX =
+        setVal.editor_x !== undefined ? setVal.editor_x : setVal.x;
+      const currentY =
+        setVal.editor_y !== undefined ? setVal.editor_y : setVal.y;
+      editorDragState.dragStartOffset = {
+        x: currentX - ptX,
+        y: currentY - ptY,
+      };
     } else if (ballIdToDrag) {
       editorDragState.draggedBallId = ballIdToDrag;
       const inst = editorGraph.instances[ballIdToDrag];
       const currentX = inst.editor_x !== undefined ? inst.editor_x : inst.x;
       const currentY = inst.editor_y !== undefined ? inst.editor_y : inst.y;
-      editorDragState.dragStartOffset = { x: currentX - ptX, y: currentY - ptY };
+      editorDragState.dragStartOffset = {
+        x: currentX - ptX,
+        y: currentY - ptY,
+      };
     }
   });
 
   window.addEventListener("mousemove", (e) => {
     if (simState.activeTab !== "editor-view") return;
-    const svgRect = document.getElementById("editorPreviewContainer").getBoundingClientRect();
+    const svgRect = document
+      .getElementById("editorPreviewContainer")
+      .getBoundingClientRect();
     const ptX = e.clientX - svgRect.left;
     const ptY = e.clientY - svgRect.top;
 
     if (editorDragState.draggedSetId) {
       const setId = editorDragState.draggedSetId;
       const setVal = editorGraph.sets[setId];
-      
+
       const newX = ptX + editorDragState.dragStartOffset.x;
       const newY = ptY + editorDragState.dragStartOffset.y;
-      
+
       const prevX = setVal.editor_x !== undefined ? setVal.editor_x : setVal.x;
       const prevY = setVal.editor_y !== undefined ? setVal.editor_y : setVal.y;
-      
+
       const dx = newX - prevX;
       const dy = newY - prevY;
-      
+
       setVal.editor_x = newX;
       setVal.editor_y = newY;
-      
+
       // Update coordinates of all balls belonging to this set
-      editorGraph.logic.variables.forEach(v => {
+      editorGraph.logic.variables.forEach((v) => {
         if (v.memberships && v.memberships.includes(setId)) {
-          const inst = Object.values(editorGraph.instances).find(i => i.variable_id === v.id);
+          const inst = Object.values(editorGraph.instances).find(
+            (i) => i.variable_id === v.id,
+          );
           if (inst) {
-            inst.editor_x = (inst.editor_x !== undefined ? inst.editor_x : inst.x) + dx;
-            inst.editor_y = (inst.editor_y !== undefined ? inst.editor_y : inst.y) + dy;
+            inst.editor_x =
+              (inst.editor_x !== undefined ? inst.editor_x : inst.x) + dx;
+            inst.editor_y =
+              (inst.editor_y !== undefined ? inst.editor_y : inst.y) + dy;
           }
         }
       });
-      
+
       updateEditorViewPositions();
     } else if (editorDragState.draggedBallId) {
       const instId = editorDragState.draggedBallId;
       const inst = editorGraph.instances[instId];
-      
+
       const newX = ptX + editorDragState.dragStartOffset.x;
       const newY = ptY + editorDragState.dragStartOffset.y;
-      
+
       inst.editor_x = newX;
       inst.editor_y = newY;
-      
+
       updateEditorViewPositions();
     }
   });
@@ -1896,7 +2334,7 @@ function updateEditorViewPositions() {
   Object.entries(editorGraph.sets).forEach(([setId, setVal]) => {
     const currentX = setVal.editor_x !== undefined ? setVal.editor_x : setVal.x;
     const currentY = setVal.editor_y !== undefined ? setVal.editor_y : setVal.y;
-    
+
     const circle = container.querySelector(`#set-circle-${setId}`);
     if (circle) {
       circle.setAttribute("cx", currentX);
@@ -1935,7 +2373,7 @@ function updateEditorViewPositions() {
   });
 
   // Update Path/Arrow SVG positions
-  editorGraph.logic.relations.forEach(rel => {
+  editorGraph.logic.relations.forEach((rel) => {
     const fromCoord = ballCoords[rel.from_variable];
     const toCoord = ballCoords[rel.to_variable];
 
@@ -1985,28 +2423,52 @@ function jumpToStep(stepIdx) {
 // 10. Interactive Editor View Logic (Visual Designer)
 // ==========================================
 function setupEditorEventListeners() {
-  document.getElementById("btnEditAddSet").addEventListener("click", editorAddSet);
-  document.getElementById("btnEditAddVar").addEventListener("click", editorAddVariable);
-  document.getElementById("btnEditAddRel").addEventListener("click", editorAddRelation);
-  document.getElementById("btnResetEditor").addEventListener("click", resetEditorGraph);
-  document.getElementById("btnCalculateAPI").addEventListener("click", calculateWithAPI);
-  document.getElementById("btnEditParseFormula").addEventListener("click", () => {
-    const formula = document.getElementById("editFormulaInput").value.trim();
-    if (formula) {
-      EditorBridge.parseFormula(formula);
-      const state = EditorBridge.getEditorState();
-      editorGraph.logic = JSON.parse(JSON.stringify(state.snapshot.logic));
-      editorGraph.sets = JSON.parse(JSON.stringify(state.snapshot.visual.sets));
-      editorGraph.instances = JSON.parse(JSON.stringify(state.snapshot.visual.instances));
-      editorGraph.relations = JSON.parse(JSON.stringify(state.snapshot.visual.relations));
-      syncEditorDropdowns();
-      renderEditorPreview();
-    }
-  });
+  document
+    .getElementById("btnEditAddSet")
+    .addEventListener("click", editorAddSet);
+  document
+    .getElementById("btnEditAddVar")
+    .addEventListener("click", editorAddVariable);
+  document
+    .getElementById("btnEditAddRel")
+    .addEventListener("click", editorAddRelation);
+  document
+    .getElementById("btnResetEditor")
+    .addEventListener("click", resetEditorGraph);
+  document
+    .getElementById("btnCalculateAPI")
+    .addEventListener("click", calculateWithAPI);
+  document
+    .getElementById("btnEditParseFormula")
+    .addEventListener("click", () => {
+      const formula = document.getElementById("editFormulaInput").value.trim();
+      if (formula) {
+        EditorBridge.parseFormula(formula);
+        const state = EditorBridge.getEditorState();
+        editorGraph.logic = JSON.parse(JSON.stringify(state.snapshot.logic));
+        editorGraph.sets = JSON.parse(
+          JSON.stringify(state.snapshot.visual.sets),
+        );
+        editorGraph.instances = JSON.parse(
+          JSON.stringify(state.snapshot.visual.instances),
+        );
+        editorGraph.relations = JSON.parse(
+          JSON.stringify(state.snapshot.visual.relations),
+        );
+        syncEditorDropdowns();
+        renderEditorPreview();
+      }
+    });
 
-  document.getElementById("manageEntityType").addEventListener("change", syncManageDropdown);
-  document.getElementById("manageEntityId").addEventListener("change", renderManageEditFields);
-  document.getElementById("btnManageDelete").addEventListener("click", handleManageDelete);
+  document
+    .getElementById("manageEntityType")
+    .addEventListener("change", syncManageDropdown);
+  document
+    .getElementById("manageEntityId")
+    .addEventListener("change", renderManageEditFields);
+  document
+    .getElementById("btnManageDelete")
+    .addEventListener("click", handleManageDelete);
 
   syncEditorDropdowns();
 }
@@ -2015,21 +2477,21 @@ function syncManageDropdown() {
   const type = document.getElementById("manageEntityType").value;
   const idDropdown = document.getElementById("manageEntityId");
   idDropdown.innerHTML = '<option value="">Elemento...</option>';
-  
+
   if (type === "set") {
-    Object.keys(editorGraph.sets).forEach(id => {
+    Object.keys(editorGraph.sets).forEach((id) => {
       idDropdown.innerHTML += `<option value="${id}">${id}</option>`;
     });
   } else if (type === "variable") {
-    editorGraph.logic.variables.forEach(v => {
+    editorGraph.logic.variables.forEach((v) => {
       idDropdown.innerHTML += `<option value="${v.id}">${v.id}</option>`;
     });
   } else if (type === "relation") {
-    editorGraph.logic.relations.forEach(r => {
+    editorGraph.logic.relations.forEach((r) => {
       idDropdown.innerHTML += `<option value="${r.id}">${r.id} (${r.from_variable}->${r.to_variable})</option>`;
     });
   }
-  
+
   renderManageEditFields();
 }
 
@@ -2037,110 +2499,114 @@ function renderManageEditFields() {
   const type = document.getElementById("manageEntityType").value;
   const id = document.getElementById("manageEntityId").value;
   const fieldsContainer = document.getElementById("manageEditFields");
-  
+
   if (!id || !type) {
     fieldsContainer.style.display = "none";
     fieldsContainer.innerHTML = "";
     return;
   }
-  
+
   fieldsContainer.style.display = "flex";
   fieldsContainer.innerHTML = "";
-  
+
   if (type === "set") {
-    const setLog = editorGraph.logic.sets.find(s => s.id === id);
+    const setLog = editorGraph.logic.sets.find((s) => s.id === id);
     const conn = setLog ? setLog.connective : "PROPAGATION";
     fieldsContainer.innerHTML = `
       <select id="editManageSetConn">
-        <option value="PROPAGATION" ${conn === 'PROPAGATION' ? 'selected' : ''}>PROPAGATION</option>
-        <option value="CONTRAPOSITIONAL" ${conn === 'CONTRAPOSITIONAL' ? 'selected' : ''}>CONTRAPOSITIONAL</option>
-        <option value="AND" ${conn === 'AND' ? 'selected' : ''}>AND</option>
-        <option value="OR" ${conn === 'OR' ? 'selected' : ''}>OR</option>
-        <option value="IMPLIES" ${conn === 'IMPLIES' ? 'selected' : ''}>IMPLIES</option>
-        <option value="BICONDITIONAL" ${conn === 'BICONDITIONAL' ? 'selected' : ''}>BICONDITIONAL</option>
+        <option value="PROPAGATION" ${conn === "PROPAGATION" ? "selected" : ""}>PROPAGATION</option>
+        <option value="CONTRAPOSITIONAL" ${conn === "CONTRAPOSITIONAL" ? "selected" : ""}>CONTRAPOSITIONAL</option>
+        <option value="AND" ${conn === "AND" ? "selected" : ""}>AND</option>
+        <option value="OR" ${conn === "OR" ? "selected" : ""}>OR</option>
+        <option value="IMPLIES" ${conn === "IMPLIES" ? "selected" : ""}>IMPLIES</option>
+        <option value="BICONDITIONAL" ${conn === "BICONDITIONAL" ? "selected" : ""}>BICONDITIONAL</option>
       </select>
       <button class="btn btn-primary" onclick="handleManageUpdate()">Guardar</button>
     `;
   } else if (type === "variable") {
-    const vLog = editorGraph.logic.variables.find(v => v.id === id);
+    const vLog = editorGraph.logic.variables.find((v) => v.id === id);
     const val = vLog ? vLog.truth_value : "N";
     fieldsContainer.innerHTML = `
       <select id="editManageVarVal">
-        <option value="N" ${val === 'N' ? 'selected' : ''}>N</option>
-        <option value="V" ${val === 'V' ? 'selected' : ''}>V</option>
-        <option value="F" ${val === 'F' ? 'selected' : ''}>F</option>
-        <option value="B" ${val === 'B' ? 'selected' : ''}>B</option>
+        <option value="N" ${val === "N" ? "selected" : ""}>N</option>
+        <option value="V" ${val === "V" ? "selected" : ""}>V</option>
+        <option value="F" ${val === "F" ? "selected" : ""}>F</option>
+        <option value="B" ${val === "B" ? "selected" : ""}>B</option>
       </select>
       <button class="btn btn-primary" onclick="handleManageUpdate()">Guardar</button>
     `;
   } else if (type === "relation") {
-    const rLog = editorGraph.logic.relations.find(r => r.id === id);
+    const rLog = editorGraph.logic.relations.find((r) => r.id === id);
     const conn = rLog ? rLog.connective : "PROPAGATION";
     fieldsContainer.innerHTML = `
       <select id="editManageRelConn">
-        <option value="PROPAGATION" ${conn === 'PROPAGATION' ? 'selected' : ''}>PROPAGATION</option>
-        <option value="CONTRAPOSITIONAL" ${conn === 'CONTRAPOSITIONAL' ? 'selected' : ''}>CONTRAPOSITIONAL</option>
-        <option value="IMPLIES" ${conn === 'IMPLIES' ? 'selected' : ''}>IMPLIES</option>
+        <option value="PROPAGATION" ${conn === "PROPAGATION" ? "selected" : ""}>PROPAGATION</option>
+        <option value="CONTRAPOSITIONAL" ${conn === "CONTRAPOSITIONAL" ? "selected" : ""}>CONTRAPOSITIONAL</option>
+        <option value="IMPLIES" ${conn === "IMPLIES" ? "selected" : ""}>IMPLIES</option>
       </select>
       <button class="btn btn-primary" onclick="handleManageUpdate()">Guardar</button>
     `;
   }
 }
 
-window.handleManageUpdate = function() {
+window.handleManageUpdate = function () {
   const type = document.getElementById("manageEntityType").value;
   const id = document.getElementById("manageEntityId").value;
   if (!id || !type) return;
-  
+
   if (type === "set") {
     const conn = document.getElementById("editManageSetConn").value;
     const res = EditorBridge.updateSet(id, { connective: conn });
     if (res.ok) {
-      const setLog = editorGraph.logic.sets.find(s => s.id === id);
+      const setLog = editorGraph.logic.sets.find((s) => s.id === id);
       if (setLog) setLog.connective = conn;
     }
   } else if (type === "variable") {
     const val = document.getElementById("editManageVarVal").value;
     const res = EditorBridge.updateVariable(id, { truth_value: val });
     if (res.ok) {
-      const vLog = editorGraph.logic.variables.find(v => v.id === id);
+      const vLog = editorGraph.logic.variables.find((v) => v.id === id);
       if (vLog) vLog.truth_value = val;
     }
   } else if (type === "relation") {
     const conn = document.getElementById("editManageRelConn").value;
     const res = EditorBridge.updateRelation(id, { connective: conn });
     if (res.ok) {
-      const rLog = editorGraph.logic.relations.find(r => r.id === id);
+      const rLog = editorGraph.logic.relations.find((r) => r.id === id);
       if (rLog) rLog.connective = conn;
     }
   }
-  
+
   renderEditorPreview();
-  console.log('[Simulator] Elemento modificado:', id);
+  console.log("[Simulator] Elemento modificado:", id);
 };
 
 function handleManageDelete() {
   const type = document.getElementById("manageEntityType").value;
   const id = document.getElementById("manageEntityId").value;
   if (!id || !type) return;
-  
+
   if (type === "set") {
     const res = EditorBridge.deleteSet(id);
     if (res.ok) {
       delete editorGraph.sets[id];
-      editorGraph.logic.sets = editorGraph.logic.sets.filter(s => s.id !== id);
-      
-      editorGraph.logic.variables = editorGraph.logic.variables.filter(v => {
+      editorGraph.logic.sets = editorGraph.logic.sets.filter(
+        (s) => s.id !== id,
+      );
+
+      editorGraph.logic.variables = editorGraph.logic.variables.filter((v) => {
         if (v.memberships.includes(id)) {
           if (v.memberships.length === 1) {
             // Remove relations involving this orphaned variable
-            editorGraph.logic.relations = editorGraph.logic.relations.filter(r => r.from_variable !== v.id && r.to_variable !== v.id);
+            editorGraph.logic.relations = editorGraph.logic.relations.filter(
+              (r) => r.from_variable !== v.id && r.to_variable !== v.id,
+            );
             // Remove instance visual
             const instId = `inst_${v.id}`;
             delete editorGraph.instances[instId];
             return false; // exclude from variables array
           } else {
-            v.memberships = v.memberships.filter(m => m !== id);
+            v.memberships = v.memberships.filter((m) => m !== id);
             return true;
           }
         }
@@ -2150,31 +2616,37 @@ function handleManageDelete() {
   } else if (type === "variable") {
     const res = EditorBridge.deleteVariable(id);
     if (res.ok) {
-      editorGraph.logic.variables = editorGraph.logic.variables.filter(v => v.id !== id);
-      editorGraph.logic.relations = editorGraph.logic.relations.filter(r => r.from_variable !== id && r.to_variable !== id);
+      editorGraph.logic.variables = editorGraph.logic.variables.filter(
+        (v) => v.id !== id,
+      );
+      editorGraph.logic.relations = editorGraph.logic.relations.filter(
+        (r) => r.from_variable !== id && r.to_variable !== id,
+      );
       const instId = `inst_${id}`;
       delete editorGraph.instances[instId];
     }
   } else if (type === "relation") {
     const res = EditorBridge.deleteRelation(id);
     if (res.ok) {
-      editorGraph.logic.relations = editorGraph.logic.relations.filter(r => r.id !== id);
+      editorGraph.logic.relations = editorGraph.logic.relations.filter(
+        (r) => r.id !== id,
+      );
       delete editorGraph.relations[id];
     }
   }
-  
+
   syncManageDropdown();
   syncEditorDropdowns();
   renderEditorPreview();
-  console.log('[Simulator] Elemento eliminado:', id);
+  console.log("[Simulator] Elemento eliminado:", id);
 }
 
 function resetEditorGraph() {
-  console.log('[Simulator] Reiniciando editor...');
-  
+  console.log("[Simulator] Reiniciando editor...");
+
   // Reiniciar el bridge (esto crea un nuevo EditorController)
   EditorBridge.resetEditor();
-  
+
   // Limpiar el editorGraph local (mantener compatibilidad con código existente)
   editorGraph = {
     sets: {},
@@ -2183,15 +2655,15 @@ function resetEditorGraph() {
     logic: {
       variables: [],
       sets: [],
-      relations: []
-    }
+      relations: [],
+    },
   };
-  
+
   syncEditorDropdowns();
   renderEditorPreview();
   document.getElementById("apiErrorLog").style.display = "none";
-  
-  console.log('[Simulator] Editor reiniciado');
+
+  console.log("[Simulator] Editor reiniciado");
 }
 
 function editorAddSet() {
@@ -2207,16 +2679,20 @@ function editorAddSet() {
 
   // Calcular posición automática
   const state = EditorBridge.getEditorState();
-  const count = state ? state.snapshot.logic.sets.length : Object.keys(editorGraph.sets).length;
+  const count = state
+    ? state.snapshot.logic.sets.length
+    : Object.keys(editorGraph.sets).length;
   const x = 120 + count * 220;
   const y = 150;
   const radius = 65;
 
   // Usar el bridge para crear el conjunto
   const result = EditorBridge.createSet(id, connective, x, y, radius, color);
-  
+
   if (!result.ok) {
-    alert(result.errors ? result.errors[0].message : "Error al crear el conjunto");
+    alert(
+      result.errors ? result.errors[0].message : "Error al crear el conjunto",
+    );
     return;
   }
 
@@ -2225,7 +2701,7 @@ function editorAddSet() {
     id,
     connective,
     subsets: [],
-    result_alias: null
+    result_alias: null,
   });
 
   editorGraph.sets[id] = {
@@ -2234,14 +2710,14 @@ function editorAddSet() {
     radius,
     shape: "circle",
     connective,
-    color
+    color,
   };
 
   nameInput.value = "";
   syncEditorDropdowns();
   renderEditorPreview();
-  
-  console.log('[Simulator] Conjunto creado:', id);
+
+  console.log("[Simulator] Conjunto creado:", id);
 }
 
 function editorAddVariable() {
@@ -2261,9 +2737,13 @@ function editorAddVariable() {
 
   // Crear la variable lógica usando el bridge
   const varResult = EditorBridge.createVariable(id, val);
-  
+
   if (!varResult.ok) {
-    alert(varResult.errors ? varResult.errors[0].message : "Error al crear la variable");
+    alert(
+      varResult.errors
+        ? varResult.errors[0].message
+        : "Error al crear la variable",
+    );
     return;
   }
 
@@ -2277,14 +2757,25 @@ function editorAddVariable() {
     return;
   }
 
-  const varsInSet = editorGraph.logic.variables.filter(v => v.memberships.includes(setId)).length;
-  
-  let dx = 0, dy = 0;
-  if (varsInSet === 0) { dx = 0; dy = 0; }
-  else if (varsInSet === 1) { dx = -20; dy = 15; }
-  else if (varsInSet === 2) { dx = 20; dy = 15; }
-  else if (varsInSet === 3) { dx = 0; dy = -25; }
-  else {
+  const varsInSet = editorGraph.logic.variables.filter((v) =>
+    v.memberships.includes(setId),
+  ).length;
+
+  let dx = 0,
+    dy = 0;
+  if (varsInSet === 0) {
+    dx = 0;
+    dy = 0;
+  } else if (varsInSet === 1) {
+    dx = -20;
+    dy = 15;
+  } else if (varsInSet === 2) {
+    dx = 20;
+    dy = 15;
+  } else if (varsInSet === 3) {
+    dx = 0;
+    dy = -25;
+  } else {
     dx = (Math.random() - 0.5) * 40;
     dy = (Math.random() - 0.5) * 40;
   }
@@ -2295,9 +2786,13 @@ function editorAddVariable() {
 
   // Crear la instancia visual usando el bridge
   const instResult = EditorBridge.createVariableInstance(instId, id, x, y);
-  
+
   if (!instResult.ok) {
-    alert(instResult.errors ? instResult.errors[0].message : "Error al crear la instancia visual");
+    alert(
+      instResult.errors
+        ? instResult.errors[0].message
+        : "Error al crear la instancia visual",
+    );
     return;
   }
 
@@ -2305,21 +2800,21 @@ function editorAddVariable() {
   editorGraph.logic.variables.push({
     id,
     truth_value: val,
-    memberships: [setId]
+    memberships: [setId],
   });
 
   editorGraph.instances[instId] = {
     id: instId,
     variable_id: id,
     x,
-    y
+    y,
   };
 
   nameInput.value = "";
   syncEditorDropdowns();
   renderEditorPreview();
-  
-  console.log('[Simulator] Variable creada:', id);
+
+  console.log("[Simulator] Variable creada:", id);
 }
 
 function editorAddRelation() {
@@ -2339,12 +2834,21 @@ function editorAddRelation() {
   }
 
   const id = `rel_${fromVar}_to_${toVar}`;
-  
+
   // Crear la relación usando el bridge
-  const result = EditorBridge.createRelation(id, fromVar, toVar, connective, color, direction);
-  
+  const result = EditorBridge.createRelation(
+    id,
+    fromVar,
+    toVar,
+    connective,
+    color,
+    direction,
+  );
+
   if (!result.ok) {
-    alert(result.errors ? result.errors[0].message : "Error al crear la relación");
+    alert(
+      result.errors ? result.errors[0].message : "Error al crear la relación",
+    );
     return;
   }
 
@@ -2353,18 +2857,18 @@ function editorAddRelation() {
     id,
     from_variable: fromVar,
     to_variable: toVar,
-    connective
+    connective,
   });
 
   editorGraph.relations[id] = {
     color: color,
     thickness: 2,
-    direction: direction
+    direction: direction,
   };
 
   renderEditorPreview();
-  
-  console.log('[Simulator] Relación creada:', id);
+
+  console.log("[Simulator] Relación creada:", id);
 }
 
 function syncEditorDropdowns() {
@@ -2376,15 +2880,15 @@ function syncEditorDropdowns() {
   relFromDropdown.innerHTML = '<option value="">Origen...</option>';
   relToDropdown.innerHTML = '<option value="">Destino...</option>';
 
-  Object.keys(editorGraph.sets).forEach(setId => {
+  Object.keys(editorGraph.sets).forEach((setId) => {
     varSetDropdown.innerHTML += `<option value="${setId}">${setId}</option>`;
   });
 
-  editorGraph.logic.variables.forEach(v => {
+  editorGraph.logic.variables.forEach((v) => {
     relFromDropdown.innerHTML += `<option value="${v.id}">${v.id}</option>`;
     relToDropdown.innerHTML += `<option value="${v.id}">${v.id}</option>`;
   });
-  
+
   syncManageDropdown();
 }
 
@@ -2407,22 +2911,32 @@ function renderEditorPreview() {
 
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
   svg.appendChild(defs);
-  
+
   // Create dynamic markers for each relation with its specific color
-  rels.forEach(rel => {
-    const visualRel = editorGraph.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
-    let markerColor = visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6");
-    
+  rels.forEach((rel) => {
+    const visualRel = editorGraph.relations[rel.id] || {
+      color: "#3B82F6",
+      thickness: 2,
+    };
+    let markerColor =
+      visualRel.color ||
+      (rel.connective === "CONTRAPOSITIONAL" ? "#EC4899" : "#3B82F6");
+
     const effectiveOp = getRelationEffectiveOp(rel, editorGraph.logic);
     if (effectiveOp) {
-      const fromVar = vars.find(v => v.id === rel.from_variable);
-      const toVar = vars.find(v => v.id === rel.to_variable);
-      const valFrom = fromVar ? fromVar.truth_value : 'N';
-      const valTo = toVar ? toVar.truth_value : 'N';
-      markerColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+      const fromVar = vars.find((v) => v.id === rel.from_variable);
+      const toVar = vars.find((v) => v.id === rel.to_variable);
+      const valFrom = fromVar ? fromVar.truth_value : "N";
+      const valTo = toVar ? toVar.truth_value : "N";
+      markerColor = getColorForValue(
+        evaluateBelnapMatrix(effectiveOp, valFrom, valTo),
+      );
     }
-    
-    const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+
+    const marker = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "marker",
+    );
     marker.setAttribute("id", `arrow-editor-${rel.id}`);
     marker.setAttribute("viewBox", "0 0 10 10");
     marker.setAttribute("refX", "6");
@@ -2430,11 +2944,14 @@ function renderEditorPreview() {
     marker.setAttribute("markerWidth", "6");
     marker.setAttribute("markerHeight", "6");
     marker.setAttribute("orient", "auto-start-reverse");
-    
-    const markerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+    const markerPath = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "path",
+    );
     markerPath.setAttribute("d", "M 0 1 L 10 5 L 0 9 z");
     markerPath.setAttribute("fill", markerColor);
-    
+
     marker.appendChild(markerPath);
     defs.appendChild(marker);
   });
@@ -2448,8 +2965,10 @@ function renderEditorPreview() {
 
   const ballCoords = {};
 
-  vars.forEach(v => {
-    const inst = Object.values(editorGraph.instances).find(i => i.variable_id === v.id);
+  vars.forEach((v) => {
+    const inst = Object.values(editorGraph.instances).find(
+      (i) => i.variable_id === v.id,
+    );
     if (!inst) return;
 
     const currentX = inst.editor_x !== undefined ? inst.editor_x : inst.x;
@@ -2461,12 +2980,15 @@ function renderEditorPreview() {
     ballCoords[v.id] = { x: currentX, y: currentY };
   });
 
-  rels.forEach(rel => {
+  rels.forEach((rel) => {
     const fromCoord = ballCoords[rel.from_variable];
     const toCoord = ballCoords[rel.to_variable];
 
     if (fromCoord && toCoord) {
-      const visualRel = editorGraph.relations[rel.id] || { color: "#3B82F6", thickness: 2 };
+      const visualRel = editorGraph.relations[rel.id] || {
+        color: "#3B82F6",
+        thickness: 2,
+      };
       const dx = toCoord.x - fromCoord.x;
       const dy = toCoord.y - fromCoord.y;
       const len = Math.sqrt(dx * dx + dy * dy);
@@ -2477,9 +2999,12 @@ function renderEditorPreview() {
       const endX = toCoord.x - (dx / len) * (radiusBall + 6);
       const endY = toCoord.y - (dy / len) * (radiusBall + 6);
 
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const path = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path",
+      );
       path.setAttribute("id", `editor-path-${rel.id}`);
-      
+
       let pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
       if (Math.abs(dy) > 10 && Math.abs(dx) > 10) {
         const midX = (startX + endX) / 2 + (dy / len) * 15;
@@ -2488,27 +3013,37 @@ function renderEditorPreview() {
       }
 
       path.setAttribute("d", pathD);
-      let strokeColor = visualRel.color || (rel.connective === 'CONTRAPOSITIONAL' ? "#EC4899" : "#3B82F6");
+      let strokeColor =
+        visualRel.color ||
+        (rel.connective === "CONTRAPOSITIONAL" ? "#EC4899" : "#3B82F6");
       const effectiveOp = getRelationEffectiveOp(rel, editorGraph.logic);
       if (effectiveOp) {
-        const fromVar = vars.find(v => v.id === rel.from_variable);
-        const toVar = vars.find(v => v.id === rel.to_variable);
-        const valFrom = fromVar ? fromVar.truth_value : 'N';
-        const valTo = toVar ? toVar.truth_value : 'N';
-        strokeColor = getColorForValue(evaluateBelnapMatrix(effectiveOp, valFrom, valTo));
+        const fromVar = vars.find((v) => v.id === rel.from_variable);
+        const toVar = vars.find((v) => v.id === rel.to_variable);
+        const valFrom = fromVar ? fromVar.truth_value : "N";
+        const valTo = toVar ? toVar.truth_value : "N";
+        strokeColor = getColorForValue(
+          evaluateBelnapMatrix(effectiveOp, valFrom, valTo),
+        );
       }
-      path.setAttribute("class", `svg-relation-path ${rel.connective === 'CONTRAPOSITIONAL' ? 'contrapositive' : ''}`);
+      path.setAttribute(
+        "class",
+        `svg-relation-path ${rel.connective === "CONTRAPOSITIONAL" ? "contrapositive" : ""}`,
+      );
       path.setAttribute("stroke", strokeColor);
       path.setAttribute("stroke-width", visualRel.thickness || 2);
       path.setAttribute("marker-end", `url(#arrow-editor-${rel.id})`);
       if (visualRel.direction === "bidirectional") {
         path.setAttribute("marker-start", `url(#arrow-editor-${rel.id})`);
       }
-      
+
       svg.appendChild(path);
 
       // Label for connective
-      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const text = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "text",
+      );
       text.setAttribute("id", `editor-path-label-${rel.id}`);
       text.setAttribute("x", (startX + endX) / 2);
       text.setAttribute("y", (startY + endY) / 2 - 10);
@@ -2528,7 +3063,9 @@ async function calculateWithAPI() {
   errorLog.style.display = "none";
   errorLog.innerHTML = "";
 
-  console.log('[Simulator] Iniciando cálculo con Motor API usando EditorBridge...');
+  console.log(
+    "[Simulator] Iniciando cálculo con Motor API usando EditorBridge...",
+  );
 
   // Verificar que el bridge esté inicializado
   if (!EditorBridge.isInitialized()) {
@@ -2538,62 +3075,62 @@ async function calculateWithAPI() {
   }
 
   const state = EditorBridge.getEditorState();
-  
+
   if (!state || state.snapshot.logic.variables.length === 0) {
     alert("Añade al menos una variable antes de calcular");
     return;
   }
 
-  console.log('[Simulator] Estado del editor:', state);
+  console.log("[Simulator] Estado del editor:", state);
 
   // Validar el snapshot antes de enviar
-  console.log('[Simulator] Validando snapshot...');
+  console.log("[Simulator] Validando snapshot...");
   const validation = EditorBridge.validateSnapshot();
-  
+
   if (!validation.valid) {
-    console.error('[Simulator] Validación fallida:', validation.errors);
+    console.error("[Simulator] Validación fallida:", validation.errors);
     errorLog.style.display = "block";
     errorLog.innerHTML = `<strong>Errores de Validación:</strong><ul>`;
-    validation.errors.forEach(err => {
+    validation.errors.forEach((err) => {
       errorLog.innerHTML += `<li><strong>${err.field}:</strong> ${err.message}</li>`;
     });
     errorLog.innerHTML += `</ul>`;
     return;
   }
 
-  console.log('[Simulator] Snapshot válido, ejecutando con motor...');
+  console.log("[Simulator] Snapshot válido, ejecutando con motor...");
 
   try {
     // Ejecutar usando el bridge (incluye validación y comunicación con el motor)
     const result = await EditorBridge.executeWithMotor();
-    
+
     if (!result.ok) {
-      console.error('[Simulator] Error en ejecución:', result.errors);
+      console.error("[Simulator] Error en ejecución:", result.errors);
       errorLog.style.display = "block";
       errorLog.innerHTML = `<strong>Error al ejecutar:</strong><ul>`;
-      result.errors.forEach(err => {
+      result.errors.forEach((err) => {
         errorLog.innerHTML += `<li><strong>${err.field}:</strong> ${err.message}</li>`;
       });
       errorLog.innerHTML += `</ul>`;
       return;
     }
 
-    console.log('[Simulator] Ejecución exitosa:', result);
+    console.log("[Simulator] Ejecución exitosa:", result);
 
     // Obtener el snapshot actualizado con la traza de ejecución
     const finalSnapshot = result.snapshot;
-    
+
     if (!finalSnapshot || !finalSnapshot.execution_trace) {
-      throw new Error('El motor no devolvió una traza de ejecución válida');
+      throw new Error("El motor no devolvió una traza de ejecución válida");
     }
 
-    console.log('[Simulator] Cargando snapshot con traza de ejecución...');
-    
+    console.log("[Simulator] Cargando snapshot con traza de ejecución...");
+
     // Cargar el snapshot en el simulador para visualizar la animación
     loadSnapshot(finalSnapshot);
 
     // Cambiar a la vista de cajitas para ver la animación
-    document.querySelectorAll(".tab-btn").forEach(btn => {
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
       if (btn.getAttribute("data-tab") === "box-view") {
         btn.click();
       }
@@ -2604,11 +3141,12 @@ async function calculateWithAPI() {
       play();
     }, 300);
 
-    alert("¡Éxito! Propagación calculada por el motor. Reproduciendo animación.");
-    console.log('[Simulator] Cálculo completado exitosamente');
-
+    alert(
+      "¡Éxito! Propagación calculada por el motor. Reproduciendo animación.",
+    );
+    console.log("[Simulator] Cálculo completado exitosamente");
   } catch (err) {
-    console.error('[Simulator] Excepción durante cálculo:', err);
+    console.error("[Simulator] Excepción durante cálculo:", err);
     errorLog.style.display = "block";
     errorLog.innerHTML = `<strong>Error de conexión al Motor:</strong> ${err.message}<br><br><small>Verifica que el servidor FastAPI esté encendido en http://localhost:8000</small>`;
   }
@@ -2618,10 +3156,10 @@ async function calculateWithAPI() {
 function displayEditorErrors(errors) {
   const errorLog = document.getElementById("apiErrorLog");
   if (!errorLog) return;
-  
+
   errorLog.style.display = "block";
   errorLog.innerHTML = `<strong>Errores del Editor:</strong><ul>`;
-  errors.forEach(err => {
+  errors.forEach((err) => {
     errorLog.innerHTML += `<li><strong>${err.field}:</strong> ${err.message} (${err.severity})</li>`;
   });
   errorLog.innerHTML += `</ul>`;

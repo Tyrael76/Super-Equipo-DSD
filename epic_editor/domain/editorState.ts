@@ -14,6 +14,10 @@ export interface EditorState {
   available_connectives: MotorConnective[];
 }
 
+/**
+ * Crea el estado inicial del editor EPiC con un snapshot vacío.
+ * Inicializa la capa lógica (variables, conjuntos, relaciones) y visual (instancias, formas).
+ */
 export function createInitialState(): EditorState {
   return {
     snapshot: {

@@ -24,6 +24,11 @@ export type ControllerResult<T = void> =
 // SOLID - SRP: el controlador orquesta acciones, validacion y ejecucion sin
 // implementar sus detalles. DIP: recibe IMotorClient en vez de construir un
 // cliente HTTP concreto. OCP: subscribe admite nuevas vistas sin cambiar el dominio.
+
+/**
+ * Controlador principal del editor EPiC. Coordina el estado, valida snapshots
+ * y se comunica con el motor de razonamiento usando el estándar PlaygroundSnapshot.
+ */
 export class EditorController {
   private state: EditorState;
   private readonly motorClient: IMotorClient;
@@ -34,6 +39,10 @@ export class EditorController {
     this.motorClient = motorClient;
   }
 
+  /**
+   * Suscribe un observador a cambios de estado para actualizar la UI reactivamente.
+   * Retorna función para cancelar la suscripción.
+   */
   subscribe(cb: (state: EditorState) => void): () => void {
     this.subscribers.push(cb);
     return () => {
@@ -42,15 +51,27 @@ export class EditorController {
     };
   }
 
+  /**
+   * Obtiene el estado actual del editor de forma inmutable.
+   * Permite consultar el snapshot sin modificarlo.
+   */
   getState(): Readonly<EditorState> {
     return this.state;
   }
 
+  /**
+   * Actualiza el estado interno y notifica a todos los suscriptores.
+   * Método privado usado por las acciones del controlador.
+   */
   private setState(newState: EditorState): void {
     this.state = newState;
     this.subscribers.forEach((cb) => cb(this.state));
   }
 
+  /**
+   * Crea una variable lógica con valor Belnap inicial.
+   * Valida que no exista duplicado antes de agregarla al inventario.
+   */
   crearVariable(id: string, valor: BelnapValue = "N"): ControllerResult {
     if (this.state.snapshot.logic.variables.some((v) => v.id === id)) {
       return {
@@ -69,16 +90,28 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Elimina una variable del inventario lógico y todas sus representaciones visuales.
+   * Limpia relaciones y contextos asociados.
+   */
   eliminarVariable(id: string): ControllerResult {
     this.setState(actions.eliminarVariableLogica(this.state, id));
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Asigna una variable a un contexto para que participe en su operación lógica.
+   * Establece la membresía en la capa lógica.
+   */
   asignarVariableAContexto(variable_id: string, set_id: string): ControllerResult {
     this.setState(actions.asignarVariableAContexto(this.state, variable_id, set_id));
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Crea una instancia visual de una variable en coordenadas específicas del canvas.
+   * Valida que no exista duplicado de instancia.
+   */
   dibujarInstancia(
     instance_id: string,
     variable_id: string,
@@ -104,11 +137,19 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Elimina una instancia visual sin afectar la variable lógica subyacente.
+   * La variable permanece en el inventario.
+   */
   eliminarInstancia(instance_id: string): ControllerResult {
     this.setState(actions.eliminarInstanciaVisual(this.state, instance_id));
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Crea un contexto (conjunto) con un conectivo EPiC que agrupa variables.
+   * Define la operación lógica que se aplicará sobre sus miembros.
+   */
   crearContexto(
     id: string,
     connective: MotorConnective,
@@ -122,11 +163,19 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Elimina un contexto y limpia todas las referencias en variables y subconjuntos.
+   * Mantiene la integridad del grafo lógico.
+   */
   eliminarContexto(id: string): ControllerResult {
     this.setState(actions.eliminarContexto(this.state, id));
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Crea una relación dirigida entre dos variables con un conectivo EPiC.
+   * Define cómo se propaga la evidencia entre nodos del grafo.
+   */
   conectar(
     id: string,
     from: string,
@@ -139,11 +188,19 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Elimina una relación lógica del grafo.
+   * Desconecta la propagación de evidencia entre las variables.
+   */
   eliminarRelacion(id: string): ControllerResult {
     this.setState(actions.eliminarRelacion(this.state, id));
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Actualiza propiedades de un contexto: conectivo, posición, radio y forma.
+   * Modifica tanto la semántica lógica como la representación visual.
+   */
   actualizarContexto(
     id: string,
     payload: { connective?: MotorConnective; x?: number; y?: number; radius?: number; shape?: string }
@@ -152,6 +209,10 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Actualiza el valor de verdad y/o membresía de una variable.
+   * Permite cambiar la evidencia inicial y reasignar contextos.
+   */
   actualizarVariable(
     id: string,
     payload: { truth_value?: BelnapValue; set_id?: string }
@@ -175,6 +236,10 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Actualiza propiedades de una relación: conectivo, color y grosor.
+   * Modifica la semántica y apariencia de la arista.
+   */
   actualizarRelacion(
     id: string,
     payload: { connective?: MotorConnective; color?: string; thickness?: number }
@@ -183,6 +248,10 @@ export class EditorController {
     return { ok: true, data: undefined };
   }
 
+  /**
+   * Carga los conectivos disponibles desde el motor EPiC.
+   * Actualiza la lista de operadores lógicos que el usuario puede usar.
+   */
   async cargarConectivos(): Promise<void> {
     try {
       const conectivos = await this.motorClient.getConectivos();
@@ -192,6 +261,10 @@ export class EditorController {
     }
   }
 
+  /**
+   * Valida el snapshot actual antes de enviarlo al motor.
+   * Verifica integridad referencial entre capas lógica y visual.
+   */
   validar(): ValidationResult {
     return validarSnapshot(
       this.state.snapshot,
@@ -199,6 +272,10 @@ export class EditorController {
     );
   }
 
+  /**
+   * Ejecuta el razonamiento EPiC enviando el snapshot al motor.
+   * Retorna el rastro de propagación de evidencia paso a paso.
+   */
   async ejecutar(): Promise<ControllerResult<ExecutionTrace>> {
     const validation = this.validar();
     if (!validation.valid) {
@@ -241,6 +318,10 @@ export class EditorController {
     }
   }
 
+  /**
+   * Regresa del modo ejecución al modo edición.
+   * Limpia el rastro de ejecución para permitir nuevas modificaciones.
+   */
   regresarAEdicion(): void {
     this.setState(actions.guardarResultadoEjecucion(this.state, undefined));
   }

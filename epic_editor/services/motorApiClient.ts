@@ -11,6 +11,10 @@ import type {
   MotorConnective,
 } from "../domain/editorTypes";
 
+/**
+ * Error personalizado para fallos de comunicación con el motor EPiC.
+ * Incluye código de estado HTTP y detalles del error.
+ */
 export class MotorApiError extends Error {
   constructor(
     public readonly statusCode: number,
@@ -32,6 +36,11 @@ export interface IMotorClient {
 
 // SOLID - DIP: esta clase implementa el puerto de salida y encapsula HTTP y la
 // adaptacion de contratos; el controlador solo conoce IMotorClient.
+
+/**
+ * Cliente HTTP para comunicarse con el motor EPiC.
+ * Traduce entre el formato del editor (arrays) y el formato del motor (diccionarios).
+ */
 export class MotorApiClient implements IMotorClient {
   private readonly baseUrl: string;
 
@@ -39,6 +48,10 @@ export class MotorApiClient implements IMotorClient {
     this.baseUrl = baseUrl.replace(/\/$/, "");
   }
 
+  /**
+   * Verifica si el motor EPiC está disponible y respondiendo.
+   * Retorna true si el endpoint /health responde con status "ok".
+   */
   async health(): Promise<boolean> {
     try {
       const res = await fetch(`${this.baseUrl}/health`);
@@ -50,6 +63,10 @@ export class MotorApiClient implements IMotorClient {
     }
   }
 
+  /**
+   * Obtiene la lista de conectivos lógicos soportados por el motor EPiC.
+   * Retorna los nombres de los operadores disponibles (AND, OR, IMPLIES, etc.).
+   */
   async getConectivos(): Promise<MotorConnective[]> {
     let res: Response;
     try {
@@ -71,6 +88,10 @@ export class MotorApiClient implements IMotorClient {
     return Object.keys(data);
   }
 
+  /**
+   * Envía un snapshot al motor EPiC para ejecutar el razonamiento evidencial.
+   * Retorna el mismo snapshot con el rastro de propagación anexado.
+   */
   async calcular(snapshot: PlaygroundSnapshot): Promise<PlaygroundSnapshot> {
     // Convertir arrays a diccionarios para el motor Python
     const motorSnapshot = this._convertToMotorFormat(snapshot);
@@ -117,7 +138,8 @@ export class MotorApiClient implements IMotorClient {
   }
 
   /**
-   * Convierte el formato del Editor (arrays) al formato del Motor (diccionarios)
+   * Convierte el formato del Editor (arrays) al formato del Motor (diccionarios).
+   * El motor Python espera variables, sets y relations como objetos indexados por id.
    */
   private _convertToMotorFormat(snapshot: PlaygroundSnapshot): any {
     const motorLogic: any = {
@@ -163,7 +185,8 @@ export class MotorApiClient implements IMotorClient {
   }
 
   /**
-   * Convierte el formato del Motor (diccionarios) de vuelta al formato del Editor (arrays)
+   * Convierte el formato del Motor (diccionarios) de vuelta al formato del Editor (arrays).
+   * Reconstruye las estructuras de arrays y normaliza el execution_trace.
    */
   private _convertFromMotorFormat(motorSnapshot: any, originalSnapshot?: PlaygroundSnapshot): PlaygroundSnapshot {
     const logic: any = {
@@ -235,6 +258,10 @@ export class MotorApiClient implements IMotorClient {
     };
   }
 
+  /**
+   * Intenta parsear el cuerpo de una respuesta HTTP como JSON.
+   * Retorna null si el parseo falla, útil para manejar errores del motor.
+   */
   private async _tryParseBody(res: Response): Promise<any> {
     try {
       return await res.json();
@@ -246,6 +273,11 @@ export class MotorApiClient implements IMotorClient {
 
 // SOLID - LSP: el mock satisface el mismo contrato asincrono que MotorApiClient,
 // por lo que puede sustituirlo en el controlador y en sus pruebas contractuales.
+
+/**
+ * Cliente mock del motor EPiC para pruebas sin conexión real.
+ * Simula respuestas del motor con datos configurables.
+ */
 export class MockMotorClient implements IMotorClient {
   private readonly config: {
     healthOk?: boolean;
@@ -275,14 +307,26 @@ export class MockMotorClient implements IMotorClient {
     };
   }
 
+  /**
+   * Simula verificación de salud del motor.
+   * Retorna el valor configurado en el constructor.
+   */
   async health(): Promise<boolean> {
     return this.config.healthOk ?? true;
   }
 
+  /**
+   * Retorna lista mock de conectivos EPiC.
+   * Útil para pruebas sin conexión al motor real.
+   */
   async getConectivos(): Promise<MotorConnective[]> {
     return this.config.conectivos ?? [];
   }
 
+  /**
+   * Simula ejecución del motor EPiC.
+   * Retorna snapshot con execution_trace mock o lanza error configurado.
+   */
   async calcular(snapshot: PlaygroundSnapshot): Promise<PlaygroundSnapshot> {
     if (this.config.calcularResponse instanceof MotorApiError) {
       throw this.config.calcularResponse;

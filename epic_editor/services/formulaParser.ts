@@ -3,6 +3,11 @@ import type { EditorController } from "../controllers/editorController";
 // SOLID - SRP parcial: el servicio aisla la traduccion de texto y no calcula
 // Belnap ni llama al Motor. El layout y la dependencia de EditorController son
 // puntos de mejora: extraer layout y recibir un puerto pequeno completaria SRP/DIP.
+
+/**
+ * Parser de fórmulas lógicas a grafos EPiC.
+ * Traduce expresiones textuales (p -> q, A AND B) a variables, contextos y relaciones.
+ */
 export class FormulaParser {
   private controller: EditorController;
   private setCounter: number = 0;
@@ -13,7 +18,8 @@ export class FormulaParser {
   }
 
   /**
-   * Genera un nombre de conjunto simple (A, B, C, ...)
+   * Genera nombres secuenciales para contextos (A, B, C, ...).
+   * Facilita identificación visual de conjuntos en el grafo.
    */
   private getNextSetName(): string {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -23,11 +29,9 @@ export class FormulaParser {
   }
 
   /**
-   * Parsea una fórmula simple y genera el grafo en el estado.
-   * Ejemplos soportados:
-   * "p -> q"
-   * "p AND q -> r"
-   * "A OR B IMPLIES C"
+   * Parsea una fórmula lógica y construye el grafo EPiC correspondiente.
+   * Crea variables con valores iniciales, contextos con conectivos y relaciones dirigidas.
+   * Soporta: "p -> q", "p AND q -> r", "A OR B IMPLIES C"
    */
   public parse(formula: string): void {
     const tokens = formula.split(/\s+/).filter((t) => t.length > 0);
