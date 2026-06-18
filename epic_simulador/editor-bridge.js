@@ -17,6 +17,7 @@ import { FormulaParser } from './dist/services/formulaParser.js';
 
 // ==========================================
 // Estado Global del Bridge
+// 📌 [PROMPT_FEATURE_INTEGRACION_BACKEND.md]
 // ==========================================
 let editorController = null;
 let motorClient = null;

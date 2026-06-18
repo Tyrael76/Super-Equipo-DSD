@@ -2,6 +2,7 @@
 
 // ==========================================
 // 0. Imports del Editor Bridge
+// 📌 [PROMPT_FEATURE_INTEGRACION_BACKEND.md]
 // ==========================================
 // SOLID - DIP: el runtime visual depende de la API estable del bridge y no
 // construye EditorController ni MotorApiClient directamente.
@@ -327,6 +328,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // ==========================================
 // 4. File and JSON Upload handlers
+// 📌 [PROMPT_FEATURE_UI_Y_RENDERIZADO_ESTATICO.md]
 // ==========================================
 function setupEventListeners() {
   const dropZone = document.getElementById("dropZone");
@@ -521,6 +523,7 @@ function handleFile(file) {
 
 // ==========================================
 // 5. Dynamic Ball Visibility Algorithm (History-Aware)
+// 📌 [PROMPT_FEATURE_ANIMACION_PASO_A_PASO.md]
 // ==========================================
 // A ball is visible at step 's' if its value is not "N" (neutral/none)
 // AND it has not propagated its value to any target with a newer update.
@@ -772,6 +775,7 @@ function calculateRelativeCoordinates() {
   });
 }
 
+// 📌 [PROMPT_FEATURE_VISTA_CAJITAS.md]
 function extractBoxPairs() {
   const logic = simState.snapshot.logic;
   const visual = simState.snapshot.visual;

@@ -445,6 +445,7 @@ body {
   padding: 2rem 0;
 }
 
+/* 📌 [PROMPT_FEATURE_UI_Y_RENDERIZADO_ESTATICO.md] */
 /* Workspace panel */
 .workspace {
   flex: 1;
@@ -609,6 +610,7 @@ body {
   display: flex;
 }
 
+/* 📌 [PROMPT_FEATURE_VISTA_CAJITAS.md] */
 /* Boxes view (Vista de Cajitas) */
 .boxes-grid {
   display: grid;
@@ -837,6 +839,7 @@ body {
   stroke-dasharray: 4, 4;
 }
 
+/* 📌 [PROMPT_FEATURE_ANIMACION_PASO_A_PASO.md] */
 /* Particle animation along path */
 .particle {
   pointer-events: none;
