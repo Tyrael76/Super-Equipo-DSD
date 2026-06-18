@@ -956,6 +956,7 @@ function calculateRelativeCoordinates() {
   });
 }
 
+// 📌 [PROMPT_FEATURE_VISTA_CAJITAS.md]
 /**
  * Extrae pares de conjuntos conectados por relaciones para la vista Box.
  * Identifica transiciones entre conjuntos basándose en las relaciones lógicas.
