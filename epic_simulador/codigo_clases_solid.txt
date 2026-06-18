@@ -1,0 +1,182 @@
+=========================================================
+Archivo: epic_editor/controllers/editorController.ts
+=========================================================
+import type {
+  PlaygroundSnapshot,
+  BelnapValue,
+  MotorConnective,
+  ValidationResult,
+  ExecutionTrace,
+} from "../domain/editorTypes";
+import { createInitialState } from "../domain/editorState";
+import type { EditorState } from "../domain/editorState";
+import * as actions from "../domain/editorActions";
+import { validarSnapshot } from "../validators/editorValidation";
+import type { IMotorClient } from "../services/motorApiClient";
+
+export type ControllerResult<T = void> =
+  | { ok: true; data: T }
+  | { ok: false; errors: ValidationResult["errors"] };
+
+// SOLID - SRP: el controlador orquesta acciones, validacion y ejecucion sin
+// implementar sus detalles. DIP: recibe IMotorClient en vez de construir un
+// cliente HTTP concreto. OCP: subscribe admite nuevas vistas sin cambiar el dominio.
+export class EditorController {
+  private state: EditorState;
+  private readonly motorClient: IMotorClient;
+  private readonly subscribers: Array<(state: EditorState) => void> = [];
+
+  constructor(motorClient: IMotorClient) {
+    this.state = createInitialState();
+    this.motorClient = motorClient;
+  }
+
+  subscribe(cb: (state: EditorState) => void): () => void {
+    this.subscribers.push(cb);
+    return () => {
+      const idx = this.subscribers.indexOf(cb);
+      if (idx >= 0) this.subscribers.splice(idx, 1);
+    };
+  }
+
+  getState(): Readonly<EditorState> {
+    return this.state;
+  }
+
+  // ... (métodos de orquestación de estado como crearVariable, eliminarVariable, etc.)
+
+  validar(): ValidationResult {
+    return validarSnapshot(
+      this.state.snapshot,
+      this.state.available_connectives,
+    );
+  }
+
+  async ejecutar(): Promise<ControllerResult<ExecutionTrace>> {
+    const validation = this.validar();
+    if (!validation.valid) {
+      return { ok: false, errors: validation.errors };
+    }
+
+    try {
+      const resultSnapshot = await this.motorClient.calcular(
+        this.state.snapshot,
+      );
+
+      this.setState(
+        actions.guardarResultadoEjecucion(
+          this.state,
+          resultSnapshot.execution_trace,
+        ),
+      );
+
+      return { ok: true, data: resultSnapshot.execution_trace! };
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Error de red con el Motor.";
+      return {
+        ok: false,
+        errors: [{ field: "motor", message: msg, severity: "error" }],
+      };
+    }
+  }
+}
+
+=========================================================
+Archivo: epic_editor/services/motorApiClient.ts
+=========================================================
+import type {
+  PlaygroundSnapshot,
+  MotorConnective,
+} from "../domain/editorTypes";
+
+// SOLID - ISP: el Editor depende de un puerto pequeno con solo las operaciones
+// que necesita del Motor, no de detalles de fetch ni de FastAPI.
+export interface IMotorClient {
+  health(): Promise<boolean>;
+  getConectivos(): Promise<MotorConnective[]>;
+  calcular(snapshot: PlaygroundSnapshot): Promise<PlaygroundSnapshot>;
+}
+
+// SOLID - DIP: esta clase implementa el puerto de salida y encapsula HTTP y la
+// adaptacion de contratos; el controlador solo conoce IMotorClient.
+export class MotorApiClient implements IMotorClient {
+  private readonly baseUrl: string;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl.replace(/\/$/, "");
+  }
+
+  async health(): Promise<boolean> {
+    // Implementación de healthcheck
+  }
+
+  async getConectivos(): Promise<MotorConnective[]> {
+    // Implementación HTTP
+  }
+
+  async calcular(snapshot: PlaygroundSnapshot): Promise<PlaygroundSnapshot> {
+    // Adaptación del request y fetch...
+  }
+}
+
+// SOLID - LSP: el mock satisface el mismo contrato asincrono que MotorApiClient,
+// por lo que puede sustituirlo en el controlador y en sus pruebas contractuales.
+export class MockMotorClient implements IMotorClient {
+  private readonly config: any;
+
+  constructor(config: any = {}) {
+    this.config = config;
+  }
+
+  async health(): Promise<boolean> {
+    return this.config.healthOk ?? true;
+  }
+
+  async getConectivos(): Promise<MotorConnective[]> {
+    return this.config.conectivos ?? [];
+  }
+
+  async calcular(snapshot: PlaygroundSnapshot): Promise<PlaygroundSnapshot> {
+    // Retorna Snapshot mockeado
+  }
+}
+
+=========================================================
+Archivo: epic_editor/domain/editorActions.ts (Fragmento)
+=========================================================
+import type { EditorState } from "./editorState";
+import type { BelnapValue, MotorConnective } from "./editorTypes";
+
+// SOLID - SRP: estas funciones solo transforman estado de dominio. Al ser
+// independientes de HTTP, validacion global y DOM, pueden probarse aisladamente.
+export function crearVariableLogica(
+  state: EditorState,
+  id: string,
+  truth_value: BelnapValue = "N",
+): EditorState {
+  // Lógica inmutable
+}
+
+=========================================================
+Archivo: epic_simulador/editor-bridge.js (Fragmento)
+=========================================================
+/**
+ * EPiC Editor Bridge - Módulo de Integración
+ * 
+ * SOLID - SRP/Adapter: concentra la frontera TypeScript-JavaScript. El
+ * Simulador no necesita conocer constructores, validadores ni detalles HTTP.
+ * ISP: expone operaciones pequenas por caso de uso en vez de un objeto global.
+ */
+import { EditorController } from './dist/controllers/editorController.js';
+import { MotorApiClient } from './dist/services/motorApiClient.js';
+
+export function initializeEditorBridge(motorUrl) {
+  // Inicializa dependencias inyectadas (DIP)
+  motorClient = new MotorApiClient(motorUrl);
+  editorController = new EditorController(motorClient);
+  
+  editorController.subscribe((state) => {
+    // Notificar al frontend JS
+  });
+}

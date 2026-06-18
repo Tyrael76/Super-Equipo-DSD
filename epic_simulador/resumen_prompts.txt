@@ -1,0 +1,25 @@
+Resumen de Archivos "PROMPT" del EPiC Simulador (Basado en Features)
+
+Nota: Mantenemos los prompts antiguos basados en archivos por retrocompatibilidad e historial, pero el flujo actual recomendado es por features (características), los cuales reflejan mucho mejor cómo se itera el desarrollo del EPiC Simulador.
+
+A continuación se documentan los 4 nuevos prompts (PROMPT_FEATURE_*.md) que guiaron la construcción incremental de la herramienta, dividiendo la carga de trabajo por funcionalidad en lugar de por archivo:
+
+1. PROMPT_FEATURE_UI_Y_RENDERIZADO_ESTATICO.md
+   - Feature: Interfaz base y dibujado estático del grafo (SVG).
+   - Archivos que suele tocar: `index.html`, `style.css`, fragmentos de inicialización en `simulator.js`.
+   - Qué logró: La creación del layout base y la lógica para consumir un JSON inicial y pintar las circunferencias (conjuntos) y bolitas (variables lógicas). Sentó las bases estructurales sin meterse en el comportamiento interactivo complejo.
+
+2. PROMPT_FEATURE_ANIMACION_PASO_A_PASO.md
+   - Feature: Motor visual para la propagación de valores lógicos.
+   - Archivos que suele tocar: `simulator.js`, animaciones en `style.css`.
+   - Qué logró: La implementación de los controles de reproducción y la lógica interactiva que lee el `execution_trace`. Este prompt guió el comportamiento direccional de las partículas (las verdes viajando hacia adelante por "V", las rojas hacia atrás por "F" en contrapositiva), cuidando de no recalcular lógica localmente.
+
+3. PROMPT_FEATURE_VISTA_CAJITAS.md
+   - Feature: Segmentación del grafo global en pares didácticos.
+   - Archivos que suele tocar: `index.html` (pestaña extra), `style.css` (layout grid), `simulator.js` (extracción y renderizado).
+   - Qué logró: La creación de una pestaña que fracciona el grafo completo en pares de implicación (`A -> B`). Impuso la regla crucial de "sincronización de clones", asegurando que si una variable se actualiza en una cajita, todas sus copias en el DOM hagan lo mismo simultáneamente.
+
+4. PROMPT_FEATURE_INTEGRACION_BACKEND.md
+   - Feature: Conexión con Motor (Backend) y Sandbox Interactivo.
+   - Archivos que suele tocar: `editor-bridge.js`, `index.html` (formularios temporales), `simulator.js` (consumo de la API).
+   - Qué logró: El desarrollo del adaptador de red y la UI de prueba de envío rápido. Encapsuló los `fetch` hacia el backend Python (`/calcular`), proveyendo manejo de errores, parseo de contratos JSON y separando los detalles de red del motor gráfico.

@@ -1,0 +1,22 @@
+Documento de Contexto y Refactor SOLID en EPiC Simulador
+
+El proyecto cuenta con un refactor orientado a separar responsabilidades, aislar el dominio de la tecnología e inyectar dependencias (Arquitectura por Capas/Hexagonal). A continuación se describe la aplicación de los principios SOLID:
+
+1. Principio de Responsabilidad Única (SRP - Single Responsibility Principle):
+   - Clase `EditorController` (en `editorController.ts`): Su única responsabilidad es orquestar las acciones de estado, validación y comunicación con el motor. No maneja la red HTTP directamente ni la mutación del estado profundo.
+   - Funciones en `editorActions.ts`: Se dedican exclusivamente a transformar la estructura inmutable del dominio lógico, separadas del DOM, la validación y de peticiones externas, permitiendo pruebas unitarias limpias.
+   - Módulo `editor-bridge.js`: Actúa puramente como un "Adapter" en la frontera TypeScript/JavaScript, traduciendo el estado para que la vista web no conozca la complejidad interna.
+
+2. Principio Abierto/Cerrado (OCP - Open/Closed Principle):
+   - Método `subscribe` en `EditorController`: Implementa un patrón Observer. Si en el futuro se desea añadir otra vista (ej. un panel de logs) o exportador visual, solo se necesita suscribir una nueva función sin modificar la lógica interna del `EditorController` ni de los estados.
+
+3. Principio de Sustitución de Liskov (LSP - Liskov Substitution Principle):
+   - Clase `MockMotorClient` (en `motorApiClient.ts`): Implementa la interfaz `IMotorClient` satisfaciendo exactamente el mismo contrato y comportamiento asíncrono que su contraparte real (`MotorApiClient`). Esto permite inyectarlo en el `EditorController` sin que éste explote o detecte la diferencia, garantizando su validez como sustituto real.
+
+4. Principio de Segregación de Interfaces (ISP - Interface Segregation Principle):
+   - Interfaz `IMotorClient` (en `motorApiClient.ts`): Define un contrato estrictamente pequeño con únicamente los métodos necesarios para la edición (`health()`, `getConectivos()`, `calcular()`). Evita exponer interfaces gigantescas a quien use el motor.
+   - `editor-bridge.js`: En lugar de exportar todo un "MegaObjetoGlobal", exporta pequeñas operaciones por caso de uso (`createVariable`, `updateSet`, `executeWithMotor`), permitiendo a la vista tomar solo lo necesario.
+
+5. Principio de Inversión de Dependencias (DIP - Dependency Inversion Principle):
+   - En `EditorController`: El constructor recibe una abstracción explícita (`motorClient: IMotorClient`) en lugar de instanciar o depender de la clase concreta `MotorApiClient`. Esto permite conectar cualquier cliente (HTTP, Mock, o gRPC futuro) sin alterar la capa de control.
+   - En `simulator.js`: El simulador JavaScript invierte la dependencia delegándola a la API estable del bridge, por lo que nunca instancia `EditorController` de manera directa ni sabe cómo se construyen sus submódulos.
