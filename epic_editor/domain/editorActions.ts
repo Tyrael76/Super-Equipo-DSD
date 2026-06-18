@@ -176,27 +176,34 @@ export function crearContexto(
  * Mantiene la integridad referencial del grafo lógico.
  */
 export function eliminarContexto(state: EditorState, id: string): EditorState {
-  const sets = state.snapshot.logic.sets.filter((s) => s.id !== id);
+  let newState = state;
+
+  // Eliminar todas las variables que pertenecen a este contexto
+  const varsToDelete = newState.snapshot.logic.variables
+    .filter((v) => v.memberships.includes(id))
+    .map((v) => v.id);
+
+  for (const varId of varsToDelete) {
+    newState = eliminarVariableLogica(newState, varId);
+  }
+
+  // Ahora limpiar el contexto mismo
+  const sets = newState.snapshot.logic.sets.filter((s) => s.id !== id);
 
   const setsCleaned = sets.map((s) => ({
     ...s,
     subsets: s.subsets.filter((sub) => sub !== id),
   }));
 
-  const variables = state.snapshot.logic.variables.map((v) => ({
-    ...v,
-    memberships: v.memberships.filter((m) => m !== id),
-  }));
-
-  const visualSets = { ...state.snapshot.visual.sets };
+  const visualSets = { ...newState.snapshot.visual.sets };
   delete visualSets[id];
 
   return {
-    ...state,
+    ...newState,
     snapshot: {
-      ...state.snapshot,
-      logic: { ...state.snapshot.logic, sets: setsCleaned, variables },
-      visual: { ...state.snapshot.visual, sets: visualSets },
+      ...newState.snapshot,
+      logic: { ...newState.snapshot.logic, sets: setsCleaned },
+      visual: { ...newState.snapshot.visual, sets: visualSets },
     },
   };
 }
@@ -414,5 +421,18 @@ export function guardarResultadoEjecucion(
       },
       execution_trace,
     },
+  };
+}
+
+/**
+ * Carga un snapshot completo en el estado del editor.
+ */
+export function cargarSnapshot(
+  state: EditorState,
+  snapshot: any,
+): EditorState {
+  return {
+    ...state,
+    snapshot,
   };
 }

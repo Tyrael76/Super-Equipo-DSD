@@ -325,4 +325,12 @@ export class EditorController {
   regresarAEdicion(): void {
     this.setState(actions.guardarResultadoEjecucion(this.state, undefined));
   }
+
+  /**
+   * Carga un snapshot completo desde un JSON externo.
+   */
+  cargarSnapshot(snapshot: PlaygroundSnapshot): ControllerResult {
+    this.setState(actions.cargarSnapshot(this.state, snapshot));
+    return { ok: true, data: undefined };
+  }
 }
