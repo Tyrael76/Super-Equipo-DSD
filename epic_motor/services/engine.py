@@ -3,6 +3,8 @@ from logic.belnap import bv_kjoin
 from logic.connectives import get_connective
 import copy
 
+# SOLID - SRP: este servicio coordina propagacion y trace. No expone HTTP,
+# no adapta DTOs del Editor y trata visual como una carga opaca.
 def run_propagation(snapshot: PlaygroundSnapshot) -> PlaygroundSnapshot:
     """
     Recibe el Snapshot, calcula la propagación matricial sobre el grafo lógico

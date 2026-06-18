@@ -24,6 +24,8 @@ Fixtures obligatorios:
 4. Cadena: A -> B -> C para verificar cajitas repetidas.
 5. Ciclo controlado para verificar que no aparecen bolitas del lado incorrecto.
 6. Variable repetida en varias instancias visuales para verificar sincronizacion.
+7. Dos relaciones candidatas hacia el mismo target para exigir relation_id u origen no ambiguo.
+8. Formula compuesta con variable auxiliar cuando el Motor formal la soporte.
 
 Reglas:
 
@@ -33,6 +35,8 @@ Reglas:
 4. Cada relation debe tener visual.relations compatible.
 5. Actions deben poder normalizarse a variable_id/new_value.
 6. No crear datos gigantes.
+7. Distinguir fixtures del contrato publico y respuestas internas Python; cada archivo declara su forma.
+8. `final_logic` o el estado final debe coincidir con la ultima accion cuando ese campo exista.
 
 Validaciones manuales:
 
@@ -42,6 +46,10 @@ Validaciones manuales:
 - Play termina.
 - Siguiente avanza solo un movimiento.
 - Variables repetidas se sincronizan.
+- El fixture puede enviarse a /calcular o marcarse claramente como salida ya calculada.
+- Cada accion referencia variable y relacion existentes cuando esos campos no son comodines.
+
+SOLID verificable: los fixtures son datos de prueba y no implementan SOLID. Se usan para demostrar las fronteras y responsabilidades de los modulos.
 
 Fallos comunes:
 
@@ -55,4 +63,6 @@ Fallos comunes:
 
 ```text
 Revisa todos los fixtures contra editorTypes.ts. Corrige referencias rotas antes de tocar el renderizador.
+
+Valida tambien contra models/snapshot.py despues de pasar por MotorApiClient. Si el fallo solo ocurre en una forma, corrige el adaptador o el normalizador y conserva un fixture de regresion.
 ```

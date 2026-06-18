@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import router
 
+# SOLID - SRP: este archivo es el composition root. Solo ensambla FastAPI,
+# middleware y rutas; las reglas de propagacion permanecen fuera de la app.
 app = FastAPI(
     title="EPiC Playground Logic Engine",
     description="Motor de Inferencia Matricial para lógica de Belnap",

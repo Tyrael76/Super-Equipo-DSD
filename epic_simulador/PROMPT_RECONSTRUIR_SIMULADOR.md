@@ -14,6 +14,9 @@ Vas a reconstruir exclusivamente la carpeta epic_simulador del proyecto EPiC Pla
 - epic_simulador/index.html
 - epic_simulador/style.css
 - epic_simulador/simulator.js
+- epic_simulador/editor-bridge.js
+- epic_simulador/package.json
+- epic_simulador/INTEGRATION_README.md
 - epic_simulador/e2e-real-trace.json
 - epic_editor/domain/editorTypes.ts
 - epic_motor/models/snapshot.py
@@ -40,6 +43,8 @@ Responsabilidades del Simulador:
 13. Permitir regresar o reiniciar.
 14. Mostrar log de acciones.
 15. Incluir un sandbox de Editor Interactivo solo como herramienta temporal, no como reemplazo del Editor real.
+16. Consumir el Editor compilado por medio de `editor-bridge.js`, sin duplicar llamadas HTTP ni validacion en el runtime visual.
+17. Leer la URL del Motor desde `VITE_MOTOR_URL` con fallback local.
 
 Reglas visuales obligatorias:
 
@@ -53,6 +58,7 @@ Reglas visuales obligatorias:
 8. Valor N: bolita neutra o invisible segun el paso.
 9. Valor B: representacion de contradiccion o combinacion.
 10. El Simulador no debe calcular valores finales; solo reproduce el trace.
+11. La orientacion de flechas debe conservar la semantica del conectivo; no se deduce solo del color o de la posicion.
 
 Reglas de movimiento:
 
@@ -66,6 +72,8 @@ Reglas de movimiento:
 8. Al terminar el recorrido, actualiza valor y visibilidad del destino.
 9. Despues de terminar la animacion, vuelve a renderizar el step completo.
 10. En ciclos, evita que una bolita desaparezca y reaparezca en la circunferencia incorrecta.
+11. Actualiza todas las coincidencias DOM de `variable_id`, no solo el primer `querySelector`.
+12. Si el trace no identifica `relation_id` u origen, la inferencia debe ser determinista o declararse ambigua; no inventes una ruta.
 
 Normalizacion de contratos:
 
@@ -111,6 +119,7 @@ epic_simulador/
   index.html
   style.css
   simulator.js
+  editor-bridge.js
   e2e-real-trace.json
   package.json
 
@@ -124,6 +133,8 @@ Pruebas/verificacion:
 6. El boton Siguiente avanza solo un step.
 7. El boton Play reproduce hasta el final.
 8. Cargar e2e-real-trace.json debe dibujar y animar sin errores.
+9. npm run build debe compilar primero el Editor y despues producir el bundle Vite.
+10. El flujo navegador -> bridge -> controlador -> Motor debe funcionar sin scripts manuales.
 
 Entrega codigo completo, comandos de ejecucion y cualquier limitacion encontrada.
 ```
@@ -136,6 +147,7 @@ El Simulador no tiene subcarpetas, asi que estos prompts bajan a los archivos y 
 - `epic_simulador/PROMPT_RECONSTRUIR_STYLES.md`: estilos de `style.css`.
 - `epic_simulador/PROMPT_RECONSTRUIR_RUNTIME.md`: logica, render SVG y animaciones en `simulator.js`.
 - `epic_simulador/PROMPT_RECONSTRUIR_DATOS.md`: presets y `e2e-real-trace.json`.
+- `epic_simulador/PROMPT_RECONSTRUIR_BRIDGE.md`: adaptador entre modulos TypeScript compilados y JavaScript del navegador.
 
 ## Prompt especifico para corregir movimiento
 

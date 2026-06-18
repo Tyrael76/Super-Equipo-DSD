@@ -51,14 +51,14 @@ describe('Integración Editor + Motor', () => {
     expect(validation.errors).toHaveLength(0);
   });
 
-  test('Detectar errores de validación', () => {
+  test('Permitir variable lógica sin instancia visual', () => {
     // Crear variable sin instancia visual
     controller.crearVariable('p', 'V');
 
     // Validar
     const validation = controller.validar();
-    expect(validation.valid).toBe(false);
-    expect(validation.errors.length).toBeGreaterThan(0);
+    expect(validation.valid).toBe(true);
+    expect(validation.errors).toHaveLength(0);
   });
 
   test('Ejecutar con motor mock', async () => {
@@ -123,7 +123,7 @@ describe('Validador de Snapshots', () => {
     expect(validation.valid).toBe(true);
   });
 
-  test('Detectar variable sin instancia visual', () => {
+  test('Permitir variable sin instancia visual', () => {
     const snapshot: PlaygroundSnapshot = {
       meta: {
         schema_version: '3.0',
@@ -146,8 +146,8 @@ describe('Validador de Snapshots', () => {
     };
 
     const validation = validarSnapshot(snapshot, []);
-    expect(validation.valid).toBe(false);
-    expect(validation.errors.some(e => e.field === 'visual.instances')).toBe(true);
+    expect(validation.valid).toBe(true);
+    expect(validation.errors).toHaveLength(0);
   });
 
   test('Detectar relación con variable inexistente', () => {

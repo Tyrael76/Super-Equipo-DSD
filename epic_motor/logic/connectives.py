@@ -77,6 +77,8 @@ CONTRAPOSITIONAL = _build(
     lambda a, b: bv_and(a, BV.N)   # a AND N extrae exactamente la falsedad
 )
 
+# SOLID - OCP: el motor consulta este registro. Un conectivo nuevo se agrega
+# como otra implementacion matricial sin reescribir el bucle de propagacion.
 # Registro de todos los conectivos disponibles
 REGISTRY: Dict[str, Connective] = {
     "AND":              AND,

@@ -9,14 +9,17 @@ Reconstruye exclusivamente epic_motor/services. Antes de escribir codigo, inspec
 
 - epic_motor/services/engine.py
 - epic_motor/models/snapshot.py
-- epic_motor/core/belnap.py
-- epic_motor/core/connectives.py
+- epic_motor/logic/belnap.py
+- epic_motor/logic/connectives.py
+- epic_motor/motorv2.py
 - epic_motor/api/routes.py
 - epic_motor/tests/test_motor.py
 
 Objetivo:
 
 Implementar el servicio run_propagation que recibe PlaygroundSnapshot y devuelve el mismo snapshot con execution_trace.
+
+Situacion actual: el servicio recorre relaciones binarias y acumula con k-join. Esto es el PoC activo, pero no representa aun dominios futuros admisibles ni restricciones ternarias completas del articulo.
 
 Archivo esperado:
 
@@ -35,6 +38,8 @@ Responsabilidades:
 9. Registrar estabilizacion cuando una iteracion no cambia nada.
 10. Marcar stabilized y total_iterations.
 11. Devolver snapshot con visual intacto.
+12. Mantener orden determinista de acciones para que el Simulador pueda reproducirlas.
+13. Incluir `relation_id` u origen opcional en la traza si se necesita una animacion no ambigua.
 
 Reglas:
 
@@ -44,6 +49,10 @@ Reglas:
 4. No crear modelos HTTP.
 5. No ocultar relaciones invalidas; si se decide ignorarlas, documentarlo y probarlo.
 6. No agregar acciones para pasos que no cambiaron salvo estabilizacion.
+7. No usar `copy` o mutacion sin una politica explicita sobre si se modifica el objeto de entrada.
+8. No vender el k-join por aristas como implementacion completa de EPiC formal.
+
+SOLID verificable: SRP porque el servicio calcula y registra trace, sin HTTP ni visual; OCP porque obtiene conectivos del registro. Para DIP formal, el motor de trabajo debe depender de protocolos `Constraint` y `TraceRecorder`, no de clases concretas.
 
 Pruebas:
 
@@ -55,6 +64,8 @@ Pruebas:
 - Trace contiene una accion por mutacion.
 - Trace final tiene estabilizacion.
 - visual sale igual que entro.
+- Acciones del mismo step tienen orden estable.
+- Una relacion invalida produce diagnostico acordado, no un continue silencioso no probado.
 
 Fallos comunes:
 
@@ -68,4 +79,6 @@ Fallos comunes:
 
 ```text
 Audita run_propagation. Debe ser puro respecto a visual y concentrarse en logic. Agrega pruebas donde visual tenga metadata arbitraria para garantizar que no se toca.
+
+Si el fallo es semantico, clasificalo como PoC topologico o EPiC formal. Para el segundo usa PROMPT_EVOLUCION_EPIC_FORMAL.md y migra por pruebas, no pegando motorv2.py dentro del endpoint.
 ```

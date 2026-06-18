@@ -3,6 +3,8 @@
 // ==========================================
 // 0. Imports del Editor Bridge
 // ==========================================
+// SOLID - DIP: el runtime visual depende de la API estable del bridge y no
+// construye EditorController ni MotorApiClient directamente.
 import * as EditorBridge from './editor-bridge.js';
 
 // ==========================================

@@ -11,6 +11,8 @@ import type {
   ExecutionTrace,
 } from "./editorTypes";
 
+// SOLID - SRP: estas funciones solo transforman estado de dominio. Al ser
+// independientes de HTTP, validacion global y DOM, pueden probarse aisladamente.
 export function crearVariableLogica(
   state: EditorState,
   id: string,

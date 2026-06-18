@@ -5,6 +5,8 @@ from logic.connectives import REGISTRY
 
 router = APIRouter()
 
+# SOLID - SRP: los handlers traducen HTTP y delegan el calculo al servicio;
+# no contienen matrices, iteraciones ni decisiones visuales.
 @router.get("/health")
 async def health():
     return {"status": "ok", "motor": "EPIC Playground v3.0"}

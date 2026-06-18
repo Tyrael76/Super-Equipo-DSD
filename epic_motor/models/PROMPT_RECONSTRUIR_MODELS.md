@@ -18,6 +18,8 @@ Objetivo:
 
 Definir modelos Pydantic estrictos para el contrato activo del endpoint /calcular y documentar o aislar el contrato viejo si permanece.
 
+Mapa actual: `models/snapshot.py` alimenta `api/routes.py`; `models/schemas.py` solo alimenta `api/app.py` y `engine/propagation.py`. No mezcles ambos grafos de modelos en una misma peticion.
+
 Archivos esperados:
 
 - snapshot.py
@@ -43,6 +45,11 @@ Reglas:
 4. Permitir visual como dict opaco.
 5. No forzar que visual tenga coordenadas conocidas por el Motor.
 6. Si schemas.py conserva ElementoIn/ConjuntoIn, marcarlo como compatibilidad vieja y no usarlo en routes.py nuevo.
+7. Validar que las claves de los diccionarios coincidan con el `id` interno o normalizarlas en una fabrica explicita.
+8. Definir una politica para campos extra y versionado del schema.
+9. Si el dominio formal se incorpora, modelar dominios admisibles separados del valor efectivo; no sobrecargar `value`.
+
+SOLID verificable: SRP porque los modelos validan/serializan pero no calculan; ISP porque cada modelo representa una porcion pequena del contrato. La dependencia de Pydantic es una decision de frontera y no demuestra DIP por si sola.
 
 Pruebas:
 
@@ -52,6 +59,8 @@ Pruebas:
 - max_iterations 0 falla.
 - visual con campos arbitrarios se conserva.
 - execution_trace puede estar ausente al entrar.
+- Las claves de variables, sets y relations conservan identidad tras serializar.
+- El modelo activo acepta la traza Python sin convertirla a nombres TypeScript dentro de Pydantic.
 
 Fallos comunes:
 
@@ -64,4 +73,6 @@ Fallos comunes:
 
 ```text
 Audita models. El endpoint activo /calcular debe usar PlaygroundSnapshot de snapshot.py. Si schemas.py existe, no debe arrastrar el contrato viejo al flujo nuevo salvo que se haya decidido explicitamente.
+
+Ejecuta pruebas de serializacion de ida y vuelta y compara visual byte a byte o por igualdad profunda. Si cambia el contrato, actualiza MotorApiClient y fixtures en el mismo cambio.
 ```

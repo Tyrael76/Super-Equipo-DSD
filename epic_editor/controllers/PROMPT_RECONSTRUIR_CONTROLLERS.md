@@ -13,7 +13,8 @@ Reconstruye exclusivamente epic_editor/controllers. Antes de escribir codigo, in
 - epic_editor/domain/editorActions.ts
 - epic_editor/validators/editorValidation.ts
 - epic_editor/services/motorApiClient.ts
-- epic_editor/tests/editorTests.test.ts
+- epic_editor/services/formulaParser.ts
+- test_integration.ts
 
 Objetivo:
 
@@ -35,6 +36,8 @@ Responsabilidades:
 8. Recibir execution_trace y guardarlo en el estado.
 9. Devolver ControllerResult uniforme.
 10. Permitir inyectar MockMotorClient en pruebas.
+11. Coordinar `actualizarContexto`, `actualizarVariable` y `actualizarRelacion` sin mutar objetos obtenidos por `getState`.
+12. Publicar cambios a suscriptores una sola vez por operacion atomica.
 
 Reglas:
 
@@ -45,6 +48,15 @@ Reglas:
 5. No ocultar errores del Motor; conviertelos en errores estructurados.
 6. No duplicar validaciones complejas que pertenecen a validators.
 7. No crear dependencias concretas dificiles de sustituir; depender de IMotorClient.
+8. El constructor requiere un IMotorClient; la URL y la construccion de MotorApiClient pertenecen al composition root o al bridge.
+9. No devolver ok true cuando una referencia requerida no existe o la accion fue rechazada silenciosamente.
+
+SOLID verificable:
+
+- SRP: el controlador orquesta y delega transformaciones, validacion y HTTP.
+- DIP: el constructor recibe `IMotorClient`.
+- LSP: la misma suite contractual debe pasar con MotorApiClient simulado y MockMotorClient.
+- OCP: `subscribe` permite nuevas vistas sin modificar las acciones de dominio.
 
 Contrato de salida:
 
@@ -71,6 +83,8 @@ Pruebas que debe soportar:
 - Ejecutar con MockMotorClient guarda trace.
 - Si el Motor no devuelve trace, devolver error claro.
 - regresarAEdicion borra execution_trace.
+- Una actualizacion de memberships publica un solo estado consistente.
+- dibujarInstancia con variable inexistente devuelve error, no exito sin cambio.
 
 Fallos comunes a evitar:
 
@@ -84,4 +98,6 @@ Fallos comunes a evitar:
 
 ```text
 Audita EditorController. Debe ser orquestador, no motor logico ni renderizador. Extrae cualquier calculo a Motor, cualquier validacion profunda a validators y cualquier transformacion pura a domain/editorActions.ts.
+
+Si una accion pura es no-op, decide la responsabilidad: la accion permanece pura y el controlador valida la precondicion para devolver un ControllerResult util. Prueba tambien cuantas notificaciones publica cada operacion.
 ```

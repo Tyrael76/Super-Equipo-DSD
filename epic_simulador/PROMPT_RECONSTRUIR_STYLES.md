@@ -28,6 +28,8 @@ Responsabilidades:
 9. Estilos SVG para sets, relations, bolitas y particulas.
 10. Estados por valor: V, F, N, B.
 11. Estilos para editor interactivo temporal.
+12. Estados de error, carga, disabled y foco visible.
+13. Soporte para particulas V, F y B sin codificar reglas logicas en CSS.
 
 Reglas:
 
@@ -38,6 +40,10 @@ Reglas:
 5. Las circunferencias y flechas deben ser faciles de inspeccionar.
 6. No depender de imagenes externas.
 7. No ocultar controles en mobile.
+8. Mantener dimensiones estables de toolbar, tabs, tablero y cajitas para evitar saltos durante el trace.
+9. No seleccionar entidades por valor logico de forma que CSS decida su comportamiento; solo su presentacion.
+
+SOLID verificable: SRP porque style.css presenta estados ya calculados. La separacion CSS/JS no prueba por si sola todos los principios SOLID.
 
 Clases importantes:
 
@@ -66,4 +72,6 @@ Fallos comunes:
 
 ```text
 Audita style.css visualmente. La prioridad es claridad del grafo y controles estables. Ajusta tamanos, contrastes y overflow antes de agregar decoracion.
+
+Verifica capturas en escritorio y movil con presets simple, contradiccion y ciclo. Revisa que labels, flechas, particulas y paneles no se solapen.
 ```

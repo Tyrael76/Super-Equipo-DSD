@@ -5,9 +5,9 @@ Usa este prompt para reconstruir solo las pruebas del Editor.
 ```text
 Actua como ingeniero senior de pruebas TypeScript/Jest.
 
-Reconstruye exclusivamente epic_editor/tests. Antes de escribir codigo, inspecciona:
+Reconstruye la suite del Editor. Hoy `epic_editor/tests` no contiene el archivo de pruebas y existe `test_integration.ts` en la raiz. Antes de escribir codigo, inspecciona:
 
-- epic_editor/tests/editorTests.test.ts
+- test_integration.ts
 - epic_editor/controllers/editorController.ts
 - epic_editor/domain/editorActions.ts
 - epic_editor/validators/editorValidation.ts
@@ -43,6 +43,9 @@ Casos obligatorios:
 16. Ejecutar con MockMotorClient.
 17. Bloquear ejecucion invalida.
 18. Regresar a edicion limpia trace.
+19. FormulaParser devuelve diagnosticos o crea entidades esperadas sin `any`.
+20. La conversion Editor -> Motor -> Editor preserva campos no calculados.
+21. Ejecutar la misma suite de IMotorClient con el mock y un fetch simulado.
 
 Reglas:
 
@@ -52,6 +55,15 @@ Reglas:
 4. No probar detalles privados si puede probarse comportamiento publico.
 5. Usar MockMotorClient para ejecutar.
 6. Mantener fixtures pequenos y legibles.
+7. Una variable sin instancia es valida; una instancia sin variable es invalida.
+8. Distinguir pruebas unitarias de `test_integration.ts` y no depender de FastAPI real.
+
+Comandos de verificacion:
+
+- `npx jest --config jest.config.js`
+- `npm run build:editor` desde `epic_simulador`
+
+Si el repositorio no tiene script de test, no afirmes que paso: documenta el comando real y su salida.
 
 Fallos comunes a evitar:
 
@@ -64,4 +76,6 @@ Fallos comunes a evitar:
 
 ```text
 Refactoriza las pruebas del Editor para cubrir contrato y comportamiento publico. Usa helpers para crear snapshots invalidos sin repetir demasiado, pero no ocultes la estructura del JSON.
+
+Cuando una prueba antigua contradiga el contrato actual, registra la decision en el nombre o comentario de la prueba y actualiza la matriz de trazabilidad.
 ```

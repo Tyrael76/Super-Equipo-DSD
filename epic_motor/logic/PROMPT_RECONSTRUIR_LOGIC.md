@@ -1,55 +1,56 @@
 # Prompt para reconstruir epic_motor/logic
 
-Usa este prompt si debes mantener o depurar la carpeta `logic`.
-
-Nota: en el estado actual del proyecto, el Motor activo importa principalmente desde `core`. La carpeta `logic` parece conservar una version anterior usada por modelos viejos como `schemas.py`.
+Usa este prompt para reconstruir la carpeta `logic`, fuente matematica activa del Motor en esta rama.
 
 ```text
-Actua como ingeniero Python senior especializado en mantenimiento de compatibilidad.
+Actua como ingeniero Python senior especializado en logica de Belnap, tablas evidenciales y extensibilidad controlada.
 
-Reconstruye exclusivamente epic_motor/logic solo si el proyecto todavia necesita compatibilidad con modelos viejos. Antes de escribir codigo, inspecciona:
+Reconstruye exclusivamente epic_motor/logic. Antes de escribir codigo, inspecciona:
 
 - epic_motor/logic/belnap.py
 - epic_motor/logic/connectives.py
-- epic_motor/core/belnap.py
-- epic_motor/core/connectives.py
+- epic_motor/services/engine.py
+- epic_motor/motorv2.py
 - epic_motor/models/schemas.py
 - epic_motor/models/snapshot.py
 - epic_motor/tests/test_motor.py
 
-Objetivo:
-
-Mantener logic compatible con core o convertirlo en una capa delegada para evitar dos verdades matematicas.
+Objetivo: mantener una sola fuente de verdad para `BV`, operaciones del bilattice y registro de conectivos usados por `services/engine.py`.
 
 Responsabilidades:
 
-1. Revisar si schemas.py todavia importa logic.
-2. Si se conserva schemas.py, mantener logic funcional.
-3. Si core es la fuente de verdad, hacer que logic delegue a core o documentar la razon de la duplicidad.
-4. Evitar que las matrices de Belnap diverjan entre core y logic.
+1. Definir y probar N, V, F y B.
+2. Mantener AND, OR, NOT y k-join en funciones puras.
+3. Encapsular cada matriz binaria en Connective.
+4. Registrar conectivos en REGISTRY para que API y motor los descubran.
+5. Documentar cuales conectivos son del PoC y cuales implementan tablas formales EPiC.
+6. Mapear T del articulo a V del producto en una frontera unica.
 
 Reglas:
 
-1. No modificar API activa salvo necesidad.
-2. No crear una tercera implementacion de Belnap.
-3. No mezclar contratos viejos con PlaygroundSnapshot.
-4. No usar logic como fuente principal si services/engine.py usa core.
+1. No importar FastAPI, Pydantic, pandas ni codigo visual.
+2. No crear otra implementacion paralela de Belnap.
+3. No afirmar que implicacion material equivale por si sola a toda la restriccion operacional EPiC.
+4. No implementar flujo o iteraciones dentro de Connective.
+
+SOLID verificable: SRP en `belnap.py`; OCP mediante REGISTRY y Connective; LSP solo si se introduce un protocolo de conectivo y cada implementacion satisface el mismo contrato.
 
 Pruebas:
 
-- Las funciones equivalentes de logic y core devuelven lo mismo.
-- schemas.py puede importarse sin romper.
-- Los tests activos siguen pasando.
+- Tablas completas para cada operacion registrada.
+- REGISTRY y GET /conectivos exponen las mismas claves.
+- Conectivo desconocido falla de forma explicita.
+- Tests activos y legacy pueden importar logic sin divergencia.
 
 Fallos comunes:
 
-- Arreglar core pero olvidar logic.
-- Cambiar logic y pensar que el Motor activo cambio.
-- Reintroducir ElementoIn/ConjuntoIn en el flujo nuevo sin decision explicita.
+- Cambiar una tabla para hacer pasar una animacion sin justificacion formal.
+- Confundir union de informacion con orden de verdad.
+- Tratar B como error o colapso.
 ```
 
 ## Prompt de correccion rapida
 
 ```text
-Resuelve la duplicidad core/logic. Elige core como fuente de verdad activa si engine.py lo usa. Mantiene logic como compatibilidad delegando a core o elimina su uso desde modelos viejos solo si todo el repo queda actualizado.
+Audita logic contra EPiC.pdf y test_motor.py. Entrega por cada tabla su fuente, casos frontera y prueba exhaustiva. Si una regla del articulo aun no esta implementada, marcala como pendiente en vez de aproximarla silenciosamente.
 ```

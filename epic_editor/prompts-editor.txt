@@ -1,3 +1,12 @@
+ACTUALIZACION DE VIGENCIA - RAMA rama-motor
+===========================================
+
+Este archivo conserva el historial de prompts originales y no debe usarse como unica fuente para reconstruir la version actual. Antes de reutilizar un bloque, lee `../PROMPTS_RECONSTRUCCION.md`, `PROMPT_RECONSTRUIR_EDITOR.md` y los prompts especificos de `domain`, `controllers`, `services`, `validators` y `tests`.
+
+Cambios actuales: el contrato publico es PlaygroundSnapshot; FormulaParser y editor-bridge ya existen; EditorController requiere IMotorClient; el Motor activo usa `logic/` y `models/snapshot.py`; TypeScript compila hacia `epic_simulador/dist`. Una variable logica puede existir sin instancia visual. Las acciones Python y TypeScript requieren normalizacion explicita.
+
+Todo prompt derivado de este historial debe incluir contexto, objetivo, restricciones, salida esperada, criterios de aceptacion, pruebas y protocolo de correccion. Debe indicar solo los principios SOLID realmente aplicados y evitar afirmaciones falsas de LSP o DIP.
+
 Prompt inicial para el contexto del programa:
 Actúa como un arquitecto de software senior y desarrollador senior especializado en integración de sistemas modulares, diseño de contratos de datos, principios SOLID y desarrollo de pruebas de concepto.
 

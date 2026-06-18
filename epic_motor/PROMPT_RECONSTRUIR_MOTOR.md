@@ -12,9 +12,10 @@ Actua como arquitecto de backend senior especializado en Python, FastAPI, Pydant
 Vas a reconstruir exclusivamente la carpeta epic_motor del proyecto EPiC Playground PoC. Antes de escribir codigo, inspecciona:
 
 - epic_motor/models/snapshot.py
-- epic_motor/core/belnap.py
-- epic_motor/core/connectives.py
+- epic_motor/logic/belnap.py
+- epic_motor/logic/connectives.py
 - epic_motor/services/engine.py
+- epic_motor/motorv2.py
 - epic_motor/api/routes.py
 - epic_motor/main.py
 - epic_motor/tests/test_motor.py
@@ -39,6 +40,8 @@ Responsabilidades del Motor:
 10. Generar ExecutionAction cada vez que cambie una variable.
 11. Generar accion final de estabilizacion cuando ya no haya cambios.
 12. Cortar por max_iterations si no estabiliza.
+13. Diferenciar la propagacion topologica actual de la semantica EPiC formal basada en dominios admisibles.
+14. Revaluar todas las restricciones afectadas cuando una variable compartida cambie.
 
 Reglas obligatorias:
 
@@ -46,7 +49,7 @@ Reglas obligatorias:
 2. No depender del Editor ni del Simulador.
 3. No interpretar coordenadas, colores o radios.
 4. No modificar visual.
-5. No aceptar conectivos inventados sin registrarlos en core/connectives.py.
+5. No aceptar conectivos inventados sin registrarlos en logic/connectives.py.
 6. No mezclar modelos antiguos si el endpoint activo usa PlaygroundSnapshot.
 7. Mantener CORS para el frontend local.
 
@@ -79,6 +82,15 @@ Algoritmo:
    - marcar stabilized false;
    - devolver trace con total_iterations.
 
+Nivel formal requerido para una evolucion completa:
+
+- Representar para cada variable un dominio futuro admisible sobre `N/V/F/B` que solo pueda reducirse.
+- Modelar cada formula descompuesta con variables auxiliares y restricciones locales; AND y OR son restricciones ternarias.
+- Implementar UI+ (evidencia positiva hacia delante), UI- (evidencia negativa hacia atras) y UC para cambio de polaridad.
+- Usar una cola de restricciones afectadas y terminar por monotonia sobre dominios finitos.
+- Mantener `B` como inconsistencia legal y detectar como error un dominio vacio.
+- Conservar el grafo informacional reversible: la orientacion de cada arista depende del conectivo.
+
 Pruebas minimas:
 
 1. Belnap NOT, AND, OR y KJOIN.
@@ -100,9 +112,9 @@ Entrega codigo completo, comandos para ejecutar pytest y comando para levantar u
 Usa estos prompts cuando quieras reconstruir una parte concreta del Motor:
 
 - `epic_motor/models/PROMPT_RECONSTRUIR_MODELS.md`: modelos Pydantic y contrato activo.
-- `epic_motor/core/PROMPT_RECONSTRUIR_CORE.md`: Belnap y conectivos activos.
-- `epic_motor/logic/PROMPT_RECONSTRUIR_LOGIC.md`: compatibilidad o deduplicacion con `core`.
+- `epic_motor/logic/PROMPT_RECONSTRUIR_LOGIC.md`: Belnap y registro de conectivos activos.
 - `epic_motor/services/PROMPT_RECONSTRUIR_SERVICES.md`: `run_propagation` y `execution_trace`.
+- `epic_motor/services/PROMPT_EVOLUCION_EPIC_FORMAL.md`: migracion controlada desde el PoC topologico a dominios admisibles.
 - `epic_motor/engine/PROMPT_RECONSTRUIR_ENGINE.md`: auditoria de motor legacy.
 - `epic_motor/api/PROMPT_RECONSTRUIR_API.md`: FastAPI, endpoints y CORS.
 - `epic_motor/tests/PROMPT_RECONSTRUIR_TESTS.md`: pruebas pytest del Motor.
@@ -113,6 +125,8 @@ Usalo cuando el Motor y el Editor no se entiendan.
 
 ```text
 Revisa la compatibilidad entre epic_editor/services/motorApiClient.ts y epic_motor/models/snapshot.py. El Editor publico usa truth_value/from_variable/to_variable; el Motor puede usar value/source/target. Corrige solo la frontera de adaptacion necesaria para que POST /calcular reciba lo que Pydantic espera y el Editor reciba de vuelta un PlaygroundSnapshot publico con execution_trace normalizado.
+
+Comprueba tambien que el cliente no pierda is_contrapositive y que el tipo ExecutionAction tenga una representacion canonica compartida. Agrega una prueba de ida y vuelta Editor -> Motor -> Editor.
 ```
 
 ## Fallos comunes y como ajustar el prompt

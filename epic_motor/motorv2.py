@@ -8,6 +8,8 @@ class EvidentialValue:
     B = "B" # Coexistencia [cite: 268]
     VALUES = [N, T, F, B]
 
+# SOLID - SRP: Variable protege el invariante del dominio admisible y calcula
+# su valor efectivo; no conoce matrices, API, trazas ni presentacion tabular.
 class Variable:
     def __init__(self, name: str, initial_value: str = "N"):
         self.name = name
@@ -92,6 +94,8 @@ class ImplicationMatrix:
         return changed
 
 
+# SOLID - SRP parcial: su responsabilidad principal es orquestar restricciones,
+# pero sus print y el display de ImplicationMatrix son deuda de separacion.
 class EPICEngine:
     """Motor EPIC que gestiona múltiples implicaciones [cite: 729]."""
     def __init__(self):

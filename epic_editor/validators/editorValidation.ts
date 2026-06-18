@@ -12,6 +12,8 @@ import type {
   EditorValidationError,
 } from "../domain/editorTypes";
 
+// SOLID - SRP: el validador inspecciona y reporta; no corrige el snapshot,
+// no ejecuta propagacion y no conoce al controlador ni a la interfaz grafica.
 function err(
   field: string,
   message: string,

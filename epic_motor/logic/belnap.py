@@ -19,6 +19,8 @@ modelar la propagación de valores entre elementos y conjuntos.
 from enum import Enum
 from typing import Dict, Tuple
 
+# SOLID - SRP: este modulo concentra solo el dominio matematico de Belnap;
+# no conoce grafos, Pydantic, FastAPI, trazas ni coordenadas visuales.
 
 class BV(str, Enum):
     """Valores de Belnap."""

@@ -22,12 +22,16 @@ export class MotorApiError extends Error {
   }
 }
 
+// SOLID - ISP: el Editor depende de un puerto pequeno con solo las operaciones
+// que necesita del Motor, no de detalles de fetch ni de FastAPI.
 export interface IMotorClient {
   health(): Promise<boolean>;
   getConectivos(): Promise<MotorConnective[]>;
   calcular(snapshot: PlaygroundSnapshot): Promise<PlaygroundSnapshot>;
 }
 
+// SOLID - DIP: esta clase implementa el puerto de salida y encapsula HTTP y la
+// adaptacion de contratos; el controlador solo conoce IMotorClient.
 export class MotorApiClient implements IMotorClient {
   private readonly baseUrl: string;
 
@@ -240,6 +244,8 @@ export class MotorApiClient implements IMotorClient {
   }
 }
 
+// SOLID - LSP: el mock satisface el mismo contrato asincrono que MotorApiClient,
+// por lo que puede sustituirlo en el controlador y en sus pruebas contractuales.
 export class MockMotorClient implements IMotorClient {
   private readonly config: {
     healthOk?: boolean;

@@ -21,6 +21,9 @@ export type ControllerResult<T = void> =
   | { ok: true; data: T }
   | { ok: false; errors: ValidationResult["errors"] };
 
+// SOLID - SRP: el controlador orquesta acciones, validacion y ejecucion sin
+// implementar sus detalles. DIP: recibe IMotorClient en vez de construir un
+// cliente HTTP concreto. OCP: subscribe admite nuevas vistas sin cambiar el dominio.
 export class EditorController {
   private state: EditorState;
   private readonly motorClient: IMotorClient;

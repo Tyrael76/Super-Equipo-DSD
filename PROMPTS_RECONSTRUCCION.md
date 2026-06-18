@@ -2,6 +2,18 @@
 
 Este archivo funciona como guia maestra para reconstruir el proyecto EPiC Playground PoC con ayuda de una IA. La reconstruccion debe hacerse por capas, desde el contrato interno hasta la visualizacion.
 
+## Base documental obligatoria
+
+Estos prompts fueron contrastados con los documentos `IA Generativa en el Desarrollo de Sistemas.pdf`, `EPiC.pdf` y `EPiC Playground - SOLID Organization.pdf`. Una IA que reconstruya el proyecto debe aplicar estas reglas transversales:
+
+- Tratar la salida generada como propuesta verificable: inspeccionar el repositorio, ejecutar pruebas y reportar incertidumbres.
+- Mantener trazabilidad `requisito -> modulo -> codigo -> prueba`.
+- Separar contrato, creacion de estado, validacion, servicios, orquestacion, calculo y visualizacion.
+- Respetar el dominio evidencial de cuatro valores. El codigo publico usa `V/F/N/B`; el articulo usa `T/F/N/B`, por lo que `T` se mapea a `V` solo en una frontera documentada.
+- La contradiccion `B` es un estado legal. Un dominio admisible vacio o la reintroduccion de valores descartados es un fallo operacional.
+- No afirmar que la implementacion actual ya cumple toda la semantica formal: `services/engine.py` es el motor activo y `motorv2.py` es un prototipo parcial de dominios admisibles.
+- Aplicar SOLID donde exista una frontera real; no etiquetar LSP si no hay tipos sustituibles ni DIP si se depende directamente de una clase concreta.
+
 Usa estos prompts en este orden por capas:
 
 1. Este archivo para fijar contrato, responsabilidades y flujo.
@@ -17,15 +29,16 @@ Editor:
 - `epic_editor/domain/PROMPT_RECONSTRUIR_DOMAIN.md`
 - `epic_editor/controllers/PROMPT_RECONSTRUIR_CONTROLLERS.md`
 - `epic_editor/services/PROMPT_RECONSTRUIR_SERVICES.md`
+- `epic_editor/services/PROMPT_RECONSTRUIR_FORMULA_PARSER.md`
 - `epic_editor/validators/PROMPT_RECONSTRUIR_VALIDATORS.md`
 - `epic_editor/tests/PROMPT_RECONSTRUIR_TESTS.md`
 
 Motor:
 
 - `epic_motor/models/PROMPT_RECONSTRUIR_MODELS.md`
-- `epic_motor/core/PROMPT_RECONSTRUIR_CORE.md`
 - `epic_motor/logic/PROMPT_RECONSTRUIR_LOGIC.md`
 - `epic_motor/services/PROMPT_RECONSTRUIR_SERVICES.md`
+- `epic_motor/services/PROMPT_EVOLUCION_EPIC_FORMAL.md`
 - `epic_motor/engine/PROMPT_RECONSTRUIR_ENGINE.md`
 - `epic_motor/api/PROMPT_RECONSTRUIR_API.md`
 - `epic_motor/tests/PROMPT_RECONSTRUIR_TESTS.md`
@@ -36,8 +49,18 @@ Simulador:
 - `epic_simulador/PROMPT_RECONSTRUIR_STYLES.md`
 - `epic_simulador/PROMPT_RECONSTRUIR_RUNTIME.md`
 - `epic_simulador/PROMPT_RECONSTRUIR_DATOS.md`
+- `epic_simulador/PROMPT_RECONSTRUIR_BRIDGE.md`
 
 Antes de pedir codigo, la IA debe leer los archivos reales del repositorio. Si hay contradiccion entre documentacion antigua y codigo, debe priorizar el codigo activo.
+
+## Mapa real de la rama actual
+
+- Flujo activo del Motor: `epic_motor/main.py` -> `api/routes.py` -> `services/engine.py` -> `logic/` + `models/snapshot.py`.
+- Flujo legacy: `api/app.py` -> `engine/propagation.py` -> `models/schemas.py`. No debe mezclarse con `/calcular` activo.
+- Prototipo formal: `motorv2.py`. Sirve como referencia para dominios admisibles, pero no esta conectado a FastAPI.
+- Compilacion del Editor: `tsconfig.json` genera modulos en `epic_simulador/dist`.
+- Integracion del navegador: `epic_simulador/editor-bridge.js` consume esos modulos y `simulator.js` usa el bridge.
+- Pruebas actuales: `epic_motor/tests/test_motor.py` y `test_integration.ts`; la carpeta `epic_editor/tests` aun no contiene una suite implementada.
 
 ## Contrato arquitectonico que no se debe romper
 
@@ -101,10 +124,15 @@ Primero inspecciona estos archivos:
 - epic_editor/validators/editorValidation.ts
 - epic_editor/controllers/editorController.ts
 - epic_editor/services/motorApiClient.ts
+- epic_editor/services/formulaParser.ts
 - epic_motor/models/snapshot.py
 - epic_motor/services/engine.py
+- epic_motor/logic/belnap.py
+- epic_motor/logic/connectives.py
+- epic_motor/motorv2.py
 - epic_motor/api/routes.py
 - epic_simulador/simulator.js
+- epic_simulador/editor-bridge.js
 - epic_simulador/index.html
 - epic_simulador/style.css
 
@@ -124,6 +152,10 @@ Reglas obligatorias:
 8. Si varias instancias tienen el mismo variable_id, son copias visuales de la misma variable.
 9. El Motor devuelve un execution_trace cronologico.
 10. El Simulador debe poder reproducir toda la secuencia continua y tambien paso a paso.
+11. La implicacion formal usa propagacion positiva hacia delante y evidencia negativa hacia atras; su direccion no es decorativa.
+12. Conjuncion y disyuncion deben modelarse como restricciones de tres variables cuando se implemente el nivel formal, no como simples aristas binarias.
+13. Toda restriccion afectada por una variable compartida debe reevaluarse hasta un punto fijo finito.
+14. Cada cambio de contrato debe actualizar TypeScript, Pydantic, adaptador HTTP, normalizador del Simulador y fixtures.
 
 Contrato esperado:
 
@@ -163,6 +195,8 @@ Reconstruye por capas:
 5. Pruebas unitarias y flujo end-to-end.
 
 Al terminar cada capa, ejecuta sus pruebas o build correspondiente. Si una prueba falla, no parches al azar: identifica si el fallo es de contrato, adaptacion, logica o visualizacion.
+
+En cada entrega incluye una matriz de trazabilidad con: requisito, archivo responsable, prueba que lo demuestra y estado `implementado/parcial/pendiente`.
 
 Entrega:
 
@@ -237,3 +271,12 @@ Agrega dos controles separados: uno para reproducir toda la secuencia automatica
 ```text
 Agrega o conserva una ruta de uso para usuario no tecnico. Debe poder crear datos desde la interfaz del Editor Interactivo o cargar/pegar un JSON desde el Simulador. No dependas exclusivamente de scripts de consola. Si hay un flujo de prueba con scripts, documentalo como opcion tecnica, no como flujo principal del usuario.
 ```
+
+## Protocolo general cuando falle un prompt
+
+1. Conserva el prompt original y agrega una seccion `Fallo observado` con entrada, resultado actual y resultado esperado.
+2. Reduce el alcance al prompt de la carpeta responsable.
+3. Pide primero una hipotesis verificable y una prueba que reproduzca el fallo.
+4. Prohibe cambios fuera del modulo salvo que se demuestre una incompatibilidad de contrato.
+5. Exige ejecutar la prueba roja, hacer el cambio minimo y volver a ejecutar pruebas y build.
+6. Si el fallo revela una diferencia entre el articulo EPiC y el PoC, marca la caracteristica como parcial; no simules cumplimiento con comentarios o nombres.

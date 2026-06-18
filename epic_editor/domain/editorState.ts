@@ -7,6 +7,8 @@ Será un envoltorio del PlaygroundSnapshot más los metadatos de la sesión (mod
 
 import type { PlaygroundSnapshot, MotorConnective } from "./editorTypes";
 
+// SOLID - SRP: EditorState y su fabrica concentran unicamente la inicializacion
+// coherente de la sesion; las transformaciones viven en editorActions.ts.
 export interface EditorState {
   snapshot: PlaygroundSnapshot;
   available_connectives: MotorConnective[];

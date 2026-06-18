@@ -3,6 +3,9 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, field_validator
 from logic.belnap import BV, bv_from_str
 
+# SOLID - SRP: estos modelos validan y serializan el contrato activo. El calculo
+# vive en services/engine.py y la adaptacion del contrato publico en el Editor.
+
 # ─────────────────────────────────────────────
 #  1. Capa Lógica (Lo único que lee el Motor)
 # ─────────────────────────────────────────────

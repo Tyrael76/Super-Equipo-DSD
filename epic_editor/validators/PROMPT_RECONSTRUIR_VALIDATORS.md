@@ -10,7 +10,7 @@ Reconstruye exclusivamente epic_editor/validators. Antes de escribir codigo, ins
 - epic_editor/validators/editorValidation.ts
 - epic_editor/domain/editorTypes.ts
 - epic_editor/domain/editorState.ts
-- epic_editor/tests/editorTests.test.ts
+- test_integration.ts
 
 Objetivo:
 
@@ -32,6 +32,8 @@ Responsabilidades:
 8. Validar meta.max_iterations entre 1 y 500.
 9. Devolver ValidationResult.
 10. Generar errores con field, message, severity y entityId.
+11. Validar IDs duplicados en arreglos logicos y coherencia entre relaciones logicas y visuales si el contrato la exige.
+12. Mantener valida una variable sin instancia visual; la capa logica es un inventario independiente.
 
 Reglas:
 
@@ -42,6 +44,9 @@ Reglas:
 5. No renderizar.
 6. No depender de EditorController.
 7. Permitir warnings en el tipo, pero errores invalidan.
+8. No confundir ausencia de representacion visual con referencia fantasma.
+
+SOLID verificable: SRP porque el modulo solo inspecciona y reporta; ISP porque consume el snapshot y la lista de conectivos, no el controlador completo. No uses DIP como etiqueta si no existe una dependencia invertida real.
 
 Pruebas que debe soportar:
 
@@ -55,6 +60,9 @@ Pruebas que debe soportar:
 - Instancia visual apuntando a fantasma invalida.
 - max_iterations 0 invalido.
 - max_iterations 501 invalido.
+- Variable logica sin instancia visual valida.
+- IDs logicos duplicados invalidos.
+- Validar no modifica el snapshot serializado.
 
 Fallos comunes a evitar:
 
@@ -68,4 +76,6 @@ Fallos comunes a evitar:
 
 ```text
 Audita validarSnapshot como funcion pura. Debe recibir snapshot y available_connectives, devolver ValidationResult y no tocar nada mas. Agrega pruebas para cada referencia rota posible.
+
+Existe una expectativa antigua en test_integration.ts que considera invalida una variable sin instancia. Corrige la prueba o formaliza una nueva regla de producto, pero no mantengas una contradiccion entre dominio, acciones y validador.
 ```

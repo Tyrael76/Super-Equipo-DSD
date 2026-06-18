@@ -4,6 +4,10 @@
  * Este módulo actúa como puente entre el EditorController de TypeScript
  * y el simulador JavaScript, proporcionando una API unificada para
  * la gestión del estado del editor y la comunicación con el motor.
+ *
+ * SOLID - SRP/Adapter: concentra la frontera TypeScript-JavaScript. El
+ * Simulador no necesita conocer constructores, validadores ni detalles HTTP.
+ * ISP: expone operaciones pequenas por caso de uso en vez de un objeto global.
  */
 
 import { EditorController } from './dist/controllers/editorController.js';

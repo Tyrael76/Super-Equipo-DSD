@@ -17,10 +17,13 @@ Vas a reconstruir exclusivamente la carpeta epic_editor del proyecto EPiC Playgr
 - epic_editor/validators/editorValidation.ts
 - epic_editor/controllers/editorController.ts
 - epic_editor/services/motorApiClient.ts
-- epic_editor/tests/editorTests.test.ts
+- epic_editor/services/formulaParser.ts
+- test_integration.ts
 - epic_motor/models/snapshot.py
 - epic_motor/api/routes.py
 - epic_simulador/simulator.js
+- epic_simulador/editor-bridge.js
+- tsconfig.json
 
 Objetivo:
 
@@ -42,6 +45,8 @@ Responsabilidades del Editor:
 12. Enviar el snapshot al Motor por HTTP.
 13. Recibir el snapshot con execution_trace.
 14. Cambiar modo de edicion a ejecucion cuando exista trace.
+15. Parsear formulas simples mediante `FormulaParser` sin colocar logica de Belnap en el parser.
+16. Publicar modulos ES que puedan compilarse a `epic_simulador/dist` y consumirse desde `editor-bridge.js`.
 
 Contrato TypeScript esperado:
 
@@ -65,6 +70,8 @@ Reglas obligatorias:
 8. Nada en visual puede apuntar a una variable logica inexistente.
 9. Nada en logic.relations puede apuntar a variables inexistentes.
 10. meta.max_iterations debe estar entre 1 y 500.
+11. Una variable logica sin instancia visual es valida: puede permanecer en el inventario; lo invalido es una instancia que apunte a una variable inexistente.
+12. El adaptador debe resolver explicitamente la diferencia entre la traza TypeScript (`target_id/result_value`) y la traza Python (`variable_id/new_value`).
 
 Estructura esperada:
 
@@ -77,10 +84,10 @@ epic_editor/
     editorValidation.ts
   services/
     motorApiClient.ts
+    formulaParser.ts
   controllers/
     editorController.ts
-  tests/
-    editorTests.test.ts
+  tests/                 # suite dedicada por crear; hoy existe test_integration.ts en raiz
   index.ts
 
 Implementa con estilo funcional e inmutable para acciones de estado. El controlador puede encapsular el estado y exponer metodos de alto nivel para que una UI lo use.
@@ -108,6 +115,8 @@ Pruebas minimas:
 8. Ejecutar con MockMotorClient y guardar execution_trace.
 9. Bloquear ejecucion si el snapshot no es valido.
 10. Regresar a modo edicion limpiando execution_trace.
+11. Parsear una formula soportada y rechazar con error estructurado una formula invalida.
+12. `npm run build:editor` desde `epic_simulador` debe compilar sin `any` accidental nuevo ni incompatibilidades de trace.
 
 Entrega codigo completo y comandos para probar.
 ```
@@ -119,6 +128,7 @@ Usa estos prompts cuando quieras reconstruir una parte concreta del Editor:
 - `epic_editor/domain/PROMPT_RECONSTRUIR_DOMAIN.md`: contrato `PlaygroundSnapshot`, estado inicial y acciones puras.
 - `epic_editor/controllers/PROMPT_RECONSTRUIR_CONTROLLERS.md`: `EditorController` como orquestador para UI.
 - `epic_editor/services/PROMPT_RECONSTRUIR_SERVICES.md`: cliente HTTP, adaptacion al Motor y mocks.
+- `epic_editor/services/PROMPT_RECONSTRUIR_FORMULA_PARSER.md`: tokenizacion, AST/decomposicion y traduccion a acciones del controlador.
 - `epic_editor/validators/PROMPT_RECONSTRUIR_VALIDATORS.md`: integridad referencial y reglas de snapshot.
 - `epic_editor/tests/PROMPT_RECONSTRUIR_TESTS.md`: pruebas Jest del Editor.
 
@@ -128,6 +138,8 @@ Usa este prompt despues de una primera implementacion para obligar a la IA a rev
 
 ```text
 Revisa criticamente el Editor que generaste. Busca acoplamientos indebidos con Motor o Simulador, mutaciones accidentales del estado, referencias rotas, errores de contrato y casos donde el controlador devuelva ok aunque la accion no haya ocurrido. Corrige sin cambiar la arquitectura. Agrega o ajusta pruebas para cubrir cada fallo encontrado.
+
+Ademas, genera una tabla `requisito -> modulo -> prueba`. Verifica SRP entre types/state/actions/validator/services/controller, DIP mediante IMotorClient e ISP manteniendo interfaces pequenas. No declares LSP salvo que MockMotorClient y MotorApiClient pasen el mismo contrato conductual.
 ```
 
 ## Fallos comunes y como ajustar el prompt

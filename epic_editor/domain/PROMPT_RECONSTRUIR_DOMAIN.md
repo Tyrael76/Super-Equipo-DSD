@@ -17,6 +17,13 @@ Objetivo:
 
 Definir el contrato publico PlaygroundSnapshot y las acciones puras que modifican el estado del Editor sin calcular logica, sin llamar HTTP y sin renderizar.
 
+Estado actual que debes conservar o migrar conscientemente:
+
+- `schema_version` inicial es `3.0`.
+- `VisualSet` admite `color` y `VisualRelation` admite `direction`.
+- `actualizarContexto` y `actualizarRelacion` coordinan la parte logica y la visual.
+- `ExecutionAction` TypeScript y la traza Python usan nombres distintos. Define una forma canonica o una union explicita; no uses `any` para ocultar la diferencia.
+
 Archivos esperados:
 
 - editorTypes.ts
@@ -36,6 +43,7 @@ Responsabilidades:
 9. Definir ExecutionTrace y ExecutionAction para reproducir el resultado del Motor.
 10. Crear estado inicial vacio y conectivos fallback.
 11. Implementar acciones puras para crear, editar y eliminar entidades.
+12. Documentar el invariante: una variable logica puede tener cero, una o muchas instancias visuales.
 
 Reglas:
 
@@ -49,6 +57,14 @@ Reglas:
 8. Si se elimina un contexto, limpia memberships y subsets rotos.
 9. Mantener logic y visual separados.
 10. No crear campos incompatibles con editorTypes.ts sin justificar extension.
+11. No exigir una instancia visual por variable; solo se prohiben referencias visuales fantasma.
+12. Si una accion no encuentra la entidad, su politica de no-op o error debe ser visible para el controlador y estar probada.
+
+SOLID verificable:
+
+- SRP: `editorTypes` declara, `editorState` crea y `editorActions` transforma.
+- OCP: metadata visual adicional puede extender los records sin mezclarse con `logic`.
+- No atribuyas DIP o LSP a funciones puras sin dependencias o subtipos.
 
 Pruebas que debe soportar esta capa:
 
@@ -59,6 +75,8 @@ Pruebas que debe soportar esta capa:
 - Borrar contexto y limpiar referencias.
 - Guardar execution_trace cambia modo a ejecucion.
 - Limpiar execution_trace regresa modo a edicion.
+- Actualizar color o direccion no altera el grafo logico salvo el conectivo solicitado.
+- La serializacion de una accion de trace coincide con la forma canonica elegida.
 
 Fallos comunes a evitar:
 
@@ -67,10 +85,13 @@ Fallos comunes a evitar:
 - Guardar truth_value dentro de visual.instances.
 - Mutar arrays internos desde acciones.
 - Crear acciones que tambien validan o llaman al Motor.
+- Reintroducir un campo visual dentro de LogicVariable o LogicRelation.
 ```
 
 ## Prompt de correccion rapida
 
 ```text
 Revisa epic_editor/domain y separa responsabilidades. editorTypes.ts solo declara tipos, editorState.ts solo crea el estado inicial, editorActions.ts solo contiene transformaciones puras. Si alguna funcion calcula propagacion, valida todo el snapshot, llama HTTP o toca DOM, muevela fuera de domain.
+
+Ejecuta npm run build:editor desde epic_simulador y agrega una prueba de inmutabilidad por cada borrado en cascada. Si falla ExecutionAction, corrige el contrato o el adaptador: no uses any para silenciarlo.
 ```

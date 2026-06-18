@@ -15,11 +15,12 @@ Algoritmo:
   4. Detectar cambios de variable (es_resultado_de) y emitir acciones
      de tipo "cambio_nombre".
 
-Principios SOLID aplicados:
-  - SRP: este módulo solo calcula; no parsea JSON ni renderiza.
-  - OCP: agregar un nuevo conectivo = agregar entrada a REGISTRY en
-         connectives.py; el Motor no cambia.
-  - LSP: un subconjunto se trata exactamente igual que un conjunto raíz.
+Principios SOLID auditados:
+  - SRP parcial: la responsabilidad principal es calcular, pero actualizar
+    colores al final mezcla una preocupacion visual que debe aislarse.
+  - OCP: agregar un conectivo al REGISTRY evita reescribir este bucle.
+  - No se atribuye LSP: tratar conjuntos y subconjuntos de forma uniforme no
+    implica sustitucion entre subtipos porque aqui no existe esa jerarquia.
 """
 
 from __future__ import annotations

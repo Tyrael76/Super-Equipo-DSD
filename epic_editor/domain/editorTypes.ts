@@ -5,6 +5,9 @@ realiza el editorTypes.ts, Vamos a borrar todo rastro de ElementoIn y ConjuntoIn
 dividiendo estrictamente logic (variables, sets, relations) y visual (instances, shapes).
 */
 
+// SOLID - SRP: este modulo solo define el contrato compartido; no crea estado,
+// valida, llama al Motor ni renderiza. Asi cada capa depende del mismo vocabulario.
+
 export type BelnapValue = "V" | "F" | "N" | "B";
 
 export type MotorConnective = string;

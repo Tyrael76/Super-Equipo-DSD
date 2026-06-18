@@ -1,5 +1,8 @@
 import type { EditorController } from "../controllers/editorController";
 
+// SOLID - SRP parcial: el servicio aisla la traduccion de texto y no calcula
+// Belnap ni llama al Motor. El layout y la dependencia de EditorController son
+// puntos de mejora: extraer layout y recibir un puerto pequeno completaria SRP/DIP.
 export class FormulaParser {
   private controller: EditorController;
   private setCounter: number = 0;

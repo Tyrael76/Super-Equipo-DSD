@@ -10,6 +10,8 @@ Reconstruye exclusivamente epic_simulador/index.html. Antes de escribir codigo, 
 - epic_simulador/index.html
 - epic_simulador/style.css
 - epic_simulador/simulator.js
+- epic_simulador/editor-bridge.js
+- epic_simulador/INTEGRATION_README.md
 
 Objetivo:
 
@@ -30,6 +32,8 @@ Secciones esperadas:
 11. Tabs para vista de cajitas, vista global y editor interactivo.
 12. Contenedores vacios para render SVG.
 13. Formularios del editor interactivo temporal si se conserva.
+14. Campo de formula y controles de gestion que consume actualmente simulator.js.
+15. Area de errores del Motor/Editor y estado de ejecucion accesible.
 
 Reglas:
 
@@ -38,6 +42,10 @@ Reglas:
 3. IDs deben coincidir con simulator.js.
 4. Mantener accesibilidad basica: botones reales, labels o placeholders claros.
 5. No crear landing page; la herramienta debe aparecer como primera pantalla.
+6. Botones de icono deben conservar nombre accesible y tooltip cuando el significado no sea obvio.
+7. No invoques EditorController ni fetch desde HTML inline; el modulo de entrada es simulator.js.
+
+SOLID verificable: el HTML conserva SRP como estructura semantica y deja comportamiento al runtime. No etiquetes como DIP una coleccion de IDs.
 
 Fallos comunes:
 
@@ -50,4 +58,6 @@ Fallos comunes:
 
 ```text
 Revisa index.html contra simulator.js. Todo getElementById usado en JS debe existir exactamente una vez en HTML.
+
+Genera una prueba automatica o script de auditoria que compare IDs consultados y declarados. Verifica teclado, labels y estados disabled durante animacion; despues ejecuta npm run build.
 ```
