@@ -69,20 +69,29 @@ _KJOIN: Dict[Tuple[str, str], BV] = {
 
 
 def bv_and(a: BV, b: BV) -> BV:
+    """Conjunción de Belnap. Retorna V solo si ambos son V."""
     return _AND[(a, b)]
 
 def bv_or(a: BV, b: BV) -> BV:
+    """Disyunción de Belnap. Retorna V si al menos uno es V."""
     return _OR[(a, b)]
 
 def bv_not(a: BV) -> BV:
+    """Negación de Belnap. Invierte V↔F, mantiene N y B."""
     return _NOT[a]
 
 def bv_kjoin(a: BV, b: BV) -> BV:
-    """Combina evidencia de dos fuentes (k-order join). Usada en propagación."""
+    """
+    Combina evidencia de dos fuentes (k-order join).
+    Usado en propagación EPiC para acumular evidencia: N<V, N<F, V<B, F<B.
+    """
     return _KJOIN[(a, b)]
 
 def bv_from_str(s: str) -> BV:
-    """Convierte string a BV, insensible a mayúsculas."""
+    """
+    Convierte string a valor Belnap, insensible a mayúsculas.
+    Acepta: V/F/N/B, true/false/none/both.
+    """
     mapping = {"v": BV.V, "f": BV.F, "n": BV.N, "b": BV.B,
                "true": BV.V, "false": BV.F, "none": BV.N, "both": BV.B}
     try:

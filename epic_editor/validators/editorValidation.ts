@@ -14,6 +14,11 @@ import type {
 
 // SOLID - SRP: el validador inspecciona y reporta; no corrige el snapshot,
 // no ejecuta propagacion y no conoce al controlador ni a la interfaz grafica.
+
+/**
+ * Crea un objeto de error de validación con campo, mensaje y entidad afectada.
+ * Utilidad interna para reportar problemas de integridad.
+ */
 function err(
   field: string,
   message: string,
@@ -22,6 +27,10 @@ function err(
   return { field, message, severity: "error", entityId };
 }
 
+/**
+ * Detecta ciclos en la jerarquía de subconjuntos usando DFS.
+ * Un ciclo indica estructura lógica inválida (A contiene B, B contiene A).
+ */
 function hasCycle(
   start: string,
   subconjuntosMap: Record<string, string[]>,
@@ -41,6 +50,12 @@ function hasCycle(
   return false;
 }
 
+/**
+ * Valida la integridad referencial del snapshot EPiC antes de enviarlo al motor.
+ * Verifica que la capa visual no apunte a fantasmas en la capa lógica,
+ * que los valores Belnap sean válidos, que no haya ciclos en contextos,
+ * y que todos los conectivos existan.
+ */
 export function validarSnapshot(
   snapshot: PlaygroundSnapshot,
   available_connectives: string[],

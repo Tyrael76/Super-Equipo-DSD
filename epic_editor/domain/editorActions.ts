@@ -13,6 +13,11 @@ import type {
 
 // SOLID - SRP: estas funciones solo transforman estado de dominio. Al ser
 // independientes de HTTP, validacion global y DOM, pueden probarse aisladamente.
+
+/**
+ * Crea una nueva variable lógica en el inventario con un valor de verdad Belnap inicial.
+ * En EPiC, las variables son los nodos del grafo informacional que propagan evidencia.
+ */
 export function crearVariableLogica(
   state: EditorState,
   id: string,
@@ -35,6 +40,10 @@ export function crearVariableLogica(
   };
 }
 
+/**
+ * Elimina una variable lógica del inventario y todas sus instancias visuales y relaciones asociadas.
+ * Limpia tanto la capa logic como visual para mantener coherencia.
+ */
 export function eliminarVariableLogica(
   state: EditorState,
   id: string,
@@ -75,6 +84,10 @@ export function eliminarVariableLogica(
   };
 }
 
+/**
+ * Crea una instancia visual de una variable lógica existente en coordenadas (x,y).
+ * Permite que una misma variable aparezca múltiples veces en el canvas.
+ */
 export function crearInstanciaVisual(
   state: EditorState,
   instance_id: string,
@@ -100,6 +113,10 @@ export function crearInstanciaVisual(
   };
 }
 
+/**
+ * Elimina una instancia visual del canvas sin afectar la variable lógica subyacente.
+ * La variable permanece en el inventario lógico.
+ */
 export function eliminarInstanciaVisual(
   state: EditorState,
   instance_id: string,
@@ -116,6 +133,10 @@ export function eliminarInstanciaVisual(
   };
 }
 
+/**
+ * Crea un contexto (conjunto) con un conectivo EPiC que agrupa variables.
+ * Los contextos representan operaciones lógicas (AND, OR, IMPLIES) sobre sus miembros.
+ */
 export function crearContexto(
   state: EditorState,
   id: string,
@@ -150,6 +171,10 @@ export function crearContexto(
   };
 }
 
+/**
+ * Elimina un contexto y limpia todas las referencias a él en variables y subconjuntos.
+ * Mantiene la integridad referencial del grafo lógico.
+ */
 export function eliminarContexto(state: EditorState, id: string): EditorState {
   const sets = state.snapshot.logic.sets.filter((s) => s.id !== id);
 
@@ -176,6 +201,10 @@ export function eliminarContexto(state: EditorState, id: string): EditorState {
   };
 }
 
+/**
+ * Crea una relación dirigida entre dos variables con un conectivo EPiC.
+ * Las relaciones son las aristas del grafo que determinan la propagación de evidencia.
+ */
 export function crearRelacion(
   state: EditorState,
   id: string,
@@ -210,6 +239,10 @@ export function crearRelacion(
   };
 }
 
+/**
+ * Elimina una relación lógica y su representación visual del grafo.
+ * Desconecta la propagación de evidencia entre las variables involucradas.
+ */
 export function eliminarRelacion(state: EditorState, id: string): EditorState {
   const relations = state.snapshot.logic.relations.filter((r) => r.id !== id);
   const visualRelations = { ...state.snapshot.visual.relations };
@@ -225,6 +258,10 @@ export function eliminarRelacion(state: EditorState, id: string): EditorState {
   };
 }
 
+/**
+ * Asigna una variable a un contexto (conjunto), estableciendo su membresía.
+ * Permite que el conectivo del contexto opere sobre la variable.
+ */
 export function asignarVariableAContexto(
   state: EditorState,
   variable_id: string,
@@ -246,6 +283,10 @@ export function asignarVariableAContexto(
   };
 }
 
+/**
+ * Remueve una variable de un contexto sin eliminarla del inventario.
+ * La variable deja de participar en la operación lógica del contexto.
+ */
 export function quitarVariableDeContexto(
   state: EditorState,
   variable_id: string,
@@ -267,6 +308,10 @@ export function quitarVariableDeContexto(
   };
 }
 
+/**
+ * Actualiza el valor de verdad Belnap (V, F, N, B) de una variable.
+ * Este valor determina la evidencia inicial que la variable aporta al sistema EPiC.
+ */
 export function actualizarValorVerdad(
   state: EditorState,
   variable_id: string,
@@ -285,6 +330,10 @@ export function actualizarValorVerdad(
   };
 }
 
+/**
+ * Actualiza las propiedades de un contexto: conectivo, posición visual, radio y forma.
+ * Modifica tanto la capa lógica (conectivo) como visual (geometría).
+ */
 export function actualizarContexto(
   state: EditorState,
   id: string,
@@ -315,6 +364,10 @@ export function actualizarContexto(
   };
 }
 
+/**
+ * Actualiza las propiedades de una relación: conectivo, color y grosor.
+ * Modifica la semántica lógica y la apariencia visual de la arista.
+ */
 export function actualizarRelacion(
   state: EditorState,
   id: string,
@@ -343,6 +396,10 @@ export function actualizarRelacion(
   };
 }
 
+/**
+ * Guarda el rastro de ejecución devuelto por el motor EPiC y cambia el modo del editor.
+ * Permite visualizar paso a paso cómo se propagó la evidencia en el grafo.
+ */
 export function guardarResultadoEjecucion(
   state: EditorState,
   execution_trace: ExecutionTrace | undefined,

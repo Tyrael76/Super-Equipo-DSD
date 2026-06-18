@@ -7,8 +7,10 @@ import copy
 # no adapta DTOs del Editor y trata visual como una carga opaca.
 def run_propagation(snapshot: PlaygroundSnapshot) -> PlaygroundSnapshot:
     """
-    Recibe el Snapshot, calcula la propagación matricial sobre el grafo lógico
-    y devuelve el mismo Snapshot mutado con el execution_trace inyectado.
+    Motor de propagación EPiC para PlaygroundSnapshot.
+    Ejecuta razonamiento evidencial sobre el grafo lógico (variables, relaciones).
+    Aplica conectivos matriciales y k-join hasta estabilización.
+    Retorna snapshot con execution_trace completo (Modus Ponens, Modus Tollens).
     """
     # 1. Inicializar el rastro de ejecución
     trace = ExecutionTrace()

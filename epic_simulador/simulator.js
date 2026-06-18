@@ -328,6 +328,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ==========================================
 // 4. File and JSON Upload handlers
 // ==========================================
+/**
+ * Configura todos los event listeners del simulador EPiC.
+ * Maneja drag & drop, controles de reproducción, zoom/pan y tabs de visualización.
+ */
 function setupEventListeners() {
   const dropZone = document.getElementById("dropZone");
   const fileInput = document.getElementById("fileInput");
@@ -505,6 +509,10 @@ function setupEventListeners() {
   });
 }
 
+/**
+ * Procesa un archivo JSON cargado y lo convierte en snapshot EPiC.
+ * Lee el archivo, parsea el JSON y carga el snapshot en el simulador.
+ */
 function handleFile(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -524,6 +532,11 @@ function handleFile(file) {
 // ==========================================
 // A ball is visible at step 's' if its value is not "N" (neutral/none)
 // AND it has not propagated its value to any target with a newer update.
+/**
+ * Determina si una variable (bola) debe ser visible en un paso específico.
+ * Una bola es visible si tiene valor no-N y no ha propagado a un objetivo más reciente.
+ * Implementa la lógica de flujo directo (Modus Ponens) y contrapositivo (Modus Tollens).
+ */
 function isBallVisibleAtStep(varId, step) {
   const valHistory = simState.variableHistory[varId];
   if (!valHistory) return false;
@@ -584,6 +597,11 @@ function isBallVisibleAtStep(varId, step) {
 // ==========================================
 // 6. Core Parser & Setup State
 // ==========================================
+/**
+ * Carga un snapshot EPiC completo en el simulador.
+ * Normaliza el formato, construye historial de variables, calcula coordenadas relativas
+ * y prepara las vistas de visualización (box view y global view).
+ */
 function loadSnapshot(snapshot) {
   if (!snapshot.logic) snapshot.logic = { variables: [], sets: [], relations: [] };
   if (!snapshot.visual) snapshot.visual = { instances: {}, sets: {}, relations: {} };
@@ -694,6 +712,10 @@ function loadSnapshot(snapshot) {
   setTimeout(fitGlobalCanvas, 50);
 }
 
+/**
+ * Construye el historial completo de valores de cada variable a través de todos los pasos.
+ * Crea un array temporal donde history[varId][step] = valor en ese paso.
+ */
 function buildVariableHistory() {
   const vars = simState.snapshot.logic.variables;
   const actions = simState.snapshot.execution_trace.actions;
@@ -727,6 +749,10 @@ function buildVariableHistory() {
   simState.variableHistory = history;
 }
 
+/**
+ * Calcula las coordenadas relativas de cada instancia visual respecto a su conjunto padre.
+ * Determina membresía por declaración explícita o proximidad geométrica.
+ */
 function calculateRelativeCoordinates() {
   const visual = simState.snapshot.visual;
   const logic = simState.snapshot.logic;
@@ -772,6 +798,10 @@ function calculateRelativeCoordinates() {
   });
 }
 
+/**
+ * Extrae pares de conjuntos conectados por relaciones para la vista Box.
+ * Identifica transiciones entre conjuntos basándose en las relaciones lógicas.
+ */
 function extractBoxPairs() {
   const logic = simState.snapshot.logic;
   const visual = simState.snapshot.visual;
@@ -832,6 +862,10 @@ function extractBoxPairs() {
 // ==========================================
 // 7. UI Updates
 // ==========================================
+/**
+ * Actualiza todos los elementos de la interfaz con el estado actual del simulador.
+ * Sincroniza badges, contadores de pasos y renderiza la vista activa.
+ */
 function updateUI() {
   const trace = simState.snapshot.execution_trace;
   const badge = document.getElementById("stabilizedBadge");
@@ -857,6 +891,10 @@ function updateUI() {
   renderActiveTab();
 }
 
+/**
+ * Construye el HTML del log de trazas de ejecución.
+ * Muestra cada acción del execution_trace con su paso, descripción y valor resultante.
+ */
 function buildTraceLogHTML() {
   const traceList = document.getElementById("traceList");
   traceList.innerHTML = "";
@@ -900,6 +938,10 @@ function buildTraceLogHTML() {
   }
 }
 
+/**
+ * Mapea un valor Belnap (V, F, N, B) a su color visual correspondiente.
+ * V=verde, F=rojo, N=gris, B=púrpura.
+ */
 function getColorForValue(val) {
   switch (val?.toUpperCase()) {
     case 'V': return "#10B981";
@@ -910,6 +952,10 @@ function getColorForValue(val) {
   }
 }
 
+/**
+ * Evalúa una operación lógica Belnap entre dos valores.
+ * Implementa las matrices de verdad para AND, OR y PROPAGATION (k-join).
+ */
 function evaluateBelnapMatrix(op, val1, val2) {
   const v1 = val1?.toUpperCase() || 'N';
   const v2 = val2?.toUpperCase() || 'N';
@@ -961,6 +1007,10 @@ function evaluateBelnapMatrix(op, val1, val2) {
   return 'N';
 }
 
+/**
+ * Determina el conectivo efectivo de una relación.
+ * Busca primero en la relación explícita, luego en el conjunto destino.
+ */
 function getRelationEffectiveOp(rel, logic) {
   try {
     let explicitOp = rel.connective;
@@ -1448,6 +1498,10 @@ function drawBallSVG(varId, instId, x, y, value, isVisible = true) {
   return g;
 }
 
+/**
+ * Ajusta el zoom y pan del canvas global para que todo el contenido sea visible.
+ * Calcula el bounding box y centra la vista con margen.
+ */
 function fitGlobalCanvas() {
   const svg = document.getElementById("globalSvg");
   if (!svg) return;
@@ -1471,6 +1525,10 @@ function fitGlobalCanvas() {
   applyZoomPan();
 }
 
+/**
+ * Aplica la transformación de zoom y pan al grupo SVG principal.
+ * Actualiza el atributo transform con los valores actuales de simState.
+ */
 function applyZoomPan() {
   const group = document.getElementById("globalTransformGroup");
   if (group) {
@@ -1481,6 +1539,11 @@ function applyZoomPan() {
 // ==========================================
 // 9. Simulation Actions & Step Animations (Fail-safe Timeout Flow)
 // ==========================================
+/**
+ * Avanza un paso en la simulación EPiC.
+ * Ejecuta animaciones de propagación y actualiza el estado tras completarlas.
+ * Implementa timeout fail-safe para evitar bloqueos en reproducción rápida.
+ */
 function stepForward() {
   const actions = simState.snapshot.execution_trace.actions;
   if (simState.currentStep >= actions.length) {
@@ -1528,6 +1591,10 @@ function stepForward() {
   }, animDuration);
 }
 
+/**
+ * Anima un pulso de estabilización en todas las variables.
+ * Indica visualmente que el sistema EPiC alcanzó un punto fijo.
+ */
 function pulseStabilization(animDuration = 600) {
   document.querySelectorAll(".svg-instance").forEach(el => {
     el.animate([
@@ -1538,6 +1605,11 @@ function pulseStabilization(animDuration = 600) {
   });
 }
 
+/**
+ * Dispara la animación de una acción individual de propagación.
+ * Anima partículas viajando por las relaciones desde fuente a destino.
+ * Implementa Modus Ponens visual (flujo directo) y Modus Tollens (flujo inverso).
+ */
 function triggerSingleActionAnimation(action, animDuration = 750) {
   const logic = simState.snapshot.logic;
   const targetVarId = action.variable_id;
@@ -1588,6 +1660,10 @@ function triggerSingleActionAnimation(action, animDuration = 750) {
   }
 }
 
+/**
+ * Anima la opacidad de una variable en la vista Box.
+ * Usado para fade-in/fade-out durante propagación.
+ */
 function animateElementOpacity(boxIdx, variableId, fromOpacity, toOpacity, duration) {
   const boxSvg = document.getElementById(`box-svg-${boxIdx}`);
   if (!boxSvg) return;
@@ -1609,6 +1685,10 @@ function animateElementOpacity(boxIdx, variableId, fromOpacity, toOpacity, durat
   });
 }
 
+/**
+ * Anima la opacidad de una variable en la vista Global.
+ * Versión global de animateElementOpacity.
+ */
 function animateElementOpacityGlobal(variableId, fromOpacity, toOpacity, duration) {
   const globalContainer = document.getElementById("globalCanvasContainer");
   if (!globalContainer) return;
@@ -1630,6 +1710,10 @@ function animateElementOpacityGlobal(variableId, fromOpacity, toOpacity, duratio
   });
 }
 
+/**
+ * Actualiza el valor y apariencia de una variable en la vista Box.
+ * Cambia color y etiqueta según el nuevo valor Belnap.
+ */
 function updateBallValAndShow(boxIdx, variableId, value) {
   const boxSvg = document.getElementById(`box-svg-${boxIdx}`);
   if (!boxSvg) return;
@@ -1642,6 +1726,10 @@ function updateBallValAndShow(boxIdx, variableId, value) {
   }
 }
 
+/**
+ * Actualiza el valor y apariencia de una variable en la vista Global.
+ * Versión global de updateBallValAndShow.
+ */
 function updateBallValAndShowGlobal(variableId, value) {
   const globalContainer = document.getElementById("globalCanvasContainer");
   if (!globalContainer) return;
@@ -1654,6 +1742,11 @@ function updateBallValAndShowGlobal(variableId, value) {
   }
 }
 
+/**
+ * Anima una partícula de evidencia viajando por un path SVG.
+ * La dirección depende del valor: V avanza, F retrocede (Modus Tollens).
+ * Visualiza la propagación de evidencia en el grafo EPiC.
+ */
 function animateParticleOnPath(pathEl, value, duration, onComplete) {
   const svg = pathEl.ownerSVGElement;
   if (!svg) return;
@@ -1727,6 +1820,10 @@ function pulseTargetBallGlobal(variableId) {
   */
 }
 
+/**
+ * Retrocede un paso en la simulación.
+ * Cancela animaciones en curso y actualiza la UI.
+ */
 function stepBackward() {
   if (simState.animationTimeout) {
     clearTimeout(simState.animationTimeout);
@@ -1738,6 +1835,10 @@ function stepBackward() {
   updateUI();
 }
 
+/**
+ * Reinicia la simulación al paso 0.
+ * Pausa la reproducción y limpia animaciones pendientes.
+ */
 function resetSimulation() {
   if (simState.animationTimeout) {
     clearTimeout(simState.animationTimeout);

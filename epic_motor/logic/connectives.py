@@ -19,19 +19,20 @@ _IDX:   Dict[BV, int] = {v: i for i, v in enumerate(_ORDER)}
 
 class Connective:
     """
-    Matriz 4×4 que define una operación binaria BV × BV → BV.
-
-    matrix[i][j]  donde  i = índice del primer argumento (fila)
-                          j = índice del segundo argumento (columna)
+    Matriz 4×4 que define un conectivo EPiC como operación binaria BV × BV → BV.
+    Representa cómo se propaga evidencia entre dos nodos del grafo informacional.
+    matrix[i][j]: i = índice del primer argumento (fila), j = segundo argumento (columna).
     """
 
     def __init__(self, name: str, matrix: List[List[BV]]) -> None:
+        """Inicializa un conectivo con nombre y matriz 4×4 de valores Belnap."""
         assert len(matrix) == 4 and all(len(r) == 4 for r in matrix), \
             "La matriz debe ser 4×4"
         self.name   = name
         self.matrix = matrix
 
     def apply(self, a: BV, b: BV) -> BV:
+        """Aplica el conectivo a dos valores Belnap, retornando el resultado según la matriz."""
         return self.matrix[_IDX[a]][_IDX[b]]
 
     def __repr__(self) -> str:         # tabla legible
@@ -48,6 +49,7 @@ class Connective:
 # ─────────────────────────────────────────────
 
 def _build(name: str, fn) -> Connective:
+    """Construye un conectivo a partir de una función BV×BV→BV, generando su matriz 4×4."""
     matrix = [[fn(r, c) for c in _ORDER] for r in _ORDER]
     return Connective(name, matrix)
 
@@ -92,6 +94,10 @@ REGISTRY: Dict[str, Connective] = {
 
 
 def get_connective(name: str) -> Connective:
+    """
+    Obtiene un conectivo del registro por nombre.
+    Lanza KeyError si el conectivo no existe.
+    """
     key = name.upper().replace("-", "_")
     if key not in REGISTRY:
         raise KeyError(

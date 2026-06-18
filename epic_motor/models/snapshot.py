@@ -11,23 +11,28 @@ from logic.belnap import BV, bv_from_str
 # ─────────────────────────────────────────────
 
 class LogicVariable(BaseModel):
+    """Variable lógica con valor de verdad Belnap (V, F, N, B)."""
     id: str
     value: str = "N"  # V, F, N, B
     
     @field_validator("value", mode="before")
     @classmethod
     def normalizar_bv(cls, v: Any) -> str:
+        """Normaliza el valor de entrada a un valor Belnap válido."""
         return bv_from_str(str(v)).value
 
     @property
     def bv(self) -> BV:
+        """Retorna el valor como enum BV para operaciones lógicas."""
         return BV(self.value)
 
 class LogicSet(BaseModel):
+    """Conjunto/contexto que agrupa variables con un conectivo lógico."""
     id: str
     elements: List[str] = Field(default_factory=list)
 
 class LogicRelation(BaseModel):
+    """Relación dirigida entre variables que define propagación de evidencia."""
     id: str
     source: str
     target: str
@@ -35,6 +40,7 @@ class LogicRelation(BaseModel):
     is_contrapositive: bool = False
 
 class LogicGraph(BaseModel):
+    """Grafo lógico completo: variables, conjuntos y relaciones del sistema EPiC."""
     variables: Dict[str, LogicVariable] = Field(default_factory=dict)
     sets: Dict[str, LogicSet] = Field(default_factory=dict)
     relations: Dict[str, LogicRelation] = Field(default_factory=dict)
@@ -44,6 +50,7 @@ class LogicGraph(BaseModel):
 # ─────────────────────────────────────────────
 
 class ExecutionAction(BaseModel):
+    """Acción individual de propagación: cambio de valor en una variable."""
     step: int
     variable_id: str
     old_value: str
@@ -52,6 +59,7 @@ class ExecutionAction(BaseModel):
     is_stabilized: bool = False
 
 class ExecutionTrace(BaseModel):
+    """Rastro completo de ejecución: secuencia de acciones hasta estabilización."""
     actions: List[ExecutionAction] = Field(default_factory=list)
     stabilized: bool = False
     total_iterations: int = 0
@@ -61,11 +69,15 @@ class ExecutionTrace(BaseModel):
 # ─────────────────────────────────────────────
 
 class PlaygroundMeta(BaseModel):
+    """Metadatos de configuración del motor EPiC."""
     max_iterations: int = Field(default=100, ge=1, le=500)
     version: str = "1.1"
 
 class PlaygroundSnapshot(BaseModel):
-    """Contrato Único de Verdad (Shared Domain.json)"""
+    """
+    Snapshot completo del playground EPiC.
+    Contrato compartido entre Editor y Motor: lógica, visual, metadatos y rastro.
+    """
     meta: PlaygroundMeta = Field(default_factory=PlaygroundMeta)
     logic: LogicGraph = Field(default_factory=LogicGraph)
     visual: Dict[str, Any] = Field(default_factory=dict) # ¡Ignoramos el contenido visual!

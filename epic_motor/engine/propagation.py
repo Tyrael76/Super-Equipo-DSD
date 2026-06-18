@@ -50,6 +50,7 @@ _COLOR_MAP: Dict[BV, str] = {
 
 
 def _color(bv: BV) -> str:
+    """Mapea un valor Belnap a su color visual correspondiente."""
     return _COLOR_MAP.get(bv, "gris")
 
 
@@ -58,9 +59,9 @@ def _build_membership_index(
     elementos: List[ElementoIn],
 ) -> Dict[str, List[str]]:
     """
-    Devuelve  elem_id → [conjunto_id, ...]
-    Infiere pertenencia tanto desde ElementoIn.pertenencia como desde
-    la jerarquía de subconjuntos de ConjuntoIn.
+    Construye índice de membresía: elem_id → [conjunto_id, ...].
+    Infiere pertenencia desde ElementoIn.pertenencia y jerarquía de subconjuntos.
+    Propaga membresía transitivamente: si e∈C2 y C2⊆C1, entonces e∈C1.
     """
     index: Dict[str, List[str]] = defaultdict(list)
 
@@ -91,10 +92,12 @@ def _build_membership_index(
 
 
 def _build_conjunto_map(conjuntos: List[ConjuntoIn]) -> Dict[str, ConjuntoIn]:
+    """Crea diccionario de conjuntos indexado por id para acceso rápido."""
     return {c.id: c for c in conjuntos}
 
 
 def _build_elemento_map(elementos: List[ElementoIn]) -> Dict[str, ElementoIn]:
+    """Crea diccionario de elementos indexado por id para acceso rápido."""
     return {e.id: e for e in elementos}
 
 
@@ -104,8 +107,9 @@ def _build_elemento_map(elementos: List[ElementoIn]) -> Dict[str, ElementoIn]:
 
 def run(payload: MotorInput) -> MotorOutput:
     """
-    Ejecuta la propagación completa y devuelve el estado estabilizado
-    junto con la lista cronológica de acciones.
+    Motor principal de propagación EPiC.
+    Ejecuta iteraciones de propagación matricial hasta estabilización o límite.
+    Retorna estado final con rastro completo de acciones (Modus Ponens, Modus Tollens).
     """
     # ── Estado mutable (trabajamos con copias para no mutar la entrada) ──
     elementos: Dict[str, ElementoOut] = {
@@ -273,7 +277,10 @@ def run(payload: MotorInput) -> MotorOutput:
 
 
 def _update_valor(elem: ElementoOut, nuevo_bv: BV) -> ElementoOut:
-    """Devuelve un nuevo ElementoOut con el valor_verdad actualizado."""
+    """
+    Actualiza el valor de verdad de un elemento de forma inmutable.
+    Retorna nuevo ElementoOut con el valor Belnap modificado.
+    """
     data = elem.model_dump()
     data["valor_verdad"] = nuevo_bv.value
     return ElementoOut(**data)
