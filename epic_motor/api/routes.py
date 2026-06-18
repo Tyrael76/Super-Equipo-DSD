@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.snapshot import PlaygroundSnapshot
 from services.engine import run_propagation
-from core.connectives import REGISTRY
+from logic.connectives import REGISTRY
 
 router = APIRouter()
 

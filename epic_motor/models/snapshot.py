@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, field_validator
-from core.belnap import BV, bv_from_str
+from logic.belnap import BV, bv_from_str
 
 # ─────────────────────────────────────────────
 #  1. Capa Lógica (Lo único que lee el Motor)

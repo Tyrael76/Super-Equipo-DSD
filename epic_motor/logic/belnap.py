@@ -38,15 +38,15 @@ class BV(str, Enum):
 _AND: Dict[Tuple[str, str], BV] = {
     (BV.V, BV.V): BV.V, (BV.V, BV.F): BV.F, (BV.V, BV.N): BV.N, (BV.V, BV.B): BV.B,
     (BV.F, BV.V): BV.F, (BV.F, BV.F): BV.F, (BV.F, BV.N): BV.F, (BV.F, BV.B): BV.F,
-    (BV.N, BV.V): BV.N, (BV.N, BV.F): BV.F, (BV.N, BV.N): BV.N, (BV.N, BV.B): BV.N,
-    (BV.B, BV.V): BV.B, (BV.B, BV.F): BV.F, (BV.B, BV.N): BV.N, (BV.B, BV.B): BV.B,
+    (BV.N, BV.V): BV.N, (BV.N, BV.F): BV.F, (BV.N, BV.N): BV.N, (BV.N, BV.B): BV.F,
+    (BV.B, BV.V): BV.B, (BV.B, BV.F): BV.F, (BV.B, BV.N): BV.F, (BV.B, BV.B): BV.B,
 }
 
 _OR: Dict[Tuple[str, str], BV] = {
     (BV.V, BV.V): BV.V, (BV.V, BV.F): BV.V, (BV.V, BV.N): BV.V, (BV.V, BV.B): BV.V,
-    (BV.F, BV.V): BV.V, (BV.F, BV.F): BV.F, (BV.F, BV.N): BV.F, (BV.F, BV.B): BV.B,
-    (BV.N, BV.V): BV.V, (BV.N, BV.F): BV.F, (BV.N, BV.N): BV.N, (BV.N, BV.B): BV.B,
-    (BV.B, BV.V): BV.V, (BV.B, BV.F): BV.B, (BV.B, BV.N): BV.B, (BV.B, BV.B): BV.B,
+    (BV.F, BV.V): BV.V, (BV.F, BV.F): BV.F, (BV.F, BV.N): BV.N, (BV.F, BV.B): BV.B,
+    (BV.N, BV.V): BV.V, (BV.N, BV.F): BV.N, (BV.N, BV.N): BV.N, (BV.N, BV.B): BV.V,
+    (BV.B, BV.V): BV.V, (BV.B, BV.F): BV.B, (BV.B, BV.N): BV.V, (BV.B, BV.B): BV.B,
 }
 
 _NOT: Dict[str, BV] = {

@@ -1,6 +1,6 @@
 from models.snapshot import PlaygroundSnapshot, ExecutionTrace, ExecutionAction
-from core.belnap import bv_kjoin
-from core.connectives import get_connective
+from logic.belnap import bv_kjoin
+from logic.connectives import get_connective
 import copy
 
 def run_propagation(snapshot: PlaygroundSnapshot) -> PlaygroundSnapshot:

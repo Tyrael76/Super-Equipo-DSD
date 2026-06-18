@@ -9,8 +9,8 @@ Cubre:
 """
 
 import pytest
-from core.belnap import BV, bv_and, bv_or, bv_not, bv_kjoin, bv_from_str
-from core.connectives import get_connective, AND, OR, IMPLIES, PROPAGATION
+from logic.belnap import BV, bv_and, bv_or, bv_not, bv_kjoin, bv_from_str
+from logic.connectives import get_connective, AND, OR, IMPLIES, PROPAGATION
 from models.snapshot import (
     PlaygroundSnapshot, LogicGraph, LogicVariable, LogicRelation, PlaygroundMeta
 )

@@ -71,10 +71,10 @@ BICONDITIONAL = _build(
 # Propagación directa: resultado = kjoin de ambos valores de evidencia
 PROPAGATION = KJOIN
 
-# Propagación contrapuesta (modus tollens):  ¬b → ¬a
+# Propagación contrapuesta (modus tollens): Falsedad en Q -> Falsedad en P
 CONTRAPOSITIONAL = _build(
     "CONTRAPOSITIONAL",
-    lambda a, b: bv_or(bv_not(b), a)   # ¬b ∨ a
+    lambda a, b: bv_and(a, BV.N)   # a AND N extrae exactamente la falsedad
 )
 
 # Registro de todos los conectivos disponibles
