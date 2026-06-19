@@ -756,8 +756,8 @@ body {
 /* SVG Rendering Elements */
 .svg-set {
   fill: rgba(30, 41, 59, 0.15);
-  stroke: rgba(255, 255, 255, 0.2);
-  stroke-width: 1.5;
+  stroke: #38bdf8;
+  stroke-width: 6;
   transition: all 0.3s;
 }
 

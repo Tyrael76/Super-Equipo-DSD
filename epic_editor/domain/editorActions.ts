@@ -134,6 +134,28 @@ export function eliminarInstanciaVisual(
 }
 
 /**
+ * Actualiza la posición de una instancia visual.
+ */
+export function actualizarInstanciaVisual(
+  state: EditorState,
+  instance_id: string,
+  payload: { x?: number; y?: number }
+): EditorState {
+  const instances = { ...state.snapshot.visual.instances };
+  if (instances[instance_id]) {
+    instances[instance_id] = { ...instances[instance_id], ...payload };
+    return {
+      ...state,
+      snapshot: {
+        ...state.snapshot,
+        visual: { ...state.snapshot.visual, instances },
+      },
+    };
+  }
+  return state;
+}
+
+/**
  * Crea un contexto (conjunto) con un conectivo EPiC que agrupa variables.
  * Los contextos representan operaciones lógicas (AND, OR, IMPLIES) sobre sus miembros.
  */

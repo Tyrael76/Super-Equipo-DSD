@@ -147,6 +147,17 @@ export class EditorController {
   }
 
   /**
+   * Actualiza la posición de una instancia visual existente.
+   */
+  actualizarInstanciaVisual(
+    instance_id: string,
+    payload: { x?: number; y?: number }
+  ): ControllerResult {
+    this.setState(actions.actualizarInstanciaVisual(this.state, instance_id, payload));
+    return { ok: true, data: undefined };
+  }
+
+  /**
    * Crea un contexto (conjunto) con un conectivo EPiC que agrupa variables.
    * Define la operación lógica que se aplicará sobre sus miembros.
    */

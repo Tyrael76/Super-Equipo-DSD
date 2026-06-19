@@ -180,6 +180,26 @@ export function createVariableInstance(instanceId, variableId, x, y) {
 }
 
 /**
+ * Actualiza la posición de una instancia visual del editor
+ * @param {string} id - ID de la instancia
+ * @param {Object} payload - Objeto con los datos a actualizar (x, y)
+ * @returns {Object} Resultado de la operación
+ */
+export function updateInstanciaVisual(id, payload) {
+  if (!editorController) {
+    return { ok: false, error: 'Bridge no inicializado' };
+  }
+
+  const result = editorController.actualizarInstanciaVisual(id, payload);
+
+  if (!result.ok && errorCallback) {
+    errorCallback(result.errors);
+  }
+
+  return result;
+}
+
+/**
  * Elimina una variable del editor
  * @param {string} id - ID de la variable a eliminar
  * @returns {Object} Resultado de la operación
@@ -423,15 +443,27 @@ export async function loadConnectives() {
 }
 
 /**
+ * Extrae las variables de una fórmula sin modificar el grafo
+ * @param {string} formula - La fórmula a parsear
+ * @returns {string[]} - Array con los nombres de las variables
+ */
+export function extractFormulaVariables(formula) {
+  if (!editorController) return [];
+  const parser = new FormulaParser(editorController);
+  return parser.extractVariables(formula);
+}
+
+/**
  * Parsea una fórmula y la dibuja en el editor
  * @param {string} formula - La fórmula a parsear
+ * @param {Object} initialValues - Mapa de variable_id -> BelnapValue
  */
-export function parseFormula(formula) {
+export function parseFormula(formula, initialValues = {}) {
   if (!editorController) {
     return { ok: false, error: 'Bridge no inicializado' };
   }
   const parser = new FormulaParser(editorController);
-  parser.parse(formula);
+  parser.parse(formula, initialValues);
   return { ok: true };
 }
 

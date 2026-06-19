@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPiC Editor Interactivo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    body { background-color: var(--bg-primary); padding: 1rem; overflow-y: auto; height: 100vh; }
+    .editor-workspace { height: 100%; display: flex; gap: 1rem; }
+  </style>
+</head>
+<body class="dark-theme">
+              <div class="editor-workspace">
+                <!-- Left Form Panel -->
+                <div class="editor-forms">
+                  <!-- Add Set Form -->
+                  <div class="editor-form-card">
+                    <h3><i data-lucide="circle"></i> Crear Conjunto</h3>
+                    <div class="form-row">
+                      <input
+                        type="text"
+                        id="editSetName"
+                        placeholder="Ej. set_A"
+                      />
+                      <select id="editSetConnective">
+                        <option value="PROPAGATION">PROPAGATION</option>
+                        <option value="CONTRAPOSITIONAL">
+                          CONTRAPOSITIONAL
+                        </option>
+                        <option value="AND">AND</option>
+                        <option value="OR">OR</option>
+                        <option value="IMPLIES">IMPLIES</option>
+                        <option value="BICONDITIONAL">BICONDITIONAL</option>
+                      </select>
+                      <input
+                        type="color"
+                        id="editSetColor"
+                        value="#3b82f6"
+                        title="Color del Conjunto"
+                      />
+                      <button class="btn btn-primary" id="btnEditAddSet">
+                        Añadir
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Add Variable Form -->
+                  <div class="editor-form-card">
+                    <h3><i data-lucide="circle-dot"></i> Crear Variable</h3>
+                    <div class="form-row">
+                      <input type="text" id="editVarName" placeholder="Ej. p" />
+                      <select id="editVarSet">
+                        <!-- Populated dynamically -->
+                        <option value="">Selecciona Conjunto...</option>
+                      </select>
+                      <select id="editVarVal">
+                        <option value="N">N (Neutro)</option>
+                        <option value="V">V (Verde/Positivo)</option>
+                        <option value="F">F (Rojo/Negativo)</option>
+                        <option value="B">B (Ambos)</option>
+                      </select>
+                      <button class="btn btn-primary" id="btnEditAddVar">
+                        Añadir
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Add Relation Form -->
+                  <div class="editor-form-card">
+                    <h3>
+                      <i data-lucide="arrow-right"></i> Crear Relación
+                      (Implicación)
+                    </h3>
+                    <div class="form-row">
+                      <select id="editRelFrom">
+                        <!-- Populated dynamically -->
+                        <option value="">Origen...</option>
+                      </select>
+                      <span>&rarr;</span>
+                      <select id="editRelTo">
+                        <!-- Populated dynamically -->
+                        <option value="">Destino...</option>
+                      </select>
+                      <select id="editRelConnective">
+                        <option value="PROPAGATION">PROPAGATION</option>
+                        <option value="CONTRAPOSITIONAL">
+                          CONTRAPOSITIONAL
+                        </option>
+                        <option value="IMPLIES">IMPLIES</option>
+                      </select>
+                      <select id="editRelDirection">
+                        <option value="unidirectional">
+                          Unidireccional &rarr;
+                        </option>
+                        <option value="bidirectional">
+                          Bidireccional &harr;
+                        </option>
+                      </select>
+                      <select id="editRelColor" title="Color de la Flecha">
+                        <option value="#10B981">Verde (Verdadero)</option>
+                        <option value="#EF4444">Rojo (Falso)</option>
+                        <option value="#6B7280">Gris (Neutral)</option>
+                        <option value="#8B5CF6">Morado (Ambos)</option>
+                      </select>
+                      <button class="btn btn-primary" id="btnEditAddRel">
+                        Conectar
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Parse Formula Form -->
+                  <div class="editor-form-card">
+                    <h3>
+                      <i data-lucide="file-code"></i> Generar desde Fórmula
+                    </h3>
+                    <div class="form-row">
+                      <input
+                        type="text"
+                        id="editFormulaInput"
+                        placeholder="Ej. p AND q IMPLIES r"
+                        style="flex: 1;"
+                      />
+                      <button class="btn btn-primary" id="btnEditParseFormula">
+                        Asignar valores de verdad
+                      </button>
+                    </div>
+                    <div class="formula-keywords" style="display: flex; gap: 0.25rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                      <button class="btn btn-primary btn-small keyword-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" data-keyword="(">(</button>
+                      <button class="btn btn-primary btn-small keyword-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" data-keyword=")">)</button>
+                      <button class="btn btn-primary btn-small keyword-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" data-keyword=" AND ">AND</button>
+                      <button class="btn btn-primary btn-small keyword-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" data-keyword=" OR ">OR</button>
+                      <button class="btn btn-primary btn-small keyword-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" data-keyword=" NOT ">NOT</button>
+                      <button class="btn btn-primary btn-small keyword-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" data-keyword=" IMPLIES ">IMPLIES</button>
+                      <button class="btn btn-primary btn-small keyword-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" data-keyword=" BICONDITIONAL ">BICONDITIONAL</button>
+                    </div>
+                    <div id="formulaVarValuesContainer" style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                      <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem;">Valores de Verdad Iniciales</h4>
+                      <div id="formulaVarFields" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem;"></div>
+                      <button class="btn btn-primary" id="btnConfirmParseFormula" style="width: 100%;">
+                        Confirmar y Generar Diagrama
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Manage Entities Form -->
+                  <div class="editor-form-card">
+                    <h3><i data-lucide="settings"></i> Gestionar Elementos</h3>
+                    <div class="form-row">
+                      <select id="manageEntityType">
+                        <option value="">Tipo...</option>
+                        <option value="set">Conjunto</option>
+                        <option value="variable">Variable</option>
+                        <option value="relation">Relación</option>
+                      </select>
+                      <select id="manageEntityId">
+                        <option value="">Elemento...</option>
+                      </select>
+                      <button
+                        class="btn btn-secondary btn-icon"
+                        id="btnManageDelete"
+                        title="Eliminar"
+                      >
+                        <i data-lucide="trash"></i>
+                      </button>
+                    </div>
+                    <!-- Dynamic edit fields injected via JS -->
+                    <div
+                      id="manageEditFields"
+                      class="form-row"
+                      style="
+                        display: none;
+                        margin-top: 10px;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                      "
+                    ></div>
+                  </div>
+
+                  <!-- Action Button -->
+                  <button
+                    class="btn btn-primary btn-large"
+                    id="btnCalculateAPI"
+                  >
+                    <i data-lucide="zap"></i> ⚡ Calcular con el Motor API
+                  </button>
+                  <div
+                    id="apiErrorLog"
+                    class="api-error-log"
+                    style="display: none"
+                  ></div>
+                </div>
+
+                <!-- Right Preview Panel -->
+                <div class="editor-preview card">
+                  <div class="preview-header">
+                    <span
+                      >Lienzo del Editor (Previsualización en tiempo real)</span
+                    >
+                    <button
+                      class="btn btn-secondary btn-icon"
+                      id="btnExportEditor"
+                      title="Descargar JSON"
+                      style="margin-right: 0.5rem;"
+                    >
+                      <i data-lucide="download"></i>
+                    </button>
+                    <button
+                      class="btn btn-secondary btn-icon"
+                      id="btnResetEditor"
+                      title="Limpiar Todo"
+                    >
+                      <i data-lucide="trash-2"></i>
+                    </button>
+                  </div>
+                  <div class="canvas-toolbar" style="top: 3.5rem;">
+                    <button
+                      class="btn btn-secondary btn-icon"
+                      id="btnEditorZoomIn"
+                      title="Acercar"
+                    >
+                      <i data-lucide="zoom-in"></i>
+                    </button>
+                    <button
+                      class="btn btn-secondary btn-icon"
+                      id="btnEditorZoomOut"
+                      title="Alejar"
+                    >
+                      <i data-lucide="zoom-out"></i>
+                    </button>
+                    <button
+                      class="btn btn-secondary btn-icon"
+                      id="btnEditorZoomReset"
+                      title="Ajustar Pantalla"
+                    >
+                      <i data-lucide="maximize"></i>
+                    </button>
+                  </div>
+                  <div
+                    class="editor-preview-container"
+                    id="editorPreviewContainer"
+                  >
+                    <!-- Realtime preview SVG -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+  <script type="module" src="./editor-app.js"></script>
+</body>
+</html>
