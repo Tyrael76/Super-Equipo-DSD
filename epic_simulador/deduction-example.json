@@ -55,7 +55,7 @@
         ]
       },
       {
-        "id": "¬C(a) ∧ ¬B",
+        "id": "¬C(a) ∧ ¬B(a)",
         "truth_value": "V",
         "memberships": [
           "set_9"
@@ -116,29 +116,29 @@
         "id": "rel_6_5",
         "from_variable": "A(a)",
         "to_variable": "¬A(a)",
-        "connective": "PROPAGATION"
+        "connective": "CONTRAPOSITIONAL"
       },
       {
         "id": "rel_7_6",
         "from_variable": "B(a)",
         "to_variable": "A(a)",
-        "connective": "CONTRAPOSITIONAL"
+        "connective": "PROPAGATION"
       },
       {
         "id": "rel_7_8",
         "from_variable": "B(a)",
         "to_variable": "¬B(a)",
-        "connective": "PROPAGATION"
+        "connective": "CONTRAPOSITIONAL"
       },
       {
         "id": "rel_9_4",
-        "from_variable": "¬C(a) ∧ ¬B",
+        "from_variable": "¬C(a) ∧ ¬B(a)",
         "to_variable": "¬C(a)",
         "connective": "PROPAGATION"
       },
       {
         "id": "rel_9_8",
-        "from_variable": "¬C(a) ∧ ¬B",
+        "from_variable": "¬C(a) ∧ ¬B(a)",
         "to_variable": "¬B(a)",
         "connective": "PROPAGATION"
       },
@@ -210,7 +210,7 @@
       },
       "inst_v9": {
         "id": "inst_v9",
-        "variable_id": "¬C(a) ∧ ¬B",
+        "variable_id": "¬C(a) ∧ ¬B(a)",
         "x": 800,
         "y": 150
       },

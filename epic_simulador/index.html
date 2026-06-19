@@ -67,26 +67,9 @@
               <i data-lucide="lightbulb"></i>
               <h2>Ejemplos Rápidos</h2>
             </div>
-            <div class="card-body preset-grid">
-              <button class="btn-preset" data-preset="simple">
-                <span>Implicación Simple</span>
-                <small>p(V) &rarr; q(N)</small>
-              </button>
-              <button class="btn-preset" data-preset="contrapositive">
-                <span>Contrapositiva</span>
-                <small>Modus Tollens q(F)</small>
-              </button>
-              <button class="btn-preset" data-preset="contradiction">
-                <span>Contradicción</span>
-                <small>V y F &rarr; r(B)</small>
-              </button>
-              <button class="btn-preset" data-preset="loop">
-                <span>Ciclo Retroalimentado</span>
-                <small>Sistema Dinámico</small>
-              </button>
-              <button class="btn-preset" data-preset="deduction">
-                <span>Deducción Natural</span>
-                <small>Reglas ∧E, ¬E, MT, ∧I</small>
+            <div class="card-body">
+              <button class="btn btn-secondary" id="btnOpenPresets" style="width: 100%; display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+                <i data-lucide="layers"></i> Explorar Ejemplos
               </button>
             </div>
           </section>
@@ -179,29 +162,6 @@
 
             <div class="tab-content" id="global-view">
               <div class="canvas-wrapper">
-                <div class="canvas-toolbar">
-                  <button
-                    class="btn btn-secondary btn-icon"
-                    id="btnZoomIn"
-                    title="Acercar"
-                  >
-                    <i data-lucide="zoom-in"></i>
-                  </button>
-                  <button
-                    class="btn btn-secondary btn-icon"
-                    id="btnZoomOut"
-                    title="Alejar"
-                  >
-                    <i data-lucide="zoom-out"></i>
-                  </button>
-                  <button
-                    class="btn btn-secondary btn-icon"
-                    id="btnZoomReset"
-                    title="Ajustar Pantalla"
-                  >
-                    <i data-lucide="maximize"></i>
-                  </button>
-                </div>
                 <div class="global-canvas-container" id="globalCanvasContainer">
                   <!-- SVG Canvas will be generated here -->
                 </div>
@@ -252,6 +212,48 @@
             </div>
           </section>
         </aside>
+      </div>
+    </div>
+
+    <!-- Modal for Presets -->
+    <div class="modal-overlay" id="presetsModal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 style="display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1.2rem;"><i data-lucide="library"></i> Ejemplos Rápidos</h2>
+          <button class="btn btn-icon" id="btnClosePresets" style="background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="modal-body preset-grid" style="padding: 1.5rem;">
+          <button class="btn-preset" data-preset="simple">
+            <span>Implicación Simple</span>
+            <small>p(V) &rarr; q(N)</small>
+          </button>
+          <button class="btn-preset" data-preset="contrapositive">
+            <span>Contrapositiva</span>
+            <small>Modus Tollens q(F)</small>
+          </button>
+          <button class="btn-preset" data-preset="contradiction">
+            <span>Contradicción</span>
+            <small>V y F &rarr; r(B)</small>
+          </button>
+          <button class="btn-preset" data-preset="loop">
+            <span>Ciclo Retroalimentado</span>
+            <small>Sistema Dinámico</small>
+          </button>
+          <button class="btn-preset" data-preset="deduction">
+            <span>Deducción Natural</span>
+            <small>Reglas ∧E, ¬E, MT, ∧I</small>
+          </button>
+          <button class="btn-preset" data-preset="socratic_justification">
+            <span>Silogismo Socrático (Válido)</span>
+            <small>Propagación de Evidencia</small>
+          </button>
+          <button class="btn-preset" data-preset="socratic_instability">
+            <span>Silogismo Socrático (Inestable)</span>
+            <small>Contradicción por Denegación</small>
+          </button>
+        </div>
       </div>
     </div>
 

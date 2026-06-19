@@ -158,6 +158,120 @@ const PRESETS = {
     },
   },
 
+  socratic_justification: {
+    meta: {
+      version: "3.0",
+      max_iterations: 2,
+      belnap_domain: ["V", "F", "N", "B"],
+      editor_mode: "ejecucion",
+    },
+    logic: {
+      variables: [
+        { id: "H(s)", truth_value: "V", memberships: ["set_H"] },
+        { id: "M(s)", truth_value: "N", memberships: ["set_M"] },
+      ],
+      sets: [
+        { id: "set_H", connective: "PROPAGATION", subsets: [] },
+        { id: "set_M", connective: "PROPAGATION", subsets: [] },
+      ],
+      relations: [
+        { id: "rel_socratic", from_variable: "H(s)", to_variable: "M(s)", connective: "PROPAGATION" },
+      ],
+    },
+    visual: {
+      sets: {
+        set_H: { x: 300, y: 250, radius: 80, shape: "circle" },
+        set_M: { x: 700, y: 250, radius: 80, shape: "circle" },
+      },
+      instances: {
+        inst_H: { id: "inst_H", variable_id: "H(s)", x: 300, y: 250 },
+        inst_M: { id: "inst_M", variable_id: "M(s)", x: 700, y: 250 },
+      },
+      relations: {
+        rel_socratic: { color: "#10B981", thickness: 3 },
+      },
+    },
+    execution_trace: {
+      total_iterations: 2,
+      stabilized: true,
+      actions: [
+        {
+          step: 1,
+          variable_id: "M(s)",
+          old_value: "N",
+          new_value: "V",
+          description: "La premisa H(s) propaga evidencia positiva hacia M(s).",
+          is_stabilized: false,
+        },
+        {
+          step: 2,
+          variable_id: "*",
+          old_value: "*",
+          new_value: "*",
+          description: "Justificación consistente.",
+          is_stabilized: true,
+        },
+      ],
+    },
+  },
+
+  socratic_instability: {
+    meta: {
+      version: "3.0",
+      max_iterations: 2,
+      belnap_domain: ["V", "F", "N", "B"],
+      editor_mode: "ejecucion",
+    },
+    logic: {
+      variables: [
+        { id: "H(s)", truth_value: "V", memberships: ["set_H"] },
+        { id: "M(s)", truth_value: "F", memberships: ["set_M"] },
+      ],
+      sets: [
+        { id: "set_H", connective: "PROPAGATION", subsets: [] },
+        { id: "set_M", connective: "PROPAGATION", subsets: [] },
+      ],
+      relations: [
+        { id: "rel_socratic", from_variable: "H(s)", to_variable: "M(s)", connective: "PROPAGATION" },
+      ],
+    },
+    visual: {
+      sets: {
+        set_H: { x: 300, y: 250, radius: 80, shape: "circle" },
+        set_M: { x: 700, y: 250, radius: 80, shape: "circle" },
+      },
+      instances: {
+        inst_H: { id: "inst_H", variable_id: "H(s)", x: 300, y: 250 },
+        inst_M: { id: "inst_M", variable_id: "M(s)", x: 700, y: 250 },
+      },
+      relations: {
+        rel_socratic: { color: "#10B981", thickness: 3 },
+      },
+    },
+    execution_trace: {
+      total_iterations: 2,
+      stabilized: true,
+      actions: [
+        {
+          step: 1,
+          variable_id: "H(s)",
+          old_value: "V",
+          new_value: "B",
+          description: "Asumir evidencia negativa en M(s) propaga F hacia atrás (Modus Tollens), causando colisión con V y resultando en estado inconsistente (Ambos) en H(s).",
+          is_stabilized: false,
+        },
+        {
+          step: 2,
+          variable_id: "*",
+          old_value: "*",
+          new_value: "*",
+          description: "Inestabilidad alcanzada.",
+          is_stabilized: true,
+        },
+      ],
+    },
+  },
+
   contradiction: {
     meta: {
       version: "3.0",
@@ -373,7 +487,7 @@ const PRESETS = {
         { id: "A(a)", truth_value: "F", memberships: ["set_6"] },
         { id: "B(a)", truth_value: "F", memberships: ["set_7"] },
         { id: "¬B(a)", truth_value: "N", memberships: ["set_8"] },
-        { id: "¬C(a) ∧ ¬B", truth_value: "V", memberships: ["set_9"] },
+        { id: "¬C(a) ∧ ¬B(a)", truth_value: "V", memberships: ["set_9"] },
       ],
       sets: [
         { id: "set_3", connective: "PROPAGATION", subsets: [] },
@@ -387,11 +501,11 @@ const PRESETS = {
       relations: [
         { id: "rel_3_4", from_variable: "¬C(a) ∧ ¬A(a)", to_variable: "¬C(a)", connective: "PROPAGATION" },
         { id: "rel_3_5", from_variable: "¬C(a) ∧ ¬A(a)", to_variable: "¬A(a)", connective: "PROPAGATION" },
-        { id: "rel_6_5", from_variable: "A(a)", to_variable: "¬A(a)", connective: "PROPAGATION" },
-        { id: "rel_7_6", from_variable: "B(a)", to_variable: "A(a)", connective: "CONTRAPOSITIONAL" },
-        { id: "rel_7_8", from_variable: "B(a)", to_variable: "¬B(a)", connective: "PROPAGATION" },
-        { id: "rel_9_4", from_variable: "¬C(a) ∧ ¬B", to_variable: "¬C(a)", connective: "PROPAGATION" },
-        { id: "rel_9_8", from_variable: "¬C(a) ∧ ¬B", to_variable: "¬B(a)", connective: "PROPAGATION" },
+        { id: "rel_6_5", from_variable: "A(a)", to_variable: "¬A(a)", connective: "CONTRAPOSITIONAL" },
+        { id: "rel_7_6", from_variable: "B(a)", to_variable: "A(a)", connective: "PROPAGATION" },
+        { id: "rel_7_8", from_variable: "B(a)", to_variable: "¬B(a)", connective: "CONTRAPOSITIONAL" },
+        { id: "rel_9_4", from_variable: "¬C(a) ∧ ¬B(a)", to_variable: "¬C(a)", connective: "PROPAGATION" },
+        { id: "rel_9_8", from_variable: "¬C(a) ∧ ¬B(a)", to_variable: "¬B(a)", connective: "PROPAGATION" },
         { id: "rel_5_8", from_variable: "¬A(a)", to_variable: "¬B(a)", connective: "PROPAGATION" },
       ],
     },
@@ -408,7 +522,7 @@ const PRESETS = {
       instances: {
         inst_v3: { id: "inst_v3", variable_id: "¬C(a) ∧ ¬A(a)", x: 200, y: 150 },
         inst_v4: { id: "inst_v4", variable_id: "¬C(a)", x: 500, y: 150 },
-        inst_v9: { id: "inst_v9", variable_id: "¬C(a) ∧ ¬B", x: 800, y: 150 },
+        inst_v9: { id: "inst_v9", variable_id: "¬C(a) ∧ ¬B(a)", x: 800, y: 150 },
         inst_v5: { id: "inst_v5", variable_id: "¬A(a)", x: 200, y: 400 },
         inst_v6: { id: "inst_v6", variable_id: "A(a)", x: 400, y: 400 },
         inst_v7: { id: "inst_v7", variable_id: "B(a)", x: 600, y: 400 },
@@ -422,7 +536,7 @@ const PRESETS = {
         rel_7_8: { color: "#10B981", thickness: 2 },
         rel_9_4: { color: "#10B981", thickness: 2 },
         rel_9_8: { color: "#10B981", thickness: 2 },
-        rel_5_8: { color: "#10B981", thickness: 2 },
+        rel_5_8: { color: "#10B981", thickness: 2, curved: true, curveOffset: 120 },
       },
     },
     execution_trace: {
@@ -477,12 +591,6 @@ let simState = {
   playInterval: null,
   animationTimeout: null,
   speed: 800,
-  zoom: 1,
-  pan: { x: 0, y: 0 },
-  isDragging: false,
-  dragStart: { x: 0, y: 0 },
-  draggedSetId: null,
-  dragStartOffset: { x: 0, y: 0 },
   activeTab: "box-view",
   variableHistory: {},
   boxPairs: [],
@@ -640,11 +748,39 @@ function setupEventListeners() {
     }
   });
 
+  const presetsModal = document.getElementById("presetsModal");
+  const btnOpenPresets = document.getElementById("btnOpenPresets");
+  const btnClosePresets = document.getElementById("btnClosePresets");
+
+  if (btnOpenPresets && presetsModal) {
+    btnOpenPresets.addEventListener("click", () => {
+      presetsModal.style.display = "flex";
+    });
+  }
+
+  if (btnClosePresets && presetsModal) {
+    btnClosePresets.addEventListener("click", () => {
+      presetsModal.style.display = "none";
+    });
+  }
+
+  // Close modal when clicking outside
+  if (presetsModal) {
+    presetsModal.addEventListener("click", (e) => {
+      if (e.target === presetsModal) {
+        presetsModal.style.display = "none";
+      }
+    });
+  }
+
   document.querySelectorAll(".btn-preset").forEach((btn) => {
     btn.addEventListener("click", () => {
       const presetName = btn.getAttribute("data-preset");
       if (PRESETS[presetName]) {
         loadSnapshot(PRESETS[presetName]);
+        if (presetsModal) {
+          presetsModal.style.display = "none";
+        }
       }
     });
   });
@@ -689,120 +825,6 @@ function setupEventListeners() {
   });
 
   const canvasContainer = document.getElementById("globalCanvasContainer");
-
-  canvasContainer.addEventListener("mousedown", (e) => {
-    // Check if dragging a set or a ball inside a set
-    const setNode = e.target.closest(".g-set-container");
-    const ballNode = e.target.closest(".g-ball-container");
-
-    let setIdToDrag = null;
-    if (setNode) {
-      setIdToDrag = setNode.getAttribute("data-set-id");
-    } else if (ballNode) {
-      const instId = ballNode.getAttribute("data-instance-id");
-      if (
-        simState.relativeCoordinates &&
-        simState.relativeCoordinates[instId]
-      ) {
-        setIdToDrag = simState.relativeCoordinates[instId].setId;
-      }
-    }
-
-    if (setIdToDrag) {
-      simState.draggedSetId = setIdToDrag;
-      const setVal = simState.snapshot.visual.sets[setIdToDrag];
-
-      // Calculate screen coordinates to SVG coordinates
-      const svgRect = canvasContainer.getBoundingClientRect();
-      const ptX = (e.clientX - svgRect.left - simState.pan.x) / simState.zoom;
-      const ptY = (e.clientY - svgRect.top - simState.pan.y) / simState.zoom;
-
-      simState.dragStartOffset = { x: setVal.x - ptX, y: setVal.y - ptY };
-    } else {
-      // Pan canvas
-      simState.isDragging = true;
-      simState.dragStart = {
-        x: e.clientX - simState.pan.x,
-        y: e.clientY - simState.pan.y,
-      };
-    }
-  });
-
-  window.addEventListener("mousemove", (e) => {
-    if (simState.activeTab !== "global-view") return;
-
-    if (simState.draggedSetId) {
-      const setId = simState.draggedSetId;
-      const setVal = simState.snapshot.visual.sets[setId];
-      const svgRect = canvasContainer.getBoundingClientRect();
-
-      const ptX = (e.clientX - svgRect.left - simState.pan.x) / simState.zoom;
-      const ptY = (e.clientY - svgRect.top - simState.pan.y) / simState.zoom;
-
-      const newX = ptX + simState.dragStartOffset.x;
-      const newY = ptY + simState.dragStartOffset.y;
-
-      const dx = newX - setVal.x;
-      const dy = newY - setVal.y;
-
-      setVal.x = newX;
-      setVal.y = newY;
-
-      // Update coordinates of all balls belonging to this set
-      Object.entries(simState.snapshot.visual.instances).forEach(
-        ([instId, inst]) => {
-          if (
-            simState.relativeCoordinates &&
-            simState.relativeCoordinates[instId] &&
-            simState.relativeCoordinates[instId].setId === setId
-          ) {
-            inst.x += dx;
-            inst.y += dy;
-          }
-        },
-      );
-
-      updateGlobalViewPositions();
-      return;
-    }
-
-    if (simState.isDragging) {
-      simState.pan.x = e.clientX - simState.dragStart.x;
-      simState.pan.y = e.clientY - simState.dragStart.y;
-      applyZoomPan();
-    }
-  });
-
-  window.addEventListener("mouseup", () => {
-    simState.isDragging = false;
-    simState.draggedSetId = null;
-  });
-
-  canvasContainer.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    const zoomFactor = 1.1;
-    if (e.deltaY < 0) {
-      simState.zoom *= zoomFactor;
-    } else {
-      simState.zoom /= zoomFactor;
-    }
-    simState.zoom = Math.min(Math.max(simState.zoom, 0.2), 5);
-    applyZoomPan();
-  });
-
-  document.getElementById("btnZoomIn").addEventListener("click", () => {
-    simState.zoom *= 1.2;
-    applyZoomPan();
-  });
-  document.getElementById("btnZoomOut").addEventListener("click", () => {
-    simState.zoom /= 1.2;
-    applyZoomPan();
-  });
-  document.getElementById("btnZoomReset").addEventListener("click", () => {
-    simState.zoom = 1;
-    simState.pan = { x: 0, y: 0 };
-    applyZoomPan();
-  });
 }
 
 /**
@@ -1041,10 +1063,6 @@ function loadSnapshot(snapshot) {
   }
 
   updateUI();
-
-  simState.zoom = 1;
-  simState.pan = { x: 0, y: 0 };
-  applyZoomPan();
 
   setTimeout(fitGlobalCanvas, 50);
 }
@@ -1636,9 +1654,10 @@ function renderBoxView() {
         path.setAttribute("id", `box-path-${boxIdx}-${rel.id}`);
 
         let pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
-        if (Math.abs(dy) < 5) {
-          const midX = (startX + endX) / 2;
-          const ctrlY = startY - 15;
+        if ((Math.abs(dx) > 10 && Math.abs(dy) > 10) || relVisual.curved) {
+          const cOffset = relVisual.curveOffset || 15;
+          const midX = (startX + endX) / 2 + (dy / len) * cOffset;
+          const ctrlY = (startY + endY) / 2 - (dx / len) * cOffset;
           pathD = `M ${startX} ${startY} Q ${midX} ${ctrlY} ${endX} ${endY}`;
         }
 
@@ -1788,9 +1807,10 @@ function renderGlobalView() {
       path.setAttribute("id", `global-path-${rel.id}`);
 
       let pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
-      if (Math.abs(dx) > 10 && Math.abs(dy) > 10) {
-        const midX = (startX + endX) / 2 + (dy / len) * 15;
-        const midY = (startY + endY) / 2 - (dx / len) * 15;
+      if ((Math.abs(dx) > 10 && Math.abs(dy) > 10) || relVisual.curved) {
+        const cOffset = relVisual.curveOffset || 15;
+        const midX = (startX + endX) / 2 + (dy / len) * cOffset;
+        const midY = (startY + endY) / 2 - (dx / len) * cOffset;
         pathD = `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`;
       }
 
@@ -1818,7 +1838,7 @@ function renderGlobalView() {
     }
   });
 
-  applyZoomPan();
+  fitGlobalCanvas();
 }
 
 function updateGlobalViewPositions() {
@@ -1897,9 +1917,10 @@ function updateGlobalViewPositions() {
       const path = container.querySelector(`#global-path-${rel.id}`);
       if (path) {
         let pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
-        if (Math.abs(dx) > 10 && Math.abs(dy) > 10) {
-          const midX = (startX + endX) / 2 + (dy / len) * 15;
-          const midY = (startY + endY) / 2 - (dx / len) * 15;
+        if ((Math.abs(dx) > 10 && Math.abs(dy) > 10) || relVisual.curved) {
+          const cOffset = relVisual.curveOffset || 15;
+          const midX = (startX + endX) / 2 + (dy / len) * cOffset;
+          const midY = (startY + endY) / 2 - (dx / len) * cOffset;
           pathD = `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`;
         }
         path.setAttribute("d", pathD);
@@ -1986,46 +2007,23 @@ function drawBallSVG(varId, instId, x, y, value, isVisible = true, prefix = "glo
 }
 
 /**
- * Ajusta el zoom y pan del canvas global para que todo el contenido sea visible.
- * Calcula el bounding box y centra la vista con margen.
+ * Ajusta el canvas global para que todo el contenido sea visible usando viewBox.
+ * Calcula el bounding box y ajusta el SVG dinámicamente.
  */
 function fitGlobalCanvas() {
   const svg = document.getElementById("globalSvg");
   if (!svg) return;
 
-  const container = document.getElementById("globalCanvasContainer");
-  const width = container.clientWidth;
-  const height = container.clientHeight;
-
-  if (width === 0 || height === 0) return;
-
   const bbox = svg.getBBox();
   if (bbox.width === 0 || bbox.height === 0) return;
 
   const margin = 50;
-  const zoomX = (width - margin * 2) / bbox.width;
-  const zoomY = (height - margin * 2) / bbox.height;
-  const zoom = Math.min(zoomX, zoomY, 1.2);
-
-  simState.zoom = zoom;
-  simState.pan.x = (width - bbox.width * zoom) / 2 - bbox.x * zoom;
-  simState.pan.y = (height - bbox.height * zoom) / 2 - bbox.y * zoom;
-
-  applyZoomPan();
-}
-
-/**
- * Aplica la transformación de zoom y pan al grupo SVG principal.
- * Actualiza el atributo transform con los valores actuales de simState.
- */
-function applyZoomPan() {
-  const group = document.getElementById("globalTransformGroup");
-  if (group) {
-    group.setAttribute(
-      "transform",
-      `translate(${simState.pan.x}, ${simState.pan.y}) scale(${simState.zoom})`,
-    );
-  }
+  const viewBoxStr = `${bbox.x - margin} ${bbox.y - margin} ${bbox.width + margin * 2} ${bbox.height + margin * 2}`;
+  
+  svg.setAttribute("viewBox", viewBoxStr);
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("height", "100%");
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
 }
 
 // ==========================================
