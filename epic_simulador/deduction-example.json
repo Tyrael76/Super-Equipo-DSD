@@ -2,67 +2,276 @@
   "meta": {
     "version": "3.0",
     "max_iterations": 1,
-    "belnap_domain": ["V", "F", "N", "B"],
+    "belnap_domain": [
+      "V",
+      "F",
+      "N",
+      "B"
+    ],
     "editor_mode": "ejecucion"
   },
   "logic": {
     "variables": [
-      { "id": "¬C(a) ∧ ¬A(a)", "truth_value": "V", "memberships": ["set_3"] },
-      { "id": "¬C(a)", "truth_value": "N", "memberships": ["set_4"] },
-      { "id": "¬A(a)", "truth_value": "N", "memberships": ["set_5"] },
-      { "id": "A(a)", "truth_value": "F", "memberships": ["set_6"] },
-      { "id": "B(a)", "truth_value": "F", "memberships": ["set_7"] },
-      { "id": "¬B(a)", "truth_value": "N", "memberships": ["set_8"] },
-      { "id": "¬C(a) ∧ ¬B", "truth_value": "V", "memberships": ["set_9"] }
+      {
+        "id": "¬C(a) ∧ ¬A(a)",
+        "truth_value": "V",
+        "memberships": [
+          "set_3"
+        ]
+      },
+      {
+        "id": "¬C(a)",
+        "truth_value": "N",
+        "memberships": [
+          "set_4"
+        ]
+      },
+      {
+        "id": "¬A(a)",
+        "truth_value": "N",
+        "memberships": [
+          "set_5"
+        ]
+      },
+      {
+        "id": "A(a)",
+        "truth_value": "F",
+        "memberships": [
+          "set_6"
+        ]
+      },
+      {
+        "id": "B(a)",
+        "truth_value": "F",
+        "memberships": [
+          "set_7"
+        ]
+      },
+      {
+        "id": "¬B(a)",
+        "truth_value": "N",
+        "memberships": [
+          "set_8"
+        ]
+      },
+      {
+        "id": "¬C(a) ∧ ¬B",
+        "truth_value": "V",
+        "memberships": [
+          "set_9"
+        ]
+      }
     ],
     "sets": [
-      { "id": "set_3", "connective": "PROPAGATION", "subsets": [] },
-      { "id": "set_4", "connective": "PROPAGATION", "subsets": [] },
-      { "id": "set_5", "connective": "PROPAGATION", "subsets": [] },
-      { "id": "set_6", "connective": "PROPAGATION", "subsets": [] },
-      { "id": "set_7", "connective": "PROPAGATION", "subsets": [] },
-      { "id": "set_8", "connective": "PROPAGATION", "subsets": [] },
-      { "id": "set_9", "connective": "PROPAGATION", "subsets": [] }
+      {
+        "id": "set_3",
+        "connective": "PROPAGATION",
+        "subsets": []
+      },
+      {
+        "id": "set_4",
+        "connective": "PROPAGATION",
+        "subsets": []
+      },
+      {
+        "id": "set_5",
+        "connective": "PROPAGATION",
+        "subsets": []
+      },
+      {
+        "id": "set_6",
+        "connective": "PROPAGATION",
+        "subsets": []
+      },
+      {
+        "id": "set_7",
+        "connective": "PROPAGATION",
+        "subsets": []
+      },
+      {
+        "id": "set_8",
+        "connective": "PROPAGATION",
+        "subsets": []
+      },
+      {
+        "id": "set_9",
+        "connective": "PROPAGATION",
+        "subsets": []
+      }
     ],
     "relations": [
-      { "id": "rel_3_4", "from_variable": "¬C(a) ∧ ¬A(a)", "to_variable": "¬C(a)", "connective": "PROPAGATION" },
-      { "id": "rel_3_5", "from_variable": "¬C(a) ∧ ¬A(a)", "to_variable": "¬A(a)", "connective": "PROPAGATION" },
-      { "id": "rel_6_5", "from_variable": "A(a)", "to_variable": "¬A(a)", "connective": "PROPAGATION" },
-      { "id": "rel_7_6", "from_variable": "B(a)", "to_variable": "A(a)", "connective": "CONTRAPOSITIONAL" },
-      { "id": "rel_7_8", "from_variable": "B(a)", "to_variable": "¬B(a)", "connective": "PROPAGATION" },
-      { "id": "rel_9_4", "from_variable": "¬C(a) ∧ ¬B", "to_variable": "¬C(a)", "connective": "PROPAGATION" },
-      { "id": "rel_9_8", "from_variable": "¬C(a) ∧ ¬B", "to_variable": "¬B(a)", "connective": "PROPAGATION" },
-      { "id": "rel_5_8", "from_variable": "¬A(a)", "to_variable": "¬B(a)", "connective": "PROPAGATION" }
+      {
+        "id": "rel_3_4",
+        "from_variable": "¬C(a) ∧ ¬A(a)",
+        "to_variable": "¬C(a)",
+        "connective": "PROPAGATION"
+      },
+      {
+        "id": "rel_3_5",
+        "from_variable": "¬C(a) ∧ ¬A(a)",
+        "to_variable": "¬A(a)",
+        "connective": "PROPAGATION"
+      },
+      {
+        "id": "rel_6_5",
+        "from_variable": "A(a)",
+        "to_variable": "¬A(a)",
+        "connective": "PROPAGATION"
+      },
+      {
+        "id": "rel_7_6",
+        "from_variable": "B(a)",
+        "to_variable": "A(a)",
+        "connective": "CONTRAPOSITIONAL"
+      },
+      {
+        "id": "rel_7_8",
+        "from_variable": "B(a)",
+        "to_variable": "¬B(a)",
+        "connective": "PROPAGATION"
+      },
+      {
+        "id": "rel_9_4",
+        "from_variable": "¬C(a) ∧ ¬B",
+        "to_variable": "¬C(a)",
+        "connective": "PROPAGATION"
+      },
+      {
+        "id": "rel_9_8",
+        "from_variable": "¬C(a) ∧ ¬B",
+        "to_variable": "¬B(a)",
+        "connective": "PROPAGATION"
+      },
+      {
+        "id": "rel_5_8",
+        "from_variable": "¬A(a)",
+        "to_variable": "¬B(a)",
+        "connective": "PROPAGATION"
+      }
     ]
   },
   "visual": {
     "sets": {
-      "set_3": { "x": 200, "y": 150, "radius": 95, "shape": "circle" },
-      "set_4": { "x": 500, "y": 150, "radius": 65, "shape": "circle" },
-      "set_9": { "x": 800, "y": 150, "radius": 95, "shape": "circle" },
-      "set_5": { "x": 200, "y": 400, "radius": 65, "shape": "circle" },
-      "set_6": { "x": 400, "y": 400, "radius": 65, "shape": "circle" },
-      "set_7": { "x": 600, "y": 400, "radius": 65, "shape": "circle" },
-      "set_8": { "x": 800, "y": 400, "radius": 65, "shape": "circle" }
+      "set_3": {
+        "x": 200,
+        "y": 150,
+        "radius": 95,
+        "shape": "circle"
+      },
+      "set_4": {
+        "x": 500,
+        "y": 150,
+        "radius": 65,
+        "shape": "circle"
+      },
+      "set_9": {
+        "x": 800,
+        "y": 150,
+        "radius": 95,
+        "shape": "circle"
+      },
+      "set_5": {
+        "x": 200,
+        "y": 400,
+        "radius": 65,
+        "shape": "circle"
+      },
+      "set_6": {
+        "x": 400,
+        "y": 400,
+        "radius": 65,
+        "shape": "circle"
+      },
+      "set_7": {
+        "x": 600,
+        "y": 400,
+        "radius": 65,
+        "shape": "circle"
+      },
+      "set_8": {
+        "x": 800,
+        "y": 400,
+        "radius": 65,
+        "shape": "circle"
+      }
     },
     "instances": {
-      "inst_v3": { "id": "inst_v3", "variable_id": "¬C(a) ∧ ¬A(a)", "x": 200, "y": 150 },
-      "inst_v4": { "id": "inst_v4", "variable_id": "¬C(a)", "x": 500, "y": 150 },
-      "inst_v9": { "id": "inst_v9", "variable_id": "¬C(a) ∧ ¬B", "x": 800, "y": 150 },
-      "inst_v5": { "id": "inst_v5", "variable_id": "¬A(a)", "x": 200, "y": 400 },
-      "inst_v6": { "id": "inst_v6", "variable_id": "A(a)", "x": 400, "y": 400 },
-      "inst_v7": { "id": "inst_v7", "variable_id": "B(a)", "x": 600, "y": 400 },
-      "inst_v8": { "id": "inst_v8", "variable_id": "¬B(a)", "x": 800, "y": 400 }
+      "inst_v3": {
+        "id": "inst_v3",
+        "variable_id": "¬C(a) ∧ ¬A(a)",
+        "x": 200,
+        "y": 150
+      },
+      "inst_v4": {
+        "id": "inst_v4",
+        "variable_id": "¬C(a)",
+        "x": 500,
+        "y": 150
+      },
+      "inst_v9": {
+        "id": "inst_v9",
+        "variable_id": "¬C(a) ∧ ¬B",
+        "x": 800,
+        "y": 150
+      },
+      "inst_v5": {
+        "id": "inst_v5",
+        "variable_id": "¬A(a)",
+        "x": 200,
+        "y": 400
+      },
+      "inst_v6": {
+        "id": "inst_v6",
+        "variable_id": "A(a)",
+        "x": 400,
+        "y": 400
+      },
+      "inst_v7": {
+        "id": "inst_v7",
+        "variable_id": "B(a)",
+        "x": 600,
+        "y": 400
+      },
+      "inst_v8": {
+        "id": "inst_v8",
+        "variable_id": "¬B(a)",
+        "x": 800,
+        "y": 400
+      }
     },
     "relations": {
-      "rel_3_4": { "color": "#10B981", "thickness": 2 },
-      "rel_3_5": { "color": "#10B981", "thickness": 2 },
-      "rel_6_5": { "color": "#10B981", "thickness": 2 },
-      "rel_7_6": { "color": "#10B981", "thickness": 2 },
-      "rel_7_8": { "color": "#10B981", "thickness": 2 },
-      "rel_9_4": { "color": "#10B981", "thickness": 2 },
-      "rel_9_8": { "color": "#10B981", "thickness": 2 },
-      "rel_5_8": { "color": "#10B981", "thickness": 2 }
+      "rel_3_4": {
+        "color": "#10B981",
+        "thickness": 2
+      },
+      "rel_3_5": {
+        "color": "#10B981",
+        "thickness": 2
+      },
+      "rel_6_5": {
+        "color": "#10B981",
+        "thickness": 2
+      },
+      "rel_7_6": {
+        "color": "#10B981",
+        "thickness": 2
+      },
+      "rel_7_8": {
+        "color": "#10B981",
+        "thickness": 2
+      },
+      "rel_9_4": {
+        "color": "#10B981",
+        "thickness": 2
+      },
+      "rel_9_8": {
+        "color": "#10B981",
+        "thickness": 2
+      },
+      "rel_5_8": {
+        "color": "#10B981",
+        "thickness": 2
+      }
     }
   },
   "execution_trace": {

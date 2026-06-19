@@ -864,8 +864,38 @@ function renderEditorPreview() {
     );
     if (!inst) return;
 
-    const currentX = inst.editor_x !== undefined ? inst.editor_x : inst.x;
-    const currentY = inst.editor_y !== undefined ? inst.editor_y : inst.y;
+    let currentX = inst.editor_x !== undefined ? inst.editor_x : inst.x;
+    let currentY = inst.editor_y !== undefined ? inst.editor_y : inst.y;
+
+    // Clamp ball to its parent set
+    if (v.memberships && v.memberships.length > 0) {
+      const parentSetId = v.memberships[0];
+      const parentSet = editorGraph.sets[parentSetId];
+      if (parentSet) {
+        const pX = parentSet.editor_x !== undefined ? parentSet.editor_x : parentSet.x;
+        const pY = parentSet.editor_y !== undefined ? parentSet.editor_y : parentSet.y;
+        
+        let dx = currentX - pX;
+        let dy = currentY - pY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const safeRadius = Math.max(10, parentSet.radius - 20);
+        
+        if (dist > safeRadius) {
+          if (dist === 0) {
+            dx = 0;
+            dy = 0;
+          } else {
+            const scale = safeRadius / dist;
+            dx = dx * scale;
+            dy = dy * scale;
+          }
+          currentX = pX + dx;
+          currentY = pY + dy;
+          inst.editor_x = currentX;
+          inst.editor_y = currentY;
+        }
+      }
+    }
 
     const gBall = drawBallSVG(v.id, inst.id, currentX, currentY, v.truth_value);
     
@@ -874,7 +904,6 @@ function renderEditorPreview() {
     }
     
     mainGroup.appendChild(gBall);
-
     ballCoords[v.id] = { x: currentX, y: currentY };
   });
 
@@ -883,10 +912,12 @@ function renderEditorPreview() {
     const toCoord = ballCoords[rel.to_variable];
 
     if (fromCoord && toCoord) {
+
       const visualRel = editorGraph.relations[rel.id] || {
         color: "#3B82F6",
         thickness: 2,
       };
+
       const dx = toCoord.x - fromCoord.x;
       const dy = toCoord.y - fromCoord.y;
       const len = Math.sqrt(dx * dx + dy * dy);

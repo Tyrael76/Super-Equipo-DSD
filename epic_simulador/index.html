@@ -211,7 +211,7 @@
             </div>
         </main>
 
-        <!-- Right Sidebar for Trace Log -->
+        <!-- Right Sidebar for Trace Log and JSON -->
         <aside class="right-sidebar">
           <section class="card trace-section">
             <div class="card-header">
@@ -236,6 +236,19 @@
                   Carga un snapshot para ver la traza.
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section class="card json-section">
+            <div class="card-header">
+              <i data-lucide="code"></i>
+              <h2>JSON del Motor</h2>
+            </div>
+            <div class="card-body">
+               <pre id="jsonViewer" class="json-viewer-box">Aún no hay datos</pre>
+               <button class="btn btn-secondary" id="btnDownloadJson" style="width: 100%; margin-top: 0.5rem;">
+                 <i data-lucide="download"></i> Descargar JSON
+               </button>
             </div>
           </section>
         </aside>

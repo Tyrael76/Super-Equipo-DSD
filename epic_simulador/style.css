@@ -1011,3 +1011,24 @@ body {
   width: 100%;
   height: 100%;
 }
+
+.json-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.json-viewer-box {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a6e22e;
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-family: monospace;
+  font-size: 0.75rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 250px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+}

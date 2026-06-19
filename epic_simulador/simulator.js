@@ -597,6 +597,20 @@ function setupEventListeners() {
   const btnPaste = document.getElementById("btnPaste");
   const jsonTextArea = document.getElementById("jsonTextArea");
 
+  const btnDownloadJson = document.getElementById("btnDownloadJson");
+  if (btnDownloadJson) {
+    btnDownloadJson.addEventListener("click", () => {
+      if (!simState.snapshot) return;
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(simState.snapshot, null, 2));
+      const downloadAnchorNode = document.createElement("a");
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", "epic_simulator_snapshot.json");
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    });
+  }
+
   dropZone.addEventListener("click", () => fileInput.click());
   dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -668,6 +682,9 @@ function setupEventListeners() {
       simState.activeTab = tabId;
 
       renderActiveTab();
+      if (tabId === "global-view") {
+        setTimeout(fitGlobalCanvas, 50);
+      }
     });
   });
 
@@ -1018,6 +1035,11 @@ function loadSnapshot(snapshot) {
     EditorBridge.loadSnapshot(simState.snapshot);
   }
 
+  const jsonViewer = document.getElementById("jsonViewer");
+  if (jsonViewer) {
+    jsonViewer.textContent = JSON.stringify(simState.snapshot, null, 2);
+  }
+
   updateUI();
 
   simState.zoom = 1;
@@ -1099,10 +1121,32 @@ function calculateRelativeCoordinates() {
 
     if (parentSetId) {
       const parentSet = visual.sets[parentSetId];
+      let dx = inst.x - parentSet.x;
+      let dy = inst.y - parentSet.y;
+      
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const safeRadius = Math.max(10, parentSet.radius - 20); // 20px padding
+      
+      if (dist > safeRadius) {
+        // The ball is outside the set! Clamp it inside.
+        if (dist === 0) {
+          dx = 0;
+          dy = 0;
+        } else {
+          const scale = safeRadius / dist;
+          dx = dx * scale;
+          dy = dy * scale;
+        }
+        
+        // Update the instance's absolute coordinates permanently
+        inst.x = parentSet.x + dx;
+        inst.y = parentSet.y + dy;
+      }
+
       simState.relativeCoordinates[instId] = {
         setId: parentSetId,
-        dx: inst.x - parentSet.x,
-        dy: inst.y - parentSet.y,
+        dx: dx,
+        dy: dy,
       };
     } else {
       simState.relativeCoordinates[instId] = {
@@ -1498,6 +1542,7 @@ function renderBoxView() {
       leftCenterX,
       centerY,
       leftRadius,
+      `box${boxIdx}`
     );
     svg.appendChild(gSetL);
 
@@ -1508,6 +1553,7 @@ function renderBoxView() {
         rightCenterX,
         centerY,
         rightRadius,
+        `box${boxIdx}`
       );
       svg.appendChild(gSetR);
     }
@@ -1548,6 +1594,7 @@ function renderBoxView() {
             by,
             curVal,
             isVisible,
+            `box${boxIdx}`
           );
           svg.appendChild(gBall);
 
@@ -1782,47 +1829,58 @@ function updateGlobalViewPositions() {
 
   // 1. Update Sets SVG positions
   Object.entries(visual.sets).forEach(([setId, setVal]) => {
-    const circle = container.querySelector(`#set-circle-${setId}`);
+    const circle = container.querySelector(`#global-set-circle-${setId}`);
     if (circle) {
       circle.setAttribute("cx", setVal.x);
       circle.setAttribute("cy", setVal.y);
     }
-    const label = container.querySelector(`#set-label-${setId}`);
+    const label = container.querySelector(`#global-set-label-${setId}`);
     if (label) {
       label.setAttribute("x", setVal.x);
       label.setAttribute("y", setVal.y - setVal.radius + 14);
     }
-    const conn = container.querySelector(`#set-conn-${setId}`);
+    const conn = container.querySelector(`#global-set-conn-${setId}`);
     if (conn) {
       conn.setAttribute("x", setVal.x);
       conn.setAttribute("y", setVal.y - setVal.radius + 25);
     }
   });
 
-  const ballCoords = {};
-
   // 2. Update Balls SVG positions
   Object.entries(visual.instances).forEach(([instId, inst]) => {
-    const circle = container.querySelector(`#ball-circle-${instId}`);
+    const relData = simState.relativeCoordinates[instId];
+    if (relData && relData.setId) {
+      const parentSet = visual.sets[relData.setId];
+      if (parentSet) {
+        inst.x = parentSet.x + relData.dx;
+        inst.y = parentSet.y + relData.dy;
+      }
+    }
+
+    const circle = container.querySelector(`#global-ball-circle-${instId}`);
     if (circle) {
       circle.setAttribute("cx", inst.x);
       circle.setAttribute("cy", inst.y);
     }
-    const label = container.querySelector(`#ball-label-${instId}`);
+    const label = container.querySelector(`#global-ball-label-${instId}`);
     if (label) {
       label.setAttribute("x", inst.x);
       label.setAttribute("y", inst.y + 4);
     }
-    const varLog = logic.variables.find((v) => v.id === inst.variable_id);
-    if (varLog) {
-      ballCoords[varLog.id] = { x: inst.x, y: inst.y };
-    }
   });
 
   // 3. Update Path/Arrow SVG positions
+  const ballCoords2 = {};
+  Object.entries(visual.instances).forEach(([instId, inst]) => {
+    const varLog = logic.variables.find((v) => v.id === inst.variable_id);
+    if (varLog) {
+      ballCoords2[varLog.id] = { x: inst.x, y: inst.y };
+    }
+  });
+
   logic.relations.forEach((rel) => {
-    const fromCoord = ballCoords[rel.from_variable];
-    const toCoord = ballCoords[rel.to_variable];
+    const fromCoord = ballCoords2[rel.from_variable];
+    const toCoord = ballCoords2[rel.to_variable];
 
     if (fromCoord && toCoord) {
       const dx = toCoord.x - fromCoord.x;
@@ -1850,17 +1908,17 @@ function updateGlobalViewPositions() {
   });
 }
 
-function drawSetSVG(setId, setVal, cx, cy, radius) {
+function drawSetSVG(setId, setVal, cx, cy, radius, prefix = "global") {
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
   g.setAttribute("class", "g-set-container");
   g.setAttribute("data-set-id", setId);
-  g.setAttribute("id", `set-group-${setId}`);
+  g.setAttribute("id", `${prefix}-set-group-${setId}`);
 
   const circle = document.createElementNS(
     "http://www.w3.org/2000/svg",
     "circle",
   );
-  circle.setAttribute("id", `set-circle-${setId}`);
+  circle.setAttribute("id", `${prefix}-set-circle-${setId}`);
   circle.setAttribute("cx", cx);
   circle.setAttribute("cy", cy);
   circle.setAttribute("r", radius);
@@ -1870,7 +1928,7 @@ function drawSetSVG(setId, setVal, cx, cy, radius) {
   g.appendChild(circle);
 
   const textId = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  textId.setAttribute("id", `set-label-${setId}`);
+  textId.setAttribute("id", `${prefix}-set-label-${setId}`);
   textId.setAttribute("x", cx);
   textId.setAttribute("y", cy - radius + 14);
   textId.setAttribute("class", "svg-set-label");
@@ -1882,7 +1940,7 @@ function drawSetSVG(setId, setVal, cx, cy, radius) {
       "http://www.w3.org/2000/svg",
       "text",
     );
-    textConn.setAttribute("id", `set-conn-${setId}`);
+    textConn.setAttribute("id", `${prefix}-set-conn-${setId}`);
     textConn.setAttribute("x", cx);
     textConn.setAttribute("y", cy - radius + 25);
     textConn.setAttribute("class", "svg-set-connective");
@@ -1893,12 +1951,12 @@ function drawSetSVG(setId, setVal, cx, cy, radius) {
   return g;
 }
 
-function drawBallSVG(varId, instId, x, y, value, isVisible = true) {
+function drawBallSVG(varId, instId, x, y, value, isVisible = true, prefix = "global") {
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
   g.setAttribute("class", "g-ball-container");
   g.setAttribute("data-instance-id", instId);
   g.setAttribute("data-variable-id", varId);
-  g.setAttribute("id", `ball-group-${instId}`);
+  g.setAttribute("id", `${prefix}-ball-group-${instId}`);
   g.setAttribute(
     "style",
     `opacity: ${isVisible ? 1 : 0}; transition: opacity 0.35s ease-in-out;`,
@@ -1908,19 +1966,20 @@ function drawBallSVG(varId, instId, x, y, value, isVisible = true) {
     "http://www.w3.org/2000/svg",
     "circle",
   );
-  circle.setAttribute("id", `ball-circle-${instId}`);
+  circle.setAttribute("id", `${prefix}-ball-circle-${instId}`);
+  circle.setAttribute("data-var-id", varId);
   circle.setAttribute("cx", x);
   circle.setAttribute("cy", y);
   circle.setAttribute("r", 15);
-  circle.setAttribute("class", `svg-instance val-${value.toLowerCase()}`);
+  circle.setAttribute("class", `svg-instance val-${(value || "N").toLowerCase()}`);
   g.appendChild(circle);
 
   const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  text.setAttribute("id", `ball-label-${instId}`);
+  text.setAttribute("id", `${prefix}-ball-label-${instId}`);
   text.setAttribute("x", x);
   text.setAttribute("y", y + 4);
   text.setAttribute("class", "svg-instance-label");
-  text.textContent = `${varId}:${value}`;
+  text.textContent = `${varId}:${value || "N"}`;
   g.appendChild(text);
 
   return g;
@@ -1934,11 +1993,13 @@ function fitGlobalCanvas() {
   const svg = document.getElementById("globalSvg");
   if (!svg) return;
 
-  const bbox = svg.getBBox();
   const container = document.getElementById("globalCanvasContainer");
   const width = container.clientWidth;
   const height = container.clientHeight;
 
+  if (width === 0 || height === 0) return;
+
+  const bbox = svg.getBBox();
   if (bbox.width === 0 || bbox.height === 0) return;
 
   const margin = 50;
