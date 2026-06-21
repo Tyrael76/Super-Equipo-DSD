@@ -25,7 +25,6 @@ def run_propagation(snapshot: PlaygroundSnapshot) -> PlaygroundSnapshot:
 
     # 2. Bucle de Estabilización
     for iteracion in range(1, max_iter + 1):
-        paso_actual = iteracion
         cambios_en_esta_iteracion = 0
         
         # Iteramos sobre todas las aristas (relaciones) del grafo
@@ -60,6 +59,8 @@ def run_propagation(snapshot: PlaygroundSnapshot) -> PlaygroundSnapshot:
                 old_val_str = destino.value
                 destino.value = nuevo_valor.value  # Mutamos el estado
                 
+                paso_actual += 1
+                
                 accion = ExecutionAction(
                     step=paso_actual,
                     variable_id=destino.id,
@@ -73,6 +74,7 @@ def run_propagation(snapshot: PlaygroundSnapshot) -> PlaygroundSnapshot:
         # 3. Condición de salida temprana
         if cambios_en_esta_iteracion == 0:
             estabilizado = True
+            paso_actual += 1
             # Registrar la acción final de estabilización
             trace.actions.append(ExecutionAction(
                 step=paso_actual,

@@ -125,7 +125,6 @@ def run(payload: MotorInput) -> MotorOutput:
 
     # ── Iteración hasta estabilización ──
     for iteracion in range(1, payload.max_iteraciones + 1):
-        paso = iteracion
         cambios_en_esta_iteracion: List[Tuple[str, BV, BV]] = []  # (id, antes, después)
 
         for eid, elem in elementos.items():
@@ -158,8 +157,9 @@ def run(payload: MotorInput) -> MotorOutput:
                     nuevo_acumulado = bv_kjoin(evidencia_acumulada, evidencia_conj)
 
                     if nuevo_acumulado != evidencia_acumulada:
+                        paso += 1
                         acciones.append(Accion(
-                            paso=iteracion,
+                            paso=paso,
                             tipo_accion=TipoAccion.PROPAGACION,
                             elemento_id=eid,
                             origen=cid,
@@ -196,8 +196,9 @@ def run(payload: MotorInput) -> MotorOutput:
                         if contra_val != other_elem.bv:
                             nuevo_other = bv_kjoin(other_elem.bv, contra_val)
                             if nuevo_other != other_elem.bv:
+                                paso += 1
                                 acciones.append(Accion(
-                                    paso=iteracion,
+                                    paso=paso,
                                     tipo_accion=TipoAccion.CONTRAPOSICION,
                                     elemento_id=other_id,
                                     origen=eid,
@@ -222,8 +223,9 @@ def run(payload: MotorInput) -> MotorOutput:
 
         # ── ¿Estabilizó? ──
         if not cambios_en_esta_iteracion:
+            paso += 1
             acciones.append(Accion(
-                paso=iteracion,
+                paso=paso,
                 tipo_accion=TipoAccion.ESTABILIZACION,
                 elemento_id="*",
                 valor_resultante="*",
