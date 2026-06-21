@@ -161,7 +161,19 @@
             </div>
 
             <div class="tab-content" id="global-view">
-              <div class="canvas-wrapper">
+              <div class="canvas-wrapper" style="position: relative;">
+                <!-- Toolbar for actions without stripe -->
+                <div style="position: absolute; bottom: 15px; right: 15px; display: flex; gap: 8px; z-index: 10; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
+                  <button class="btn" id="btnCanvasAdd" title="Añadir Conjunto o Variable" style="background-color: #10B981; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                    <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                  </button>
+                  <button class="btn" id="btnCanvasAddRelation" title="Añadir Operación Lógica" style="background-color: #3B82F6; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                    <i data-lucide="link" style="width: 18px; height: 18px;"></i>
+                  </button>
+                  <button class="btn" id="btnCanvasRemove" title="Eliminar Elemento" style="background-color: #EF4444; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                    <i data-lucide="minus" style="width: 18px; height: 18px;"></i>
+                  </button>
+                </div>
                 <div class="global-canvas-container" id="globalCanvasContainer">
                   <!-- SVG Canvas will be generated here -->
                 </div>
@@ -204,8 +216,11 @@
               <i data-lucide="code"></i>
               <h2>JSON del Motor</h2>
             </div>
-            <div class="card-body">
-               <pre id="jsonViewer" class="json-viewer-box">Aún no hay datos</pre>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
+               <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Enviado (Petición)</div>
+               <pre id="jsonViewerInput" class="json-viewer-box" style="flex: 1; height: auto; border: 1px solid var(--border-color); padding: 0.5rem; background: rgba(0,0,0,0.35); border-radius: 6px; font-size: 0.7rem; color: #10B981; margin: 0; white-space: pre-wrap; word-break: break-word;">Aún no hay datos</pre>
+               <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-top: 4px;">Recibido (Respuesta)</div>
+               <pre id="jsonViewer" class="json-viewer-box" style="flex: 1; height: auto; border: 1px solid var(--border-color); padding: 0.5rem; background: rgba(0,0,0,0.35); border-radius: 6px; font-size: 0.7rem; color: #10B981; margin: 0; white-space: pre-wrap; word-break: break-word;">Aún no hay datos</pre>
                <button class="btn btn-secondary" id="btnDownloadJson" style="width: 100%; margin-top: 0.5rem;">
                  <i data-lucide="download"></i> Descargar JSON
                </button>

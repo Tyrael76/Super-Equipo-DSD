@@ -614,6 +614,19 @@ let editorGraph = {
 // ==========================================
 // 3. Initialization
 // ==========================================
+async function applyChangeAndExecute() {
+  if (!window.EditorBridge || !window.EditorBridge.isInitialized()) return;
+  try {
+    const res = await window.EditorBridge.executeWithMotor();
+    if (res && res.ok) {
+      loadSnapshot(res.snapshot);
+    } else {
+      loadSnapshot(window.EditorBridge.getCurrentSnapshot());
+    }
+  } catch (e) {
+    loadSnapshot(window.EditorBridge.getCurrentSnapshot());
+  }
+}
 document.addEventListener("DOMContentLoaded", async () => {
   lucide.createIcons();
   // Inicializar el Editor Bridge
@@ -719,6 +732,107 @@ function setupEventListeners() {
     });
   }
 
+
+
+  const btnCanvasAdd = document.getElementById("btnCanvasAdd");
+  if (btnCanvasAdd) {
+    btnCanvasAdd.addEventListener("click", async () => {
+      const type = prompt("¿Qué deseas añadir? (Ingresa 'C' para Conjunto o 'V' para Variable)");
+      if (!type) return;
+      if (type.toUpperCase() === 'C') {
+        const id = prompt("Ingresa el ID del Conjunto (ej: set_A):");
+        if (id && window.EditorBridge && window.EditorBridge.isInitialized()) {
+          window.EditorBridge.createSet(id, "AND", 400, 300, 65);
+          await applyChangeAndExecute();
+        }
+      } else if (type.toUpperCase() === 'V') {
+        const id = prompt("Ingresa el ID de la Variable (ej: p):");
+        if (id && window.EditorBridge && window.EditorBridge.isInitialized()) {
+          let val = prompt("Ingresa el valor de verdad (V, F, N, B):", "N");
+          if (!val) val = "N";
+          val = val.toUpperCase();
+          if (!["V", "F", "N", "B"].includes(val)) val = "N";
+          window.EditorBridge.createVariable(id, val);
+          window.EditorBridge.createVariableInstance(`inst_${id}_1`, id, 400, 300);
+          
+          if (simState.snapshot && simState.snapshot.visual && simState.snapshot.visual.sets) {
+            const sets = Object.keys(simState.snapshot.visual.sets);
+            if (sets.length > 0) {
+              const setChoice = prompt(`¿Deseas asignar la variable a un conjunto existente?\nConjuntos disponibles: ${sets.join(", ")}\n\n(Escribe el ID del conjunto, o deja vacío para no asignarla)`);
+              if (setChoice && sets.includes(setChoice)) {
+                window.EditorBridge.assignVariableToSet(id, setChoice);
+              } else if (setChoice) {
+                alert(`El conjunto "${setChoice}" no existe. La variable se creó sin conjunto asignado.`);
+              }
+            }
+          }
+          
+          await applyChangeAndExecute();
+        }
+      } else {
+        alert("Opción no válida.");
+      }
+    });
+  }
+
+  const btnCanvasAddRelation = document.getElementById("btnCanvasAddRelation");
+  if (btnCanvasAddRelation) {
+    btnCanvasAddRelation.addEventListener("click", async () => {
+      const vars = simState.snapshot?.logic?.variables?.map(v => v.id) || [];
+      if (vars.length < 2) {
+        alert("Necesitas al menos 2 variables creadas para hacer una relación.");
+        return;
+      }
+      const varsStr = vars.join(", ");
+      
+      const id = prompt("Ingresa un ID único para la operación/relación (ej: rel_1):");
+      if (!id) return;
+      
+      const fromVar = prompt(`Ingresa el ID de la variable de origen (from)\nDisponibles: ${varsStr}`);
+      if (!fromVar || !vars.includes(fromVar)) {
+        if (fromVar) alert(`La variable "${fromVar}" no existe.`);
+        return;
+      }
+      
+      const toVar = prompt(`Ingresa el ID de la variable destino (to)\nDisponibles: ${varsStr}`);
+      if (!toVar || !vars.includes(toVar)) {
+        if (toVar) alert(`La variable "${toVar}" no existe.`);
+        return;
+      }
+      
+      const connective = prompt("Ingresa la operación lógica (ej: IMPLIES, AND, OR, XOR):", "IMPLIES");
+      if (!connective) return;
+
+      if (window.EditorBridge && window.EditorBridge.isInitialized()) {
+        window.EditorBridge.createRelation(id, fromVar, toVar, connective.toUpperCase());
+        await applyChangeAndExecute();
+      }
+    });
+  }
+
+  const btnCanvasRemove = document.getElementById("btnCanvasRemove");
+  if (btnCanvasRemove) {
+    btnCanvasRemove.addEventListener("click", async () => {
+      const type = prompt("¿Qué deseas eliminar? (Ingresa 'C' para Conjunto o 'V' para Variable)");
+      if (!type) return;
+      if (type.toUpperCase() === 'C') {
+        const id = prompt("Ingresa el ID del Conjunto a eliminar:");
+        if (id && window.EditorBridge && window.EditorBridge.isInitialized()) {
+          window.EditorBridge.deleteSet(id);
+          await applyChangeAndExecute();
+        }
+      } else if (type.toUpperCase() === 'V') {
+        const id = prompt("Ingresa el ID de la Variable a eliminar:");
+        if (id && window.EditorBridge && window.EditorBridge.isInitialized()) {
+          window.EditorBridge.deleteVariable(id);
+          await applyChangeAndExecute();
+        }
+      } else {
+        alert("Opción no válida.");
+      }
+    });
+  }
+
   dropZone.addEventListener("click", () => fileInput.click());
   dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -739,10 +853,11 @@ function setupEventListeners() {
     if (file) handleFile(file);
   });
 
-  btnPaste.addEventListener("click", () => {
+  btnPaste.addEventListener("click", async () => {
     try {
       const parsed = JSON.parse(jsonTextArea.value);
       loadSnapshot(parsed);
+      await applyChangeAndExecute();
     } catch (err) {
       alert("JSON inválido: " + err.message);
     }
@@ -774,13 +889,14 @@ function setupEventListeners() {
   }
 
   document.querySelectorAll(".btn-preset").forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const presetName = btn.getAttribute("data-preset");
       if (PRESETS[presetName]) {
         loadSnapshot(PRESETS[presetName]);
         if (presetsModal) {
           presetsModal.style.display = "none";
         }
+        await applyChangeAndExecute();
       }
     });
   });
@@ -833,7 +949,7 @@ function setupEventListeners() {
  */
 function handleFile(file) {
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
       const parsed = JSON.parse(e.target.result);
       loadSnapshot(parsed);
@@ -842,6 +958,7 @@ function handleFile(file) {
         null,
         2,
       );
+      await applyChangeAndExecute();
     } catch (err) {
       alert("Error al parsear el archivo: " + err.message);
     }
@@ -936,6 +1053,18 @@ function isBallVisibleAtStep(varId, step) {
  * y prepara las vistas de visualización (box view y global view).
  */
 function loadSnapshot(snapshot) {
+  if (!snapshot.meta) {
+    snapshot.meta = {
+      schema_version: "1.0",
+      editor_mode: "ejecucion",
+      belnap_domain: ["V", "F", "N", "B"],
+      max_iterations: 100,
+    };
+  } else {
+    if (!snapshot.meta.belnap_domain) snapshot.meta.belnap_domain = ["V", "F", "N", "B"];
+    if (!snapshot.meta.max_iterations) snapshot.meta.max_iterations = 100;
+  }
+
   if (!snapshot.logic)
     snapshot.logic = { variables: [], sets: [], relations: [] };
   if (!snapshot.visual)
@@ -1060,6 +1189,15 @@ function loadSnapshot(snapshot) {
   const jsonViewer = document.getElementById("jsonViewer");
   if (jsonViewer) {
     jsonViewer.textContent = JSON.stringify(simState.snapshot, null, 2);
+  }
+
+  const jsonViewerInput = document.getElementById("jsonViewerInput");
+  if (jsonViewerInput) {
+    const inputSnapshot = {
+      logic: simState.snapshot.logic,
+      visual: simState.snapshot.visual
+    };
+    jsonViewerInput.textContent = JSON.stringify(inputSnapshot, null, 2);
   }
 
   updateUI();
@@ -1195,22 +1333,22 @@ function extractBoxPairs() {
   const addedPairs = new Set();
 
   logic.relations.forEach((rel) => {
-    const fromVar = logic.variables.find((v) => v.id === rel.from_variable);
-    const toVar = logic.variables.find((v) => v.id === rel.to_variable);
+    const fromVar = logic.variables.find((v) => String(v.id) === String(rel.from_variable));
+    const toVar = logic.variables.find((v) => String(v.id) === String(rel.to_variable));
     if (!fromVar || !toVar) return;
 
     const fromInst = Object.values(visual.instances).find(
-      (inst) => inst.variable_id === fromVar.id,
+      (inst) => String(inst.variable_id) === String(fromVar.id),
     );
     const toInst = Object.values(visual.instances).find(
-      (inst) => inst.variable_id === toVar.id,
+      (inst) => String(inst.variable_id) === String(toVar.id),
     );
     if (!fromInst || !toInst) return;
 
     const fromSetId = simState.relativeCoordinates[fromInst.id]?.setId;
     const toSetId = simState.relativeCoordinates[toInst.id]?.setId;
 
-    if (fromSetId && toSetId && fromSetId !== toSetId) {
+    if (fromSetId && toSetId && String(fromSetId) !== String(toSetId)) {
       const pairKey = `${fromSetId}->${toSetId}`;
       if (!addedPairs.has(pairKey)) {
         addedPairs.add(pairKey);
@@ -1496,7 +1634,7 @@ function renderBoxView() {
 
     container.appendChild(card);
 
-    const svgContainer = document.getElementById(`box-svg-${boxIdx}`);
+    const svgContainer = card.querySelector(".box-svg-container");
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 420 200");
     svgContainer.appendChild(svg);
@@ -1583,9 +1721,9 @@ function renderBoxView() {
       Object.entries(visual.instances).forEach(([instId, inst]) => {
         const relData = simState.relativeCoordinates[instId];
         console.log(
-          `[drawVar] inst=${instId} relData.setId=${relData?.setId} expected=${setId} match=${relData?.setId === setId}`,
+          `[drawVar] inst=${instId} relData.setId=${relData?.setId} expected=${setId} match=${String(relData?.setId) === String(setId)}`,
         );
-        if (relData && relData.setId === setId) {
+        if (relData && String(relData.setId) === String(setId)) {
           const scale =
             cx === leftCenterX
               ? leftRadius / setLeft.radius
@@ -1622,7 +1760,7 @@ function renderBoxView() {
     };
 
     drawVariablesForSet(setIdLeft, leftCenterX);
-    if (setIdLeft !== setIdRight) {
+    if (String(setIdLeft) !== String(setIdRight)) {
       drawVariablesForSet(setIdRight, rightCenterX);
     }
 
@@ -1688,6 +1826,134 @@ function renderBoxView() {
 }
 
 // --- GLOBAL CANVAS RENDER ---
+let isDraggingGlobal = false;
+let draggedGlobalElement = null;
+let dragGlobalType = null;
+let dragGlobalId = null;
+let dragGlobalOffsetX = 0;
+let dragGlobalOffsetY = 0;
+
+function setupGlobalDragging(svg) {
+  if (svg.dataset.dragSetup === "true") return;
+  svg.dataset.dragSetup = "true";
+
+  svg.addEventListener("dblclick", async (e) => {
+    const target = e.target.closest(".g-set-container, .g-ball-container");
+    if (!target) return;
+    
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (target.classList.contains("g-set-container")) {
+      const setId = target.getAttribute("data-set-id");
+      if (confirm(`¿Seguro que deseas eliminar el conjunto "${setId}"?`)) {
+        if (window.EditorBridge && window.EditorBridge.isInitialized()) {
+          window.EditorBridge.deleteSet(setId);
+          try {
+            const res = await window.EditorBridge.executeWithMotor();
+            loadSnapshot(res && res.ok ? res.snapshot : window.EditorBridge.getCurrentSnapshot());
+          } catch (err) {
+            loadSnapshot(window.EditorBridge.getCurrentSnapshot());
+          }
+        }
+      }
+    } else {
+      const varId = target.getAttribute("data-variable-id");
+      if (confirm(`¿Seguro que deseas eliminar la variable "${varId}"?`)) {
+        if (window.EditorBridge && window.EditorBridge.isInitialized()) {
+          window.EditorBridge.deleteVariable(varId);
+          try {
+            const res = await window.EditorBridge.executeWithMotor();
+            loadSnapshot(res && res.ok ? res.snapshot : window.EditorBridge.getCurrentSnapshot());
+          } catch (err) {
+            loadSnapshot(window.EditorBridge.getCurrentSnapshot());
+          }
+        }
+      }
+    }
+  });
+
+  svg.addEventListener("mousedown", (e) => {
+    const target = e.target.closest(".g-set-container, .g-ball-container");
+    if (!target) return;
+    
+    isDraggingGlobal = true;
+    draggedGlobalElement = target;
+    
+    const CTM = svg.getScreenCTM();
+    if (target.classList.contains("g-set-container")) {
+      dragGlobalType = "set";
+      dragGlobalId = target.getAttribute("data-set-id");
+      const setVal = simState.snapshot.visual.sets[dragGlobalId];
+      dragGlobalOffsetX = (e.clientX - CTM.e) / CTM.a - setVal.x;
+      dragGlobalOffsetY = (e.clientY - CTM.f) / CTM.d - setVal.y;
+    } else {
+      dragGlobalType = "ball";
+      dragGlobalId = target.getAttribute("data-instance-id");
+      const instVal = simState.snapshot.visual.instances[dragGlobalId];
+      dragGlobalOffsetX = (e.clientX - CTM.e) / CTM.a - instVal.x;
+      dragGlobalOffsetY = (e.clientY - CTM.f) / CTM.d - instVal.y;
+    }
+    e.stopPropagation();
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isDraggingGlobal || !draggedGlobalElement) return;
+    
+    const CTM = svg.getScreenCTM();
+    const mouseX = (e.clientX - CTM.e) / CTM.a;
+    const mouseY = (e.clientY - CTM.f) / CTM.d;
+
+    const newX = mouseX - dragGlobalOffsetX;
+    const newY = mouseY - dragGlobalOffsetY;
+
+    if (dragGlobalType === "set") {
+      const setVal = simState.snapshot.visual.sets[dragGlobalId];
+      setVal.x = newX;
+      setVal.y = newY;
+    } else {
+      const instVal = simState.snapshot.visual.instances[dragGlobalId];
+      let finalNewX = newX;
+      let finalNewY = newY;
+      
+      const relData = simState.relativeCoordinates[dragGlobalId];
+      if (relData && relData.setId) {
+        const parentSet = simState.snapshot.visual.sets[relData.setId];
+        let dx = newX - parentSet.x;
+        let dy = newY - parentSet.y;
+        
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const safeRadius = Math.max(10, parentSet.radius - 20);
+        
+        if (dist > safeRadius) {
+          if (dist > 0) {
+            const scale = safeRadius / dist;
+            dx = dx * scale;
+            dy = dy * scale;
+          }
+          finalNewX = parentSet.x + dx;
+          finalNewY = parentSet.y + dy;
+        }
+        
+        relData.dx = dx;
+        relData.dy = dy;
+      }
+      
+      instVal.x = finalNewX;
+      instVal.y = finalNewY;
+    }
+    
+    updateGlobalViewPositions();
+  });
+
+  window.addEventListener("mouseup", (e) => {
+    if (isDraggingGlobal) {
+      isDraggingGlobal = false;
+      draggedGlobalElement = null;
+    }
+  });
+}
+
 function renderGlobalView() {
   const container = document.getElementById("globalCanvasContainer");
   container.innerHTML = "";
@@ -1698,6 +1964,8 @@ function renderGlobalView() {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("id", "globalSvg");
   container.appendChild(svg);
+
+  setupGlobalDragging(svg);
 
   const gTransform = document.createElementNS(
     "http://www.w3.org/2000/svg",
@@ -1903,6 +2171,11 @@ function updateGlobalViewPositions() {
     const toCoord = ballCoords2[rel.to_variable];
 
     if (fromCoord && toCoord) {
+      const relVisual = visual.relations[rel.id] || {
+        color: "#3B82F6",
+        thickness: 2,
+      };
+
       const dx = toCoord.x - fromCoord.x;
       const dy = toCoord.y - fromCoord.y;
       const len = Math.sqrt(dx * dx + dy * dy);
@@ -1980,7 +2253,7 @@ function drawBallSVG(varId, instId, x, y, value, isVisible = true, prefix = "glo
   g.setAttribute("id", `${prefix}-ball-group-${instId}`);
   g.setAttribute(
     "style",
-    `opacity: ${isVisible ? 1 : 0}; transition: opacity 0.35s ease-in-out;`,
+    `opacity: ${isVisible ? 1 : 0.2}; transition: opacity 0.35s ease-in-out;`,
   );
 
   const circle = document.createElementNS(
@@ -2191,18 +2464,20 @@ function animateElementOpacity(
     `[data-variable-id="${variableId}"]`,
   );
   ballGroups.forEach((ballGroup) => {
+    const finalToOpacity = toOpacity === 0 ? 0.2 : toOpacity;
+    const finalFromOpacity = fromOpacity === 0 ? 0.2 : fromOpacity;
     if (duration === 0) {
-      ballGroup.style.display = "none";
+      ballGroup.style.opacity = finalToOpacity;
     } else {
       ballGroup.style.display = "";
-      ballGroup.animate([{ opacity: fromOpacity }, { opacity: toOpacity }], {
+      ballGroup.animate([{ opacity: finalFromOpacity }, { opacity: finalToOpacity }], {
         duration: duration,
         fill: "forwards",
         easing: "ease-in-out",
       });
 
       setTimeout(() => {
-        ballGroup.style.opacity = toOpacity;
+        ballGroup.style.opacity = finalToOpacity;
       }, duration);
     }
   });
@@ -2224,18 +2499,20 @@ function animateElementOpacityGlobal(
     `[data-variable-id="${variableId}"]`,
   );
   ballGroups.forEach((ballGroup) => {
+    const finalToOpacity = toOpacity === 0 ? 0.2 : toOpacity;
+    const finalFromOpacity = fromOpacity === 0 ? 0.2 : fromOpacity;
     if (duration === 0) {
-      ballGroup.style.display = "none";
+      ballGroup.style.opacity = finalToOpacity;
     } else {
       ballGroup.style.display = "";
-      ballGroup.animate([{ opacity: fromOpacity }, { opacity: toOpacity }], {
+      ballGroup.animate([{ opacity: finalFromOpacity }, { opacity: finalToOpacity }], {
         duration: duration,
         fill: "forwards",
         easing: "ease-in-out",
       });
 
       setTimeout(() => {
-        ballGroup.style.opacity = toOpacity;
+        ballGroup.style.opacity = finalToOpacity;
       }, duration);
     }
   });

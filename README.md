@@ -79,14 +79,32 @@ npm run build:editor
 
 ---
 
-## 🎯 Uso Rápido
+## 🎯 Uso Rápido y Nuevas Funcionalidades
 
-1. Ve a la pestaña **"Editor Interactivo"**
-2. Crea un conjunto con el botón "Añadir"
-3. Crea variables dentro del conjunto
-4. Crea relaciones entre variables
-5. Click en **"⚡ Calcular con el Motor API"**
-6. Ve la animación en la pestaña **"Vista de Cajitas"**
+1. Ve a la pestaña **"Editor Interactivo"** o utiliza la **"Vista Global (Lienzo)"**.
+2. **Edición en Lienzo:** Utiliza los botones flotantes en la parte inferior derecha del lienzo para:
+   - **( + )** Crear Conjuntos o Variables. Al crear una variable, se te preguntará a qué conjunto asignarla interactivamente.
+   - **( 🔗 )** Crear Operaciones Lógicas (Relaciones), seleccionando el origen, destino y la compuerta lógica (AND, OR, IMPLIES, XOR).
+   - **( - )** Eliminar elementos interactivos. (También puedes dar **Doble Clic** a cualquier elemento para eliminarlo).
+3. **Mover Elementos:** Puedes arrastrar libremente Variables y Conjuntos; las conexiones y flechas se actualizarán en tiempo real.
+4. **Sincronización:** Cada cambio interactivo se comunica al instante con el Motor de Python, recalcula el Grafo Lógico, y regenera la traza de forma automática.
+5. **Doble Panel JSON:** El panel lateral te mostrará claramente el **JSON Enviado (Petición)** desde el simulador y el **JSON Recibido (Respuesta)** con la simulación resuelta.
+6. Click en **"⚡ Calcular con el Motor API"** o presiona "Reproducir" en la barra superior para ver la animación paso a paso.
+
+---
+
+## 💡 Ejemplos Rápidos y Deducción Natural
+
+Para probar el motor de forma instantánea, haz clic en **"Explorar Ejemplos"** (en el panel izquierdo). 
+Tendrás a disposición varios escenarios (presets) listos para usar:
+- Implicación Simple
+- Contrapositiva
+- Contradicción
+- Ciclo Retroalimentado
+- **Deducción Natural (⭐ IMPORTANTE)**
+- Silogismos Socráticos
+
+> **NOTA DESTACADA:** El ejemplo de **Deducción Natural** incluido en los presets implementa exactamente el caso de estudio que el profesor solicitó a partir de su artículo de investigación. Al cargar este ejemplo, el simulador reproducirá paso a paso la inferencia basada en las reglas ∧E, ¬E, MT, ∧I utilizando la lógica tetralente de Belnap.
 
 ---
 

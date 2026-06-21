@@ -175,7 +175,7 @@ export class MotorApiClient implements IMotorClient {
 
     return {
       meta: {
-        max_iterations: snapshot.meta.max_iterations || 100,
+        max_iterations: snapshot.meta?.max_iterations || 100,
         version: "1.1"
       },
       logic: motorLogic,
@@ -247,6 +247,7 @@ export class MotorApiClient implements IMotorClient {
               step: a.step,
               // Normalizar: motor usa target_id/result_value, simulador usa variable_id/new_value
               variable_id: a.variable_id ?? a.target_id,
+              old_value: a.old_value,
               new_value: a.new_value ?? a.result_value,
               // Normalizar: motor usa action_type:"stabilization", simulador usa is_stabilized
               is_stabilized: a.is_stabilized ?? (a.action_type === "stabilization" || a.target_id === "*"),

@@ -81,23 +81,29 @@ Una vez que termine de compilar (en menos de 100 ms), la terminal te indicará l
 
 ---
 
-## 🎨 Cómo funciona la Simulación y Animación Paso a Paso
+## 🎨 Cómo funciona la Simulación, Interactividad y Animación
 
-### 1. El Editor Interactivo (Sandbox)
-En la pestaña **"Editor Interactivo"** puedes dibujar tu propio escenario lógico desde cero:
-* **Crear Conjuntos**: Define conjuntos lógicos (como `set_A`, `set_B`) y su conectivo principal.
-* **Crear Variables**: Añade variables (ej. `p`, `q`) asignándoles un conjunto contenedor y un valor de verdad inicial.
-  * **Consejo**: Deja las variables de destino en **`N` (Neutro)** para que empiecen invisibles y puedas ver cómo les llega la animación.
-* **Crear Relaciones (Implicaciones)**: Selecciona una variable origen, una de destino y el conectivo.
-* **Calcular con el Motor API**: Envía tu diseño al Backend Python para calcular la propagación de forma inmediata.
+### 1. Interactividad Directa en el Lienzo Global
+En la pestaña **"Vista Global (Lienzo)"**, tienes el poder de construir escenarios completos de forma visual y responsiva:
+* **Creación Rápida (+):** Botón verde para crear Conjuntos o Variables en tiempo real. **[NUEVO]** Al crear una nueva variable, el sistema te solicitará ingresar su valor de verdad de Belnap explícito (V, F, N, B) para un control más estricto del estado inicial.
+* **Operaciones (🔗):** Botón azul para establecer Relaciones lógicas (ej. IMPLIES, AND) especificando orígenes y destinos de las variables.
+* **Eliminación Intuitiva (-):** Botón rojo o simplemente **Doble-Clic** sobre cualquier variable o conjunto para eliminarlo instantáneamente.
+* **Arrastrar y Soltar (Drag & Drop):** Las variables y conjuntos se pueden mover por todo el lienzo manteniendo su cohesión. Las flechas (relaciones) recalcularán automáticamente su curvatura y posición para no perder la conexión lógica.
+* **Espacios Dinámicos y Fluidos:** **[NUEVO]** La interfaz ahora responde dinámicamente al tamaño y cantidad de elementos del lienzo. La restricción fija de pantalla ha sido eliminada permitiendo que el lienzo y la vista de cajitas se expandan infinitamente, activando el scroll nativo de forma limpia y accesible.
+* **Auto-Sincronización y Doble JSON:** Cada acción ejecutada en el lienzo se envía al **Motor de Python de forma invisible y automática**. **[NUEVO]** El backend ahora genera una traza estricta paso-a-paso (`paso += 1` por mutación individual), garantizando que las animaciones subsecuentes nunca colisionen y respeten el Execution Trace íntegro. Además, un panel de control con doble vista muestra el **JSON Enviado** (petición en crudo) y el **JSON Recibido** (con el trace).
 
-### 2. Animación Inteligente de Partículas
+### 2. Ejemplos Rápidos y Deducción Natural
+A través del botón **"Explorar Ejemplos"**, puedes cargar al instante presets complejos ya modelados en el lienzo. 
+
+> **⭐ IMPORTANTE - DEDUCCIÓN NATURAL:** Se ha incluido específicamente el preset **"Deducción Natural"**. Este modelo recrea de forma exacta el escenario metodológico y caso de uso investigativo que se pidió derivado del artículo. Contiene las configuraciones necesarias de las variables para aplicar en tiempo real las reglas de **Modus Tollens (MT)**, **Introducción a la Conjunción (∧I)**, **Eliminación de Conjunción (∧E)** y **Eliminación de Negación (¬E)** en base a la lógica de Belnap. Es la demostración cúspide del motor.
+
+### 3. Animación Inteligente de Partículas
 Cuando el simulador recibe la traza del motor (`execution_trace`), crea una línea de tiempo paso a paso:
 * **Valores Positivos (`V`)**: Viajan en dirección de la flecha (hacia adelante). Se representan con partículas verdes.
 * **Valores Negativos (`F`)**: Viajan en dirección contraria a la flecha (hacia atrás / contrapositiva). Se representan con partículas rojas.
 * **Visibilidad Dinámica (History-Aware)**: Las variables de destino con valor inicial `N` (neutras) comienzan invisibles en el paso 0. La bolita de verdad correspondiente aparecerá mágicamente en su circunferencia de destino una vez que la animación de la partícula complete su recorrido.
 
-### 3. Controles de Reproducción
+### 4. Controles de Reproducción
 En la barra de herramientas superior tienes control absoluto de la simulación:
 * **Play / Pause**: Reproduce o pausa la animación cronometrada.
 * **Step Forward (Siguiente paso) / Step Backward (Paso anterior)**: Permite depurar la propagación cuadro por cuadro manualmente.
